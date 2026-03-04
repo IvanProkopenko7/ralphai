@@ -1,0 +1,7 @@
+name = "ralph-ai-proxy"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# After deploying, run:
+#   wrangler secret put ROBOFLOW_API_KEY
+# and paste your API key when prompted.

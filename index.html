@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sprawdz Ralph Lauren AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="title">Sprawdz Ralph lauren ai</h1>
+    <p class="subtitle-note">*Na razie obsługiwane są tylko metki „Polo by Ralph Lauren"</p>
+
+    <div class="upload-area" id="uploadArea" tabindex="0" role="button" aria-label="Dodaj zdjęcia metek">
+      <input type="file" id="fileInput" accept="image/*" hidden />
+
+      <div class="preview-wrapper" id="previewWrapper">
+        <img id="previewImg" src="" alt="Podgląd zdjęcia" hidden />
+        <div class="plus-icon" id="plusIcon">
+          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="17" y="4" width="6" height="32" rx="2" />
+            <rect x="4" y="17" width="32" height="6" rx="2" />
+          </svg>
+        </div>
+      </div>
+
+      <span class="upload-label" id="uploadLabel">dodaj zdjecia metek</span>
+    </div>
+
+    <button class="btn-analyze" id="btnAnalyze" disabled>Sprawdź metkę</button>
+
+    <div class="result-card" id="resultCard" hidden>
+      <div class="result-header">Wynik klasyfikacji</div>
+      <div class="result-body" id="resultBody"></div>
+    </div>
+
+    <div class="error-msg" id="errorMsg" hidden></div>
+  </div>
+
+  <!-- Crop modal -->
+  <div class="crop-modal" id="cropModal" hidden>
+    <div class="crop-modal-inner">
+      <div class="crop-container">
+        <img id="cropImage" src="" alt="Crop" />
+      </div>
+      <div class="crop-actions">
+        <button class="btn-crop-cancel" id="btnCropCancel">Anuluj</button>
+        <button class="btn-crop-confirm" id="btnCropConfirm">Przytnij</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

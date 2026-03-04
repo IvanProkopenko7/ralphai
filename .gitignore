@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Wrangler
+.wrangler/
+worker/.wrangler/
+
+# Environment & secrets
+.env
+.env.*
+.dev.vars
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.suo
+*.user
