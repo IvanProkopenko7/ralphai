@@ -8,8 +8,8 @@
  *   npx wrangler secret put ROBOFLOW_API_KEY   ← paste key when prompted       *
  * ─────────────────────────────────────────────────────────────────────────── */
 
-const MODEL_ID = 'ralph_polo_label';
-const VERSION  = '19';
+const MODEL_ID = 'ralphai-5ryt3';
+const VERSION  = '1';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin':  '*',

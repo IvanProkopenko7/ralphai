@@ -3,56 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sprawdz Ralph Lauren AI</title>
+  <title>Legit check RALPH LAUREN</title>
+  <link rel="icon" type="image/svg+xml" href="R.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
 </head>
 <body>
 
-  <div class="container">
-    <h1 class="title">Sprawdz Ralph lauren ai</h1>
-    <p class="subtitle-note">*Na razie obsługiwane są tylko metki „Polo by Ralph Lauren"</p>
+  <header class="navbar">
+    <a href="javascript:void(0)" class="nav-logo" onclick="location.reload()">RALPHAI</a>
+    <nav class="nav-links">
+      <a href="#" class="nav-ankieta">ANKIETA</a>
+      <a href="mailto:kontakt@ralphai.tech" class="nav-kontakt">KONTAKT</a>
+    </nav>
+  </header>
 
-    <div class="upload-area" id="uploadArea" tabindex="0" role="button" aria-label="Dodaj zdjęcia metek">
-      <input type="file" id="fileInput" accept="image/*" hidden />
+  <main id="canvas" class="main-content">
 
-      <div class="preview-wrapper" id="previewWrapper">
-        <img id="previewImg" src="" alt="Podgląd zdjęcia" hidden />
-        <div class="plus-icon" id="plusIcon">
-          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="17" y="4" width="6" height="32" rx="2" />
-            <rect x="4" y="17" width="32" height="6" rx="2" />
-          </svg>
-        </div>
+    <!-- Upload section -->
+    <section class="upload-section">
+      <p class="title">Legit check RALPH LAUREN</p>
+      <p class="subtitle">Dodaj zdjęcie górnej metki</p>
+      <p class="note">
+        <span>*Na razie obsługiwane są tylko metki</span><span class="note-bold"> „Polo by Ralph Lauren"</span>
+      </p>
+
+      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+
+      <div id="previewGrid" class="preview-grid" hidden></div>
+
+      <div id="resultRow" class="result-row" hidden></div>
+
+      <button id="chooseBtn" class="choose-btn">
+        <span>Wybierz zdjęcie</span>
+      </button>
+
+      <div class="drop-text" id="dropTextGroup">
+        <p class="drop-line-1">lub upuść zdjęcia tutaj</p>
+        <p class="drop-line-2">albo wklej z Ctrl+V</p>
       </div>
 
-      <span class="upload-label" id="uploadLabel">dodaj zdjecia metek</span>
+      <button id="btnAnalyze" class="btn-analyze" hidden><span>Sprawdź metkę</span></button>
+      <div id="errorMsg" class="error-msg" hidden></div>
+    </section>
+
+    <!-- How-to section -->
+    <section class="how-to-section">
+      <p class="section-heading">Jak kadrować zdjęcia?</p>
+      <video class="cropping-video" autoplay loop muted playsinline>
+        <source src="polo_by_cropping.mp4" type="video/mp4" />
+      </video>
+    </section>
+
+  </main>
+
+  <!-- Ankieta modal -->
+  <div class="ankieta-overlay" id="ankietaModal" hidden>
+    <div class="ankieta-modal-inner">
+      <button class="ankieta-close" id="btnAnkietaClose">&#x2715;</button>
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScLEdyzmpLAqRDd0vL2WiuSM8GGE1uLsfMoMIa9NQ_cxvBEew/viewform?embedded=true" frameborder="0" scrolling="no">Loading…</iframe>
     </div>
-
-    <button class="btn-analyze" id="btnAnalyze" disabled>Sprawdź metkę</button>
-
-    <div class="result-card" id="resultCard" hidden>
-      <div class="result-header">Wynik klasyfikacji</div>
-      <div class="result-body" id="resultBody"></div>
-    </div>
-
-    <div class="error-msg" id="errorMsg" hidden></div>
   </div>
 
-  <!-- Crop modal -->
-  <div class="crop-modal" id="cropModal" hidden>
-    <div class="crop-modal-inner">
-      <div class="crop-container">
-        <img id="cropImage" src="" alt="Crop" />
+  <!-- Cropper modal -->
+  <div class="cropper-overlay" id="cropperModal" hidden>
+    <div class="cropper-modal-inner">
+      <div class="cropper-img-wrap">
+        <img id="cropperImg" src="" alt="Kadruj zdjęcie" />
       </div>
-      <div class="crop-actions">
+      <div class="cropper-actions">
         <button class="btn-crop-cancel" id="btnCropCancel">Anuluj</button>
-        <button class="btn-crop-confirm" id="btnCropConfirm">Przytnij</button>
+        <button class="btn-crop-confirm" id="btnCropConfirm">Przytnij i użyj</button>
       </div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="app.js"></script>
+
+  <footer class="site-footer">
+    <p class="footer-author">Stworzone przez <strong>Ivana Prokopenko</strong></p>
+    <p class="footer-email">email: <a href="mailto:kontakt@ralphai.tech">kontakt@ralphai.tech</a></p>
+    <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
+  </footer>
 </body>
 </html>

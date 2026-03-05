@@ -9,6 +9,12 @@ worker/.wrangler/
 .env
 .env.*
 .dev.vars
+worker/.dev.vars
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
 
 # OS
 .DS_Store

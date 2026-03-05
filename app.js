@@ -5,133 +5,240 @@
 const API_URL = 'https://ralph-ai-proxy.ivanprokopenkose7en.workers.dev';
 
 /* ─── DOM refs ────────────────────────────────────── */
-const uploadArea   = document.getElementById('uploadArea');
+const dropZone     = document.getElementById('canvas');
 const fileInput    = document.getElementById('fileInput');
-const previewImg   = document.getElementById('previewImg');
-const plusIcon     = document.getElementById('plusIcon');
-const uploadLabel  = document.getElementById('uploadLabel');
+const chooseBtn    = document.getElementById('chooseBtn');
+const dropText     = document.getElementById('dropTextGroup');
+const previewGrid  = document.getElementById('previewGrid');
+const resultRow    = document.getElementById('resultRow');
 const btnAnalyze   = document.getElementById('btnAnalyze');
-const resultCard   = document.getElementById('resultCard');
-const resultBody   = document.getElementById('resultBody');
 const errorMsg     = document.getElementById('errorMsg');
-const cropModal    = document.getElementById('cropModal');
-const cropImage    = document.getElementById('cropImage');
+const cropperModal  = document.getElementById('cropperModal');
+const cropperImg    = document.getElementById('cropperImg');
 const btnCropConfirm = document.getElementById('btnCropConfirm');
 const btnCropCancel  = document.getElementById('btnCropCancel');
+const ankietaModal   = document.getElementById('ankietaModal');
+const btnAnkietaClose = document.getElementById('btnAnkietaClose');
 
 /* ─── State ───────────────────────────────────────── */
-let selectedFile    = null;
+let croppedImages   = [];
+let cropQueue       = [];
 let cropperInstance = null;
 
-/* ─── Upload area interactions ────────────────────── */
-uploadArea.addEventListener('click', () => fileInput.click());
-
-uploadArea.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') fileInput.click();
+/* ─── Ankieta modal ───────────────────────────────── */
+document.querySelector('.nav-ankieta').addEventListener('click', (e) => {
+  e.preventDefault();
+  ankietaModal.hidden = false;
+  document.body.style.overflow = 'hidden';
 });
+
+btnAnkietaClose.addEventListener('click', () => {
+  ankietaModal.hidden = true;
+  document.body.style.overflow = '';
+});
+
+ankietaModal.addEventListener('click', (e) => {
+  if (e.target === ankietaModal) {
+    ankietaModal.hidden = true;
+    document.body.style.overflow = '';
+  }
+});
+
+/* ─── Scroll to top after form submit ─────────────── */
+const ankietaIframe = ankietaModal.querySelector('iframe');
+const ankietaInner  = ankietaModal.querySelector('.ankieta-modal-inner');
+let iframeLoaded = false;
+ankietaIframe.addEventListener('load', () => {
+  if (!iframeLoaded) { iframeLoaded = true; return; } // skip initial load
+  ankietaInner.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ─── Logo → reset to start ───────────────────────── */
+document.querySelector('.nav-logo').addEventListener('click', (e) => {
+  e.preventDefault();
+  croppedImages = [];
+  cropQueue = [];
+  renderGrid();
+  hideError();
+  hideResult();
+  fileInput.value = '';
+});
+
+/* ─── Upload area interactions ────────────────────── */
+chooseBtn.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', (e) => {
-  if (e.target.files.length) handleFile(e.target.files[0]);
+  if (e.target.files.length) handleFiles(Array.from(e.target.files));
+  fileInput.value = '';
 });
+
+/* Prevent browser from opening dropped/pasted files as a new page */
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop',     (e) => e.preventDefault());
 
 /* Drag & drop */
-uploadArea.addEventListener('dragover', (e) => {
+let dragCounter = 0;
+
+dropZone.addEventListener('dragenter', (e) => {
   e.preventDefault();
-  uploadArea.classList.add('drag-over');
+  dragCounter++;
+  dropZone.classList.add('drag-over');
 });
 
+dropZone.addEventListener('dragover', (e) => e.preventDefault());
+
 ['dragleave', 'dragend'].forEach(evt =>
-  uploadArea.addEventListener(evt, () => uploadArea.classList.remove('drag-over'))
+  dropZone.addEventListener(evt, () => {
+    dragCounter--;
+    if (dragCounter <= 0) { dragCounter = 0; dropZone.classList.remove('drag-over'); }
+  })
 );
 
-uploadArea.addEventListener('drop', (e) => {
+dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
-  uploadArea.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) handleFile(file);
+  dragCounter = 0;
+  dropZone.classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if (files.length) handleFiles(files);
+});
+
+/* Paste from clipboard */
+document.addEventListener('paste', (e) => {
+  e.preventDefault();
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  const files = [];
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) files.push(file);
+    }
+  }
+  if (files.length) handleFiles(files);
 });
 
 /* ─── File handler ────────────────────────────────── */
-function handleFile(file) {
+function handleFiles(files) {
   hideError();
-  hideResult();
+  files.forEach(f => cropQueue.push(f));
+  processNextCrop();
+}
 
+function processNextCrop() {
+  if (!cropQueue.length) return;
+  const file = cropQueue.shift();
   const reader = new FileReader();
-  reader.onload = (ev) => {
-    // Destroy any previous Cropper instance
-    if (cropperInstance) {
-      cropperInstance.destroy();
-      cropperInstance = null;
-    }
-
-    cropImage.src = ev.target.result;
-    cropModal.hidden = false;
-
-    // Init Cropper after the image is laid out
-    cropImage.onload = () => {
-      cropperInstance = new Cropper(cropImage, {
-        viewMode: 1,
-        autoCropArea: 1,
-        movable: true,
-        zoomable: true,
-        rotatable: false,
-        scalable: false,
-        responsive: true,
-      });
-    };
-  };
+  reader.onload = (ev) => openCropper(ev.target.result);
   reader.readAsDataURL(file);
 }
 
-/* ─── Crop confirm ─────────────────────────────────── */
-btnCropConfirm.addEventListener('click', () => {
-  if (!cropperInstance) return;
+/* ─── Cropper ─────────────────────────────────────── */
+function openCropper(src) {
+  cropperImg.src = src;
+  cropperModal.hidden = false;
 
-  const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 1024, maxHeight: 1024 });
-  canvas.toBlob((blob) => {
-    selectedFile = blob;
+  // Small delay so the image renders before Cropper initialises
+  setTimeout(() => {
+    if (cropperInstance) cropperInstance.destroy();
+    cropperInstance = new Cropper(cropperImg, {
+      viewMode:     1,
+      autoCropArea: 0.9,
+      movable:      true,
+      zoomable:     true,
+      scalable:     false,
+      rotatable:    false,
+    });
+  }, 50);
+}
 
-    previewImg.src = canvas.toDataURL('image/jpeg');
-    previewImg.hidden = false;
-    plusIcon.style.display = 'none';
-    uploadLabel.textContent = 'Zdjęcie przycięte';
-    btnAnalyze.disabled = false;
-
-    cropperInstance.destroy();
-    cropperInstance = null;
-    cropModal.hidden = true;
-  }, 'image/jpeg', 0.92);
-});
-
-/* ─── Crop cancel ──────────────────────────────────── */
-btnCropCancel.addEventListener('click', () => {
+function closeCropper() {
+  cropperModal.hidden = true;
   if (cropperInstance) {
     cropperInstance.destroy();
     cropperInstance = null;
   }
-  cropModal.hidden = true;
+  cropperImg.src = '';
+  // Reset file input so the same file can be re-selected
   fileInput.value = '';
+}
+
+btnCropConfirm.addEventListener('click', () => {
+  if (!cropperInstance) return;
+
+  const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 640, maxHeight: 640 });
+  canvas.toBlob((blob) => {
+    croppedImages.push({ blob, dataUrl: canvas.toDataURL('image/jpeg', 0.88) });
+    closeCropper();
+    renderGrid();
+    processNextCrop();
+  }, 'image/jpeg', 0.88);
 });
+
+btnCropCancel.addEventListener('click', () => {
+  cropQueue = [];
+  closeCropper();
+});
+
+/* ─── Preview grid ───────────────────────────────── */
+function renderGrid() {
+  if (croppedImages.length === 0) {
+    previewGrid.hidden = true;
+    previewGrid.innerHTML = '';
+    chooseBtn.hidden = false;
+    dropText.hidden = false;
+    btnAnalyze.hidden = true;
+    return;
+  }
+
+  previewGrid.hidden = false;
+  chooseBtn.hidden = true;
+  dropText.hidden = true;
+  btnAnalyze.hidden = false;
+  const n = croppedImages.length;
+  btnAnalyze.querySelector('span').textContent = n === 1 ? 'Sprawdź metkę' : `Sprawdź metki (${n})`;
+
+  previewGrid.innerHTML = croppedImages.map((img, i) => `
+    <div class="preview-card" data-card-index="${i}">
+      <div class="preview-thumb">
+        <img src="${img.dataUrl}" alt="Zdjęcie ${i + 1}" />
+        <button class="preview-thumb-remove" data-index="${i}" aria-label="Usuń">&#x2715;</button>
+      </div>
+      ${img.chip ? img.chip : ''}
+    </div>
+  `).join('') + `<button class="preview-thumb preview-thumb-add" id="addMoreBtn">+</button>`;
+
+  previewGrid.querySelectorAll('.preview-thumb-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index, 10);
+      croppedImages.splice(idx, 1);
+      renderGrid();
+    });
+  });
+
+  document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
+}
 
 /* ─── Analyze button ──────────────────────────────── */
 btnAnalyze.addEventListener('click', async () => {
-  if (!selectedFile) return;
+  if (!croppedImages.length) return;
   hideError();
   hideResult();
 
   btnAnalyze.classList.add('loading');
-  btnAnalyze.textContent = 'Analizowanie';
+  btnAnalyze.querySelector('span').textContent = 'Analizowanie…';
   btnAnalyze.disabled = true;
 
   try {
-    const base64 = await toResizedBase64(selectedFile);
-    const result = await classifyImage(base64);
-    displayResult(result);
+    const results = await Promise.all(
+      croppedImages.map(({ blob }) => toResizedBase64(blob).then(classifyImage))
+    );
+    displayResults(results);
   } catch (err) {
     showError(err.message || 'Błąd podczas analizy. Spróbuj ponownie.');
   } finally {
     btnAnalyze.classList.remove('loading');
-    btnAnalyze.textContent = 'Sprawdź metkę';
+    const n = croppedImages.length;
+    btnAnalyze.querySelector('span').textContent = n === 1 ? 'Sprawdź metkę' : `Sprawdź metki (${n})`;
     btnAnalyze.disabled = false;
   }
 });
@@ -198,73 +305,32 @@ async function classifyImage(base64) {
 }
 
 /* ─── Display results ─────────────────────────────── */
-function displayResult(data) {
-  /*
-    Actual Roboflow classification response:
-    {
-      "top": "fake",
-      "confidence": 1.0,
-      "predictions": [
-        { "class": "fake", "class_id": 1, "confidence": 1.0 }
-      ]
+function displayResults(dataArr) {
+  dataArr.forEach((data, i) => {
+    if (croppedImages[i]) {
+      croppedImages[i].chip = buildResultChip(data);
     }
-  */
-  const predictedClass = data.top || 'unknown';
-  const topConf = data.confidence ?? 0;
-  const pct = Math.round(topConf * 100);
+  });
+  resultRow.hidden = true;
+  renderGrid();
+}
 
-  // predictions is an array — sort by confidence descending
-  const sorted = (Array.isArray(data.predictions) ? data.predictions : [])
-    .map(p => ({ name: p.class, confidence: p.confidence }))
-    .sort((a, b) => b.confidence - a.confidence);
+function buildResultChip(data) {
+  const predictedClass = (data.top || 'unknown').toLowerCase();
+  const pct = Math.round((data.confidence ?? 0) * 100);
 
-  /* Badge type */
-  const lcClass = predictedClass.toLowerCase();
-  let badgeClass = 'unknown';
-  let badgeText  = 'Nieznany';
+  let chipClass  = 'result-chip--unknown';
+  let labelText  = 'Nieznany';
 
-  if (lcClass.includes('authentic') || lcClass.includes('oryginal') || lcClass.includes('original') || lcClass.includes('prawdziwy')) {
-    badgeClass = 'authentic';
-    badgeText  = 'Oryginał';
-  } else if (lcClass.includes('fake') || lcClass.includes('podróbka') || lcClass.includes('replica') || lcClass.includes('fals')) {
-    badgeClass = 'fake';
-    badgeText  = 'Podróbka';
+  if (predictedClass.includes('authentic') || predictedClass.includes('original') || predictedClass.includes('oryginal') || predictedClass.includes('prawdziwy') || predictedClass === 'real') {
+    chipClass = 'result-chip--authentic';
+    labelText = 'Oryginał';
+  } else if (predictedClass.includes('fake') || predictedClass.includes('podróbka') || predictedClass.includes('replica') || predictedClass.includes('fals')) {
+    chipClass = 'result-chip--fake';
+    labelText = 'Fake';
   }
 
-  /* Build HTML */
-  let html = `
-    <div class="result-top">
-      <span class="badge ${badgeClass}">${badgeText}</span>
-      <span class="result-class">${escHtml(predictedClass)}</span>
-    </div>
-    <div class="confidence-row">
-      <span class="confidence-label">Pewność</span>
-      <div class="confidence-bar-wrap">
-        <div class="confidence-bar" style="width:${pct}%"></div>
-      </div>
-      <span class="confidence-pct">${pct}%</span>
-    </div>
-  `;
-
-  if (sorted.length > 1) {
-    html += `<div class="top-predictions">`;
-    sorted.slice(0, 5).forEach(({ name, confidence }) => {
-      const p = Math.round(confidence * 100);
-      html += `
-        <div class="pred-row">
-          <span class="pred-name">${escHtml(name)}</span>
-          <div class="pred-bar-wrap">
-            <div class="pred-bar" style="width:${p}%"></div>
-          </div>
-          <span class="pred-pct">${p}%</span>
-        </div>
-      `;
-    });
-    html += `</div>`;
-  }
-
-  resultBody.innerHTML = html;
-  resultCard.hidden = false;
+  return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span><span class="result-chip-pct">pewność: ${pct}%</span></div>`;
 }
 
 /* ─── Helpers ─────────────────────────────────────── */
@@ -279,8 +345,8 @@ function hideError() {
 }
 
 function hideResult() {
-  resultCard.hidden = true;
-  resultBody.innerHTML = '';
+  resultRow.hidden = true;
+  resultRow.innerHTML = '';
 }
 
 function escHtml(str) {
