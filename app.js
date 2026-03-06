@@ -177,6 +177,7 @@ btnCropConfirm.addEventListener('click', () => {
   if (!cropperInstance) return;
 
   const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 640, maxHeight: 640 });
+  if (!canvas) return;
   canvas.toBlob((blob) => {
     croppedImages.push({ blob, dataUrl: canvas.toDataURL('image/jpeg', 0.88) });
     closeCropper();
