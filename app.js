@@ -19,6 +19,8 @@ const btnCropConfirm = document.getElementById('btnCropConfirm');
 const btnCropCancel  = document.getElementById('btnCropCancel');
 const ankietaModal   = document.getElementById('ankietaModal');
 const btnAnkietaClose = document.getElementById('btnAnkietaClose');
+const previewClearAll = document.getElementById('previewClearAll');
+const previewClearAllContainer = document.getElementById('previewClearAllContainer');
 
 /* ─── State ───────────────────────────────────────── */
 let croppedImages   = [];
@@ -188,6 +190,16 @@ btnCropCancel.addEventListener('click', () => {
   closeCropper();
 });
 
+/* ─── Clear all button ────────────────────────────── */
+previewClearAll.addEventListener('click', () => {
+  croppedImages = [];
+  cropQueue = [];
+  fileInput.value = '';
+  hideError();
+  hideResult();
+  renderGrid();
+});
+
 /* ─── Preview grid ───────────────────────────────── */
 function renderGrid() {
   if (croppedImages.length === 0) {
@@ -196,6 +208,7 @@ function renderGrid() {
     chooseBtn.hidden = false;
     dropText.hidden = false;
     btnAnalyze.hidden = true;
+    previewClearAllContainer.hidden = true;
     return;
   }
 
@@ -203,6 +216,7 @@ function renderGrid() {
   chooseBtn.hidden = true;
   dropText.hidden = true;
   btnAnalyze.hidden = false;
+  previewClearAllContainer.hidden = false;
   const n = croppedImages.length;
   btnAnalyze.querySelector('span').textContent = n === 1 ? 'Sprawdź metkę' : `Sprawdź metki (${n})`;
 

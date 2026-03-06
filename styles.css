@@ -220,7 +220,23 @@ html, body {
   width: clamp(200px, 80vw, 920px);
   max-width: 100%;
 }
-
+.preview-clearAll {
+  background: #f44336;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.preview-clearAll-container {
+  padding: 5px 0 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  width: clamp(200px, 80vw, 920px);
+  max-width: 100%;
+}
 .preview-card {
   display: flex;
   flex-direction: column;
@@ -229,8 +245,8 @@ html, body {
 
 .preview-thumb {
   position: relative;
-  width: 200px;
-  height: 100px;
+  width: 220px;
+  height: 110px;
   border-radius: 10px 10px 0 0;
   overflow: hidden;
   flex-shrink: 0;
@@ -266,8 +282,8 @@ html, body {
 }
 
 .preview-thumb-add {
-  width: 200px;
-  height: 100px;
+  width: 220px;
+  height: 110px;
   border-radius: 10px;
   border: 2px dashed #ccc;
   background: #fafafa;
@@ -719,6 +735,13 @@ html, body {
     padding: 0;
     align-items: stretch;
   }
+  .preview-thumb {
+  width: 180px;
+  height: 90px;
+}
+.result-chip {
+  width: 180px;
+}
 
   .ankieta-modal-inner {
     border-radius: 0;
