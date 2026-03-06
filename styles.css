@@ -775,6 +775,17 @@ html, body {
   .cropper-img-wrap {
     height: 280px;
   }
+
+  /* Wider buttons on tablets */
+  .choose-btn,
+  .btn-analyze {
+    width: min(85%, 440px);
+  }
+
+  /* Ctrl+V paste is not standard on touch devices */
+  .drop-line-2 {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -783,8 +794,69 @@ html, body {
     padding: 0 12px;
   }
 
+  .nav-logo {
+    font-size: 22px;
+  }
+
   .nav-links {
     gap: 12px;
+  }
+
+  .nav-ankieta,
+  .nav-kontakt {
+    font-size: 13px;
+  }
+
+  .main-content {
+    padding: 20px 16px;
+    gap: 36px;
+  }
+
+  .note {
+    font-size: 12px;
+  }
+
+  /* Full-width buttons on phones */
+  .choose-btn,
+  .btn-analyze {
+    width: 92%;
+    height: 52px;
+  }
+
+  .choose-btn span {
+    font-size: 16px;
+  }
+
+  .btn-analyze {
+    margin-top: 16px;
+    font-size: 16px;
+  }
+
+  /* Responsive 2-column preview cards */
+  .preview-thumb,
+  .preview-thumb-add {
+    width: calc(40vw - 8px);
+    height: calc((40vw - 8px) * 0.75);
+  }
+
+  .result-chip {
+    width: calc(40vw - 8px);
+  }
+
+  /* Stack footer vertically */
+  .site-footer {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .footer-author,
+  .footer-email,
+  .footer-github {
+    flex: none;
   }
 
   .cropper-img-wrap {
@@ -795,5 +867,25 @@ html, body {
   .btn-crop-confirm {
     padding: 8px 16px;
     font-size: 13px;
+  }
+}
+
+/* Extra-small phones (≤360px) */
+@media (max-width: 360px) {
+  .nav-logo {
+    font-size: 18px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+  }
+
+  .choose-btn,
+  .btn-analyze {
+    width: 95%;
   }
 }

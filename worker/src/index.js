@@ -9,7 +9,7 @@
  * ─────────────────────────────────────────────────────────────────────────── */
 
 const MODEL_ID = 'ralphai-5ryt3';
-const VERSION  = '1';
+const VERSION  = '2';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin':  '*',
