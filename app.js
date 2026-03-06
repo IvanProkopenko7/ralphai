@@ -25,6 +25,15 @@ let croppedImages   = [];
 let cropQueue       = [];
 let cropperInstance = null;
 
+/* ─── Warmup ping ─────────────────────────────────── */
+// Fires an empty POST on page load to wake Roboflow's inference server,
+// so the model is warm by the time the user submits a photo.
+fetch(API_URL, { method: 'POST', body: '' }).catch(() => {});
+// Keep the model warm every 4 minutes while the page stays open.
+setInterval(() => {
+  fetch(API_URL, { method: 'POST', body: '' }).catch(() => {});
+}, 4 * 60 * 1000);
+
 /* ─── Ankieta modal ───────────────────────────────── */
 document.querySelector('.nav-ankieta').addEventListener('click', (e) => {
   e.preventDefault();

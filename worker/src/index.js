@@ -29,6 +29,18 @@ export default {
       return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
     }
 
+    /* ── Warmup ping — empty body, just return 200 without hitting Roboflow ── */
+    const contentLength = request.headers.get('Content-Length');
+    if (contentLength === '0' || contentLength === null) {
+      const body = await request.text();
+      if (!body) {
+        return new Response(JSON.stringify({ warmup: true }), {
+          status: 200,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     /* ── Forward to Roboflow with secret key ── */
     const apiKey = env.ROBOFLOW_API_KEY;
     if (!apiKey) {
