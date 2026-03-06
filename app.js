@@ -55,6 +55,8 @@ const i18n = {
   errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
 };
 
+const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
+
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
@@ -63,6 +65,10 @@ function applyTranslations() {
   if (!isPolish) document.documentElement.lang = 'en';
   const langBtn = document.getElementById('langToggle');
   if (langBtn) langBtn.textContent = isPolish ? 'EN' : 'PL';
+  const navContact = document.getElementById('navContactLink');
+  if (navContact) navContact.href = `mailto:${EMAIL}`;
+  const footerEmail = document.getElementById('footerEmailLink');
+  if (footerEmail) { footerEmail.href = `mailto:${EMAIL}`; footerEmail.textContent = EMAIL; }
 }
 applyTranslations();
 
