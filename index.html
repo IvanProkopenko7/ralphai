@@ -16,8 +16,8 @@
   <header class="navbar">
     <a href="javascript:void(0)" class="nav-logo" onclick="location.reload()">RALPHAI</a>
     <nav class="nav-links">
-      <a href="#" class="nav-ankieta">ANKIETA</a>
-      <a href="mailto:kontakt@ralphai.tech" class="nav-kontakt">KONTAKT</a>
+      <a href="#" class="nav-ankieta" data-i18n="navSurvey">ANKIETA</a>
+      <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact">KONTAKT</a>
     </nav>
   </header>
 
@@ -26,27 +26,27 @@
     <!-- Upload section -->
     <section class="upload-section">
       <p class="title">Legit check RALPH LAUREN</p>
-      <p class="subtitle">Dodaj zdjęcie górnej metki</p>
+      <p class="subtitle" data-i18n="subtitle">Dodaj zdjęcie górnej metki</p>
       <p class="note">
-        <span>*Na razie obsługiwane są tylko metki</span><span class="note-bold"> „Polo by Ralph Lauren"</span>
+        <span data-i18n="notePrefix">*Na razie obsługiwane są tylko metki</span><span class="note-bold" data-i18n="noteBold"> „Polo by Ralph Lauren"</span>
       </p>
 
       <input type="file" id="fileInput" accept="image/*" multiple hidden />
 
       <div class="preview-clearAll-container" id="previewClearAllContainer" hidden>
-        <button id="previewClearAll" class="preview-clearAll">Wyczyść wszystko</button>
+        <button id="previewClearAll" class="preview-clearAll" data-i18n="clearAll">Wyczyść wszystko</button>
       </div>
       <div id="previewGrid" class="preview-grid" hidden></div>
 
       <div id="resultRow" class="result-row" hidden></div>
 
       <button id="chooseBtn" class="choose-btn">
-        <span>Wybierz zdjęcie</span>
+        <span data-i18n="chooseBtn">Wybierz zdjęcie</span>
       </button>
 
       <div class="drop-text" id="dropTextGroup">
-        <p class="drop-line-1">lub upuść zdjęcia tutaj</p>
-        <p class="drop-line-2">albo wklej z Ctrl+V</p>
+        <p class="drop-line-1" data-i18n="dropLine1">lub upuść zdjęcia tutaj</p>
+        <p class="drop-line-2" data-i18n="dropLine2">albo wklej z Ctrl+V</p>
       </div>
 
       <button id="btnAnalyze" class="btn-analyze" hidden><span>Sprawdź metkę</span></button>
@@ -55,7 +55,7 @@
 
     <!-- How-to section -->
     <section class="how-to-section">
-      <p class="section-heading">Jak kadrować zdjęcia?</p>
+      <p class="section-heading" data-i18n="howTo">Jak kadrować zdjęcia?</p>
       <video class="cropping-video" autoplay loop muted playsinline>
         <source src="polo_by_cropping.mp4" type="video/mp4" />
       </video>
@@ -67,7 +67,10 @@
   <div class="ankieta-overlay" id="ankietaModal" hidden>
     <div class="ankieta-modal-inner">
       <button class="ankieta-close" id="btnAnkietaClose">&#x2715;</button>
-      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScLEdyzmpLAqRDd0vL2WiuSM8GGE1uLsfMoMIa9NQ_cxvBEew/viewform?embedded=true" frameborder="0" scrolling="yes">Loading…</iframe>
+      <iframe
+        src="https://docs.google.com/forms/d/e/1FAIpQLScLEdyzmpLAqRDd0vL2WiuSM8GGE1uLsfMoMIa9NQ_cxvBEew/viewform?embedded=true"
+        data-src-en="https://docs.google.com/forms/d/e/1FAIpQLSekwho11Sn0HfgCnvqzYGK_4JIGGqRmLeunpvy6pGK0v0FiTw/viewform?embedded=true"
+        frameborder="0" scrolling="yes">Loading…</iframe>
     </div>
   </div>
 
@@ -78,19 +81,19 @@
         <img id="cropperImg" src="" alt="Kadruj zdjęcie" />
       </div>
       <div class="cropper-actions">
-        <button class="btn-crop-cancel" id="btnCropCancel">Anuluj</button>
-        <button class="btn-crop-confirm" id="btnCropConfirm">Przytnij i użyj</button>
+        <button class="btn-crop-cancel" id="btnCropCancel" data-i18n="cropCancel">Anuluj</button>
+        <button class="btn-crop-confirm" id="btnCropConfirm" data-i18n="cropConfirm">Przytnij i użyj</button>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script src="app.js"></script>
-
   <footer class="site-footer">
-    <p class="footer-author">Stworzone przez <strong>Ivana Prokopenko</strong></p>
-    <p class="footer-email">email: <a href="mailto:kontakt@ralphai.tech">kontakt@ralphai.tech</a></p>
+    <p class="footer-author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong></p>
+    <p class="footer-email">email: <a href="mailto:contact@ralphai.tech">contact@ralphai.tech</a></p>
     <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
   </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -22,19 +22,74 @@ const btnAnkietaClose = document.getElementById('btnAnkietaClose');
 const previewClearAll = document.getElementById('previewClearAll');
 const previewClearAllContainer = document.getElementById('previewClearAllContainer');
 
+/* ─── i18n ────────────────────────────────────────── */
+const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
+
+const i18n = {
+  navSurvey:       isPolish ? 'ANKIETA'                              : 'SURVEY',
+  navContact:      isPolish ? 'KONTAKT'                              : 'CONTACT',
+  subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the label',
+  notePrefix:      isPolish ? '*Na razie obsługiwane są tylko metki' : "*Currently, only",
+  noteBold:        isPolish ? ' \u201ePolo by Ralph Lauren\u201d'    : " 'Polo by Ralph Lauren' labels are supported",
+  clearAll:        isPolish ? 'Wyczyść wszystko'                     : 'Clear all',
+  chooseBtn:       isPolish ? 'Wybierz zdjęcie'                      : 'Choose photo',
+  dropLine1:       isPolish ? 'lub upuść zdjęcia tutaj'              : 'or drop photos here',
+  dropLine2:       isPolish ? 'albo wklej z Ctrl+V'                  : 'or paste with Ctrl+V',
+  checkTag:        isPolish ? 'Sprawdź metkę'                        : 'Check label',
+  checkTags:       (n) => isPolish ? `Sprawdź metki (${n})`          : `Check labels (${n})`,
+  analyzing:       isPolish ? 'Analizowanie\u2026'                   : 'Analyzing\u2026',
+  howTo:           isPolish ? 'Jak kadrować zdjęcia?'                : 'How to crop photos?',
+  cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
+  cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
+  footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
+  photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
+  chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
+  chipAuthentic:   isPolish ? 'Oryginał'                             : 'Authentic',
+  chipFake:        'Fake',
+  confidence:      (pct) => isPolish ? `pewność: ${pct}%`            : `confidence: ${pct}%`,
+  errorCannotRead: isPolish ? 'Nie można odczytać pliku.'            : 'Cannot read file.',
+  errorApi:        (st, d) => isPolish
+    ? `Błąd API ${st}: ${d || 'nieznany błąd serwera.'}`
+    : `API error ${st}: ${d || 'unknown server error.'}`,
+  errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
+};
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (typeof i18n[key] === 'string') el.textContent = i18n[key];
+  });
+  if (!isPolish) document.documentElement.lang = 'en';
+}
+applyTranslations();
+if (!isPolish) {
+  const frame = document.querySelector('#ankietaModal iframe[data-src-en]');
+  if (frame) frame.src = frame.dataset.srcEn;
+}
+
 /* ─── State ───────────────────────────────────────── */
 let croppedImages   = [];
 let cropQueue       = [];
 let cropperInstance = null;
 
 /* ─── Warmup ping ─────────────────────────────────── */
-// Fires an empty POST on page load to wake Roboflow's inference server,
-// so the model is warm by the time the user submits a photo.
-fetch(API_URL, { method: 'POST', body: '' }).catch(() => {});
-// Keep the model warm every 4 minutes while the page stays open.
-setInterval(() => {
-  fetch(API_URL, { method: 'POST', body: '' }).catch(() => {});
-}, 4 * 60 * 1000);
+// Sends a real 1×1 JPEG so the Worker forwards it to Roboflow,
+// forcing the model to load before the user submits a photo.
+(function scheduleWarmup() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 1;
+  c.getContext('2d').fillRect(0, 0, 1, 1);
+  const base64 = c.toDataURL('image/jpeg', 0.5).split(',')[1];
+  function ping() {
+    fetch(API_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    base64,
+    }).catch(() => {});
+  }
+  ping();
+  setInterval(ping, 4 * 60 * 1000);
+})();
 
 /* ─── Ankieta modal ───────────────────────────────── */
 document.querySelector('.nav-ankieta').addEventListener('click', (e) => {
@@ -219,12 +274,12 @@ function renderGrid() {
   btnAnalyze.hidden = false;
   previewClearAllContainer.hidden = false;
   const n = croppedImages.length;
-  btnAnalyze.querySelector('span').textContent = n === 1 ? 'Sprawdź metkę' : `Sprawdź metki (${n})`;
+  btnAnalyze.querySelector('span').textContent = n === 1 ? i18n.checkTag : i18n.checkTags(n);
 
   previewGrid.innerHTML = croppedImages.map((img, i) => `
     <div class="preview-card" data-card-index="${i}">
       <div class="preview-thumb">
-        <img src="${img.dataUrl}" alt="Zdjęcie ${i + 1}" />
+        <img src="${img.dataUrl}" alt="${i18n.photo(i + 1)}" />
         <button class="preview-thumb-remove" data-index="${i}" aria-label="Usuń">&#x2715;</button>
       </div>
       ${img.chip ? img.chip : ''}
@@ -249,7 +304,7 @@ btnAnalyze.addEventListener('click', async () => {
   hideResult();
 
   btnAnalyze.classList.add('loading');
-  btnAnalyze.querySelector('span').textContent = 'Analizowanie…';
+  btnAnalyze.querySelector('span').textContent = i18n.analyzing;
   btnAnalyze.disabled = true;
 
   try {
@@ -258,11 +313,11 @@ btnAnalyze.addEventListener('click', async () => {
     );
     displayResults(results);
   } catch (err) {
-    showError(err.message || 'Błąd podczas analizy. Spróbuj ponownie.');
+    showError(err.message || i18n.errorAnalysis);
   } finally {
     btnAnalyze.classList.remove('loading');
     const n = croppedImages.length;
-    btnAnalyze.querySelector('span').textContent = n === 1 ? 'Sprawdź metkę' : `Sprawdź metki (${n})`;
+    btnAnalyze.querySelector('span').textContent = n === 1 ? i18n.checkTag : i18n.checkTags(n);
     btnAnalyze.disabled = false;
   }
 });
@@ -302,7 +357,7 @@ function toResizedBase64(file, maxPx = 640, quality = 0.88) {
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Nie można odczytać pliku.'));
+      reject(new Error(i18n.errorCannotRead));
     };
 
     img.src = url;
@@ -320,9 +375,7 @@ async function classifyImage(base64) {
   if (!response.ok) {
     let detail = '';
     try { detail = await response.text(); } catch (_) {}
-    throw new Error(
-      `Błąd API ${response.status}: ${detail || 'nieznany błąd serwera.'}`
-    );
+    throw new Error(i18n.errorApi(response.status, detail));
   }
 
   return response.json();
@@ -344,17 +397,17 @@ function buildResultChip(data) {
   const pct = Math.round((data.confidence ?? 0) * 100);
 
   let chipClass  = 'result-chip--unknown';
-  let labelText  = 'Nieznany';
+  let labelText  = i18n.chipUnknown;
 
   if (predictedClass.includes('authentic') || predictedClass.includes('original') || predictedClass.includes('oryginal') || predictedClass.includes('prawdziwy') || predictedClass === 'real') {
     chipClass = 'result-chip--authentic';
-    labelText = 'Oryginał';
+    labelText = i18n.chipAuthentic;
   } else if (predictedClass.includes('fake') || predictedClass.includes('podróbka') || predictedClass.includes('replica') || predictedClass.includes('fals')) {
     chipClass = 'result-chip--fake';
-    labelText = 'Fake';
+    labelText = i18n.chipFake;
   }
 
-  return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span><span class="result-chip-pct">pewność: ${pct}%</span></div>`;
+  return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span><span class="result-chip-pct">${i18n.confidence(pct)}</span></div>`;
 }
 
 /* ─── Helpers ─────────────────────────────────────── */

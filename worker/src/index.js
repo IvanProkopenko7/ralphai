@@ -29,7 +29,7 @@ export default {
       return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
     }
 
-    /* ── Warmup ping — empty body, just return 200 without hitting Roboflow ── */
+    /* ── Empty body — return 200 without hitting Roboflow ── */
     const contentLength = request.headers.get('Content-Length');
     if (contentLength === '0' || contentLength === null) {
       const body = await request.text();
