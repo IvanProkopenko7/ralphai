@@ -23,7 +23,8 @@ const previewClearAll = document.getElementById('previewClearAll');
 const previewClearAllContainer = document.getElementById('previewClearAllContainer');
 
 /* ─── i18n ────────────────────────────────────────── */
-const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
+const storedLang = localStorage.getItem('lang');
+const isPolish = storedLang ? storedLang === 'pl' : (navigator.language || '').toLowerCase().startsWith('pl');
 
 const i18n = {
   navSurvey:       isPolish ? 'ANKIETA'                              : 'SURVEY',
@@ -60,8 +61,15 @@ function applyTranslations() {
     if (typeof i18n[key] === 'string') el.textContent = i18n[key];
   });
   if (!isPolish) document.documentElement.lang = 'en';
+  const langBtn = document.getElementById('langToggle');
+  if (langBtn) langBtn.textContent = isPolish ? 'EN' : 'PL';
 }
 applyTranslations();
+
+document.getElementById('langToggle').addEventListener('click', () => {
+  localStorage.setItem('lang', isPolish ? 'en' : 'pl');
+  location.reload();
+});
 if (!isPolish) {
   const frame = document.querySelector('#ankietaModal iframe[data-src-en]');
   if (frame) frame.src = frame.dataset.srcEn;

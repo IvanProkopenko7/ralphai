@@ -45,12 +45,21 @@ html, body {
 }
 
 .nav-ankieta,
-.nav-kontakt {
+.nav-kontakt,
+.nav-lang-toggle {
   font-weight: 400;
   font-size: clamp(14px, 1.67vw, 32px);
   color: #fff;
   white-space: nowrap;
   text-decoration: none;
+}
+
+.nav-lang-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: normal;
 }
 
 /* ===== MAIN CONTENT (drop zone) ===== */
