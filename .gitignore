@@ -1,6 +1,3 @@
-# Dependencies
-node_modules/
-
 # Wrangler
 .wrangler/
 worker/.wrangler/
@@ -19,8 +16,22 @@ worker/.dev.vars
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Editor
 .vscode/
 *.suo
 *.user
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# npm / yarn
+node_modules/
+package-lock.json
+yarn.lock
