@@ -20,6 +20,8 @@ const btnCropConfirm = document.getElementById('btnCropConfirm');
 const btnCropCancel  = document.getElementById('btnCropCancel');
 const previewClearAll = document.getElementById('previewClearAll');
 const previewClearAllContainer = document.getElementById('previewClearAllContainer');
+const updateModalOverlay = document.getElementById('updateModalOverlay');
+const updateModalClose = document.getElementById('updateModalClose');
 
 /* ─── i18n ────────────────────────────────────────── */
 const storedLang = localStorage.getItem('lang');
@@ -90,6 +92,40 @@ document.getElementById('langToggle').addEventListener('click', () => {
   localStorage.setItem('lang', isPolish ? 'en' : 'pl');
   location.reload();
 });
+
+/* ─── Update popup ───────────────────────────────── */
+let previousBodyOverflow = '';
+
+function openUpdateModal() {
+  if (!updateModalOverlay) return;
+  previousBodyOverflow = document.body.style.overflow;
+  updateModalOverlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeUpdateModal() {
+  if (!updateModalOverlay) return;
+  updateModalOverlay.hidden = true;
+  document.body.style.overflow = previousBodyOverflow || '';
+}
+
+if (updateModalOverlay && updateModalClose) {
+  // Only show the modal if not already shown in this browser
+  if (!localStorage.getItem('updateModalShown')) {
+    openUpdateModal();
+    localStorage.setItem('updateModalShown', '1');
+  }
+
+  updateModalClose.addEventListener('click', closeUpdateModal);
+
+  updateModalOverlay.addEventListener('click', (e) => {
+    if (e.target === updateModalOverlay) closeUpdateModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !updateModalOverlay.hidden) closeUpdateModal();
+  });
+}
 
 /* ─── State ───────────────────────────────────────── */
 let croppedImages   = [];
