@@ -44,7 +44,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=optional" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
 </head>
@@ -54,7 +54,7 @@
   <header class="navbar">
     <a href="/" class="nav-logo">RALPHAI</a>
     <nav class="nav-links">
-      <a href="#" class="nav-ankieta" data-i18n="navSurvey">ANKIETA</a>
+      <a href="labels.html" class="nav-labels" data-i18n="navLabels">LABELS</a>
       <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
       <button id="langToggle" class="nav-lang-toggle"></button>
     </nav>
@@ -67,8 +67,7 @@
       <h1 class="title">Legit check RALPH LAUREN</h1>
       <p class="subtitle" data-i18n="subtitle">Dodaj zdjęcie górnej metki</p>
       <p class="note">
-        <span data-i18n="notePrefix">*Na razie obsługiwane są tylko metki</span><span class="note-bold"
-          data-i18n="noteBold"> „Polo by Ralph Lauren"</span>
+        <span data-i18n-html="supportedLabelsNote">*Zobacz <a href="labels.html" class="note-link">listę wspieranych metek</a></span>
       </p>
 
       <input type="file" id="fileInput" accept="image/*" multiple hidden />
@@ -89,6 +88,10 @@
         <p class="drop-line-2" data-i18n="dropLine2">albo wklej z Ctrl+V</p>
       </div>
 
+      <div id="uncertaintyMsg" class="uncertainty-msg" hidden>
+        Some of the results are too uncertain. Please try re-taking the photos and cropping them more closely. If the result is still uncertain, then please send those photos to the <a href="mailto:contact@ralphai.tech">website's email</a> for a human legit check or post them on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>
+      </div>
+
       <button id="btnAnalyze" class="btn-analyze" hidden><span>Sprawdź metkę</span></button>
       <div id="errorMsg" class="error-msg" hidden></div>
     </section>
@@ -97,22 +100,11 @@
     <section class="how-to-section">
       <h2 class="section-heading" data-i18n="howTo">Jak kadrować zdjęcia?</h2>
       <video class="cropping-video" autoplay loop muted playsinline>
-        <source src="polo_by_cropping.mp4" type="video/mp4" />
+        <source src="polo_by_cropping (online-video-cutter.com).mp4" type="video/mp4" />
       </video>
     </section>
 
   </main>
-
-  <!-- Ankieta modal -->
-  <div class="ankieta-overlay" id="ankietaModal" hidden>
-    <div class="ankieta-modal-inner">
-      <button class="ankieta-close" id="btnAnkietaClose">&#x2715;</button>
-      <iframe
-        src="https://docs.google.com/forms/d/e/1FAIpQLScLEdyzmpLAqRDd0vL2WiuSM8GGE1uLsfMoMIa9NQ_cxvBEew/viewform?embedded=true"
-        data-src-en="https://docs.google.com/forms/d/e/1FAIpQLSekwho11Sn0HfgCnvqzYGK_4JIGGqRmLeunpvy6pGK0v0FiTw/viewform?embedded=true"
-        frameborder="0" scrolling="yes">Loading…</iframe>
-    </div>
-  </div>
 
   <!-- Cropper modal -->
   <div class="cropper-overlay" id="cropperModal" hidden>

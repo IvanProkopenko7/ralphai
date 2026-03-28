@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>RalphAI - Labels Library</title>
+	<meta name="description" content="Reference gallery of supported and upcoming Ralph Lauren labels." />
+	<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+	<link rel="manifest" href="/favicon/site.webmanifest" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=optional" rel="stylesheet" />
+	<link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+	<header class="navbar">
+		<a href="/" class="nav-logo">RALPHAI</a>
+		<nav class="nav-links">
+			<a href="labels.html" class="nav-labels nav-labels--active" data-i18n="navLabels">LABELS</a>
+			<a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
+			<button id="langToggle" class="nav-lang-toggle"></button>
+		</nav>
+	</header>
+
+	<main class="main-content main-content--labels">
+		<section class="labels-page-wrapper" aria-labelledby="supported-labels-heading">
+			<h2 id="supported-labels-heading" class="labels-section-title" data-i18n="supportedLabels">SUPPORTED LABELS</h2>
+			<div class="labels-subgroup">
+				<h3 class="labels-subgroup-title">polo by ralph lauren</h3>
+				<div id="grid-supported-polo-by" class="labels-grid" role="list"></div>
+			</div>
+			<div class="labels-subgroup">
+				<h3 class="labels-subgroup-title">polo ralph lauren</h3>
+				<div id="grid-supported-polo" class="labels-grid" role="list"></div>
+			</div>
+		</section>
+
+		<section class="labels-page-wrapper" aria-labelledby="upcoming-labels-heading">
+			<h2 id="upcoming-labels-heading" class="labels-section-title labels-section-title--upcoming" data-i18n="upcomingLabels">UPCOMING LABELS</h2>
+			<div class="labels-subgroup">
+				<h3 class="labels-subgroup-title">ralph lauren</h3>
+				<div id="grid-upcoming-ralph" class="labels-grid" role="list"></div>
+			</div>
+			<div class="labels-subgroup">
+				<h3 class="labels-subgroup-title">other</h3>
+				<div id="grid-upcoming-other" class="labels-grid" role="list"></div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">
+		<p class="footer-author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong></p>
+		<p class="footer-email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a></p>
+		<a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
+	</footer>
+
+	<script src="labels.js"></script>
+</body>
+
+</html>

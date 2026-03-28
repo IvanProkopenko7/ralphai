@@ -12,13 +12,12 @@ const dropText     = document.getElementById('dropTextGroup');
 const previewGrid  = document.getElementById('previewGrid');
 const resultRow    = document.getElementById('resultRow');
 const btnAnalyze   = document.getElementById('btnAnalyze');
+const uncertaintyMsg = document.getElementById('uncertaintyMsg');
 const errorMsg     = document.getElementById('errorMsg');
 const cropperModal  = document.getElementById('cropperModal');
 const cropperImg    = document.getElementById('cropperImg');
 const btnCropConfirm = document.getElementById('btnCropConfirm');
 const btnCropCancel  = document.getElementById('btnCropCancel');
-const ankietaModal   = document.getElementById('ankietaModal');
-const btnAnkietaClose = document.getElementById('btnAnkietaClose');
 const previewClearAll = document.getElementById('previewClearAll');
 const previewClearAllContainer = document.getElementById('previewClearAllContainer');
 
@@ -27,9 +26,12 @@ const storedLang = localStorage.getItem('lang');
 const isPolish = storedLang ? storedLang === 'pl' : (navigator.language || '').toLowerCase().startsWith('pl');
 
 const i18n = {
-  navSurvey:       isPolish ? 'ANKIETA'                              : 'SURVEY',
+  navLabels:       isPolish ? 'METKI'                                : 'LABELS',
   navContact:      isPolish ? 'KONTAKT'                              : 'CONTACT',
   subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the label',
+  supportedLabelsNote: isPolish
+    ? '*Zobacz <a href="labels.html">listę wspieranych metek</a>'
+    : '*See the <a href="labels.html">list of supported labels</a>',
   notePrefix:      isPolish ? '*Na razie obsługiwane są tylko metki' : "*Currently, only",
   noteBold:        isPolish ? ' \u201ePolo by Ralph Lauren\u201d'    : " 'Polo by Ralph Lauren' labels are supported",
   clearAll:        isPolish ? 'Wyczyść wszystko'                     : 'Clear all',
@@ -53,6 +55,9 @@ const i18n = {
     ? `Błąd API ${st}: ${d || 'nieznany błąd serwera.'}`
     : `API error ${st}: ${d || 'unknown server error.'}`,
   errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
+  uncertaintyHtml: isPolish 
+    ? 'Niektóre wyniki są zbyt niepewne. Spróbuj ponownie zrobić zdjęcia i przyciąć je dokładniej. Jeśli wynik nadal jest niepewny, prześlij te zdjęcia na <a href="mailto:kontakt@ralphai.tech">adres e-mail strony</a> w celu weryfikacji przez człowieka lub opublikuj je na grupach takich jak <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.'
+    : 'Some of the results are too uncertain. Please, try re-cropping yellow photos more closely and checking them again. If the result is still uncertain, then please send those photos to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
 };
 
 const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
@@ -62,6 +67,10 @@ function applyTranslations() {
     const key = el.dataset.i18n;
     if (typeof i18n[key] === 'string') el.textContent = i18n[key];
   });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.dataset.i18nHtml;
+    if (typeof i18n[key] === 'string') el.innerHTML = i18n[key];
+  });
   if (!isPolish) document.documentElement.lang = 'en';
   const langBtn = document.getElementById('langToggle');
   if (langBtn) langBtn.textContent = isPolish ? 'EN' : 'PL';
@@ -69,6 +78,11 @@ function applyTranslations() {
   if (navContact) navContact.href = `mailto:${EMAIL}`;
   const footerEmail = document.getElementById('footerEmailLink');
   if (footerEmail) { footerEmail.href = `mailto:${EMAIL}`; footerEmail.textContent = EMAIL; }
+
+  const uncertaintyMsgEl = document.getElementById('uncertaintyMsg');
+  if (uncertaintyMsgEl) {
+    uncertaintyMsgEl.innerHTML = i18n.uncertaintyHtml;
+  }
 }
 applyTranslations();
 
@@ -76,10 +90,6 @@ document.getElementById('langToggle').addEventListener('click', () => {
   localStorage.setItem('lang', isPolish ? 'en' : 'pl');
   location.reload();
 });
-if (!isPolish) {
-  const frame = document.querySelector('#ankietaModal iframe[data-src-en]');
-  if (frame) frame.src = frame.dataset.srcEn;
-}
 
 /* ─── State ───────────────────────────────────────── */
 let croppedImages   = [];
@@ -104,34 +114,6 @@ let cropperInstance = null;
   ping();
   setInterval(ping, 4 * 60 * 1000);
 })();
-
-/* ─── Ankieta modal ───────────────────────────────── */
-document.querySelector('.nav-ankieta').addEventListener('click', (e) => {
-  e.preventDefault();
-  ankietaModal.hidden = false;
-  document.body.style.overflow = 'hidden';
-});
-
-btnAnkietaClose.addEventListener('click', () => {
-  ankietaModal.hidden = true;
-  document.body.style.overflow = '';
-});
-
-ankietaModal.addEventListener('click', (e) => {
-  if (e.target === ankietaModal) {
-    ankietaModal.hidden = true;
-    document.body.style.overflow = '';
-  }
-});
-
-/* ─── Scroll to top after form submit ─────────────── */
-const ankietaIframe = ankietaModal.querySelector('iframe');
-const ankietaInner  = ankietaModal.querySelector('.ankieta-modal-inner');
-let iframeLoaded = false;
-ankietaIframe.addEventListener('load', () => {
-  if (!iframeLoaded) { iframeLoaded = true; return; } // skip initial load
-  ankietaInner.scrollTo({ top: 0, behavior: 'smooth' });
-});
 
 /* ─── Logo → reset to start ───────────────────────── */
 document.querySelector('.nav-logo').addEventListener('click', (e) => {
@@ -279,8 +261,17 @@ function renderGrid() {
     dropText.hidden = false;
     btnAnalyze.hidden = true;
     previewClearAllContainer.hidden = true;
+    if (uncertaintyMsg) uncertaintyMsg.hidden = true;
     return;
   }
+
+  let hasLowConfidence = false;
+  croppedImages.forEach(img => {
+    if (img.chip && img.chip.includes('result-chip--unknown')) {
+      hasLowConfidence = true;
+    }
+  });
+  if (uncertaintyMsg) uncertaintyMsg.hidden = !hasLowConfidence;
 
   previewGrid.hidden = false;
   chooseBtn.hidden = true;
@@ -322,8 +313,10 @@ btnAnalyze.addEventListener('click', async () => {
   btnAnalyze.disabled = true;
 
   try {
+    // We already have the max-640px JPEG dataUrl from the Cropper.
+    // Skip toResizedBase64 to prevent degrading the image with double-JPEG compression loss.
     const results = await Promise.all(
-      croppedImages.map(({ blob }) => toResizedBase64(blob).then(classifyImage))
+      croppedImages.map(({ dataUrl }) => classifyImage(dataUrl.split(',')[1]))
     );
     displayResults(results);
   } catch (err) {
@@ -335,48 +328,6 @@ btnAnalyze.addEventListener('click', async () => {
     btnAnalyze.disabled = false;
   }
 });
-
-/* ─── Image → resized JPEG base64 ────────────────── */
-/**
- * Roboflow inference works best with JPEG images ≤ 640 px.
- * Sending raw base64 as application/x-www-form-urlencoded
- * requires encodeURIComponent so that '+' chars are not
- * decoded as spaces on the server side.
- */
-function toResizedBase64(file, maxPx = 640, quality = 0.88) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width, height } = img;
-
-      // Downscale if either dimension exceeds maxPx
-      if (width > maxPx || height > maxPx) {
-        const ratio = Math.min(maxPx / width, maxPx / height);
-        width  = Math.round(width  * ratio);
-        height = Math.round(height * ratio);
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width  = width;
-      canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-
-      // Get raw base64 from data-URL (strip prefix)
-      const dataUrl = canvas.toDataURL('image/jpeg', quality);
-      resolve(dataUrl.split(',')[1]);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error(i18n.errorCannotRead));
-    };
-
-    img.src = url;
-  });
-}
 
 /* ─── Roboflow API call ───────────────────────────── */
 async function classifyImage(base64) {
@@ -402,6 +353,7 @@ function displayResults(dataArr) {
       croppedImages[i].chip = buildResultChip(data);
     }
   });
+
   resultRow.hidden = true;
   renderGrid();
 }
@@ -419,6 +371,10 @@ function buildResultChip(data) {
   } else if (predictedClass.includes('fake') || predictedClass.includes('podróbka') || predictedClass.includes('replica') || predictedClass.includes('fals')) {
     chipClass = 'result-chip--fake';
     labelText = i18n.chipFake;
+  }
+
+  if (pct <= 80) {
+    chipClass = 'result-chip--unknown';
   }
 
   return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span><span class="result-chip-pct">${i18n.confidence(pct)}</span></div>`;

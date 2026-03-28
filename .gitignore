@@ -35,3 +35,36 @@ yarn-error.log*
 node_modules/
 package-lock.json
 yarn.lock
+
+# Build / cache / test outputs
+dist/
+build/
+coverage/
+.cache/
+
+# Python / notebook artifacts
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Additional IDE / local workspace files
+.idea/
+*.code-workspace
+
+# Temporary / backup files
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Local databases and exports
+*.db
+*.sqlite
+*.sqlite3
+
+# Archives (often private dumps)
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
