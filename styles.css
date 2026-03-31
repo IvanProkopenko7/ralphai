@@ -1016,8 +1016,6 @@ body {
 .cropper-img-wrap {
   width: 100%;
   height: 85vh;
-  max-height: 800px;
-  min-height: 400px;
   background: #000;
   overflow: hidden;
 }
@@ -1090,10 +1088,6 @@ body {
     color: #555;
   }
 
-  .cropper-img-wrap {
-    height: 85vh;
-    min-height: 400px;
-  }
 
   /* Wider buttons on tablets */
   .choose-btn,
@@ -1118,6 +1112,10 @@ body {
 }
 
 @media (max-width: 480px) {
+  
+  .cropper-img-wrap {
+        height: 70vh;
+    }
   .navbar {
     height: 56px;
     padding: 0 12px;
@@ -1209,10 +1207,6 @@ body {
     flex: none;
   }
 
-  .cropper-img-wrap {
-    height: 85vh;
-    min-height: 400px;
-  }
 
   .btn-crop-cancel,
   .btn-crop-confirm {
