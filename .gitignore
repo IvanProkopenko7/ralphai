@@ -5,8 +5,16 @@ worker/.wrangler/
 # Environment & secrets
 .env
 .env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .dev.vars
 worker/.dev.vars
+worker/.dev.vars.*
+.envrc
+*.env
+secrets/
 *.secret
 *.key
 *.pem
@@ -50,6 +58,7 @@ __pycache__/
 # Additional IDE / local workspace files
 .idea/
 *.code-workspace
+.github/copilot-instructions.md
 
 # Temporary / backup files
 *.tmp

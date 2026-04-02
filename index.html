@@ -42,11 +42,11 @@
     }
   }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=optional" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+  </noscript>
 </head>
 
 <body>
@@ -99,8 +99,9 @@
     <!-- How-to section -->
     <section class="how-to-section">
       <h2 class="section-heading" data-i18n="howTo">Jak kadrować zdjęcia?</h2>
-      <video class="cropping-video" autoplay loop muted playsinline>
-        <source src="polo_by_cropping (online-video-cutter.com).mp4" type="video/mp4" />
+      <video class="cropping-video" loop muted playsinline preload="none" id="howToVideo">
+        <source data-src="polo_by_cropping (online-video-cutter.com).mp4" type="video/mp4" />
+        <track id="howToVideoCaptions" kind="captions" srclang="en" label="English" src="captions/cropping.en.vtt" />
       </video>
     </section>
 
@@ -125,52 +126,52 @@
       <button class="update-modal-close" id="updateModalClose" aria-label="Close update popup">&times;</button>
 
       <div class="update-modal-header">
-        <h2 class="update-modal-title" id="updateModalTitle">🎉 First 100 visitors!</h2>
-        <p class="update-modal-subtitle">What's new:</p>
+        <h2 class="update-modal-title" id="updateModalTitle" data-i18n="updateModalTitle">🎉 First 100 visitors!</h2>
+        <p class="update-modal-subtitle" data-i18n="updateModalSubtitle">What's new:</p>
       </div>
 
       <div class="update-modal-content">
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#9678;</div>
           <div class="update-feature-text">
-            <h3>AI accuracy has improved</h3>
-            <p>The AI model is now trained on <strong>4× more images</strong> than before.</p>
+            <h3 data-i18n="updateFeatureAccuracyTitle">AI accuracy has improved</h3>
+            <p data-i18n-html="updateFeatureAccuracyBody">The AI model is now trained on <strong>4× more images</strong> than before.</p>
           </div>
         </article>
 
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#9873;</div>
           <div class="update-feature-text">
-            <h3>Vintage "Polo By Ralph Lauren" tags have been added</h3>
+            <h3 data-i18n="updateFeatureVintageTitle">Vintage "Polo By Ralph Lauren" tags have been added</h3>
           </div>
         </article>
 
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#9873;</div>
           <div class="update-feature-text">
-            <h3>"Polo Ralph Lauren" tags have been added</h3>
+            <h3 data-i18n="updateFeaturePoloTitle">"Polo Ralph Lauren" tags have been added</h3>
           </div>
         </article>
 
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#10059;</div>
           <div class="update-feature-text">
-            <h3>Label diversity has been improved</h3>
-            <p>Labels of all kinds are now available: polos, shirts, jackets, shorts, trousers, caps, scarves, ties, and more.</p>
+            <h3 data-i18n="updateFeatureDiversityTitle">Label diversity has been improved</h3>
+            <p data-i18n="updateFeatureDiversityBody">Labels of all kinds are now available: polos, shirts, jackets, shorts, trousers, caps, scarves, ties, and more.</p>
           </div>
         </article>
 
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#9635;</div>
           <div class="update-feature-text">
-            <h3>The cropping area has been increased to improve the cropping precision</h3>
+            <h3 data-i18n="updateFeatureCropTitle">The cropping area has been increased to improve the cropping precision</h3>
           </div>
         </article>
       </div>
 
       <div class="update-modal-footer">
-        <p class="update-footer-title">Thank you for checking out this website!</p>
-        <p class="update-footer-subtitle">More improvements are coming soon.</p>
+        <p class="update-footer-title" data-i18n="updateFooterTitle">Thank you for checking out this website!</p>
+        <p class="update-footer-subtitle" data-i18n="updateFooterSubtitle">More improvements are coming soon.</p>
       </div>
     </div>
   </div>

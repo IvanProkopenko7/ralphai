@@ -46,6 +46,27 @@ const i18n = {
   howTo:           isPolish ? 'Jak kadrować zdjęcia?'                : 'How to crop photos?',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
+  updateModalTitle: isPolish ? '🎉 Mamy już 100 wizyt!'               : '🎉 First 100 visitors!',
+  updateModalSubtitle: isPolish ? 'Co nowego?'                        : "What's new:",
+  updateFeatureAccuracyTitle: isPolish ? 'Lepsza skuteczność AI'      : 'AI accuracy has improved',
+  updateFeatureAccuracyBody: isPolish
+    ? 'Model AI został wytrenowany na <strong>4× większym zbiorze zdjęć</strong>.'
+    : 'The AI model is now trained on <strong>4× more images</strong> than before.',
+  updateFeatureVintageTitle: isPolish
+    ? 'Dodaliśmy metki vintage „Polo By Ralph Lauren”'
+    : 'Vintage "Polo By Ralph Lauren" tags have been added',
+  updateFeaturePoloTitle: isPolish
+    ? 'Dodaliśmy metki „Polo Ralph Lauren”'
+    : '"Polo Ralph Lauren" tags have been added',
+  updateFeatureDiversityTitle: isPolish ? 'Większa różnorodność metek' : 'Label diversity has been improved',
+  updateFeatureDiversityBody: isPolish
+    ? 'Teraz model obsługuje metki najróżniejszych kategorii: polo, koszule, kurtki, szorty, spodnie, czapki, szaliki, krawaty i inne.'
+    : 'Labels of all kinds are now available: polos, shirts, jackets, shorts, trousers, caps, scarves, ties, and more.',
+  updateFeatureCropTitle: isPolish
+    ? 'Zwiększyliśmy obszar kadrowania, żeby łatwiej i precyzyjniej przycinać zdjęcia'
+    : 'The cropping area has been increased to improve the cropping precision',
+  updateFooterTitle: isPolish ? 'Dzięki, że korzystasz z RalphAI!'     : 'Thank you for checking out this website!',
+  updateFooterSubtitle: isPolish ? 'Kolejne usprawnienia już w drodze.' : 'More improvements are coming soon.',
   footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
@@ -87,6 +108,61 @@ function applyTranslations() {
   }
 }
 applyTranslations();
+
+/* ─── Defer how-to video source load ───────────────── */
+const howToVideo = document.getElementById('howToVideo');
+if (howToVideo) {
+  const sourceEl = howToVideo.querySelector('source[data-src]');
+  const captionsTrack = howToVideo.querySelector('#howToVideoCaptions');
+
+  if (captionsTrack) {
+    captionsTrack.srclang = isPolish ? 'pl' : 'en';
+    captionsTrack.label = isPolish ? 'Polski' : 'English';
+    captionsTrack.src = isPolish ? 'captions/cropping.pl.vtt' : 'captions/cropping.en.vtt';
+  }
+
+  if (sourceEl) {
+    const loadVideoSource = () => {
+      if (sourceEl.src) return;
+      sourceEl.src = sourceEl.dataset.src;
+      howToVideo.preload = 'metadata';
+      howToVideo.load();
+    };
+
+    const playVideo = () => {
+      const playPromise = howToVideo.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    };
+
+    const syncVideoPlayback = (isVisible) => {
+      if (isVisible) {
+        loadVideoSource();
+        playVideo();
+      } else if (!howToVideo.paused) {
+        howToVideo.pause();
+      }
+    };
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          syncVideoPlayback(entry.isIntersecting);
+        });
+      }, { rootMargin: '120px 0px', threshold: 0.15 });
+      observer.observe(howToVideo);
+    } else {
+      loadVideoSource();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && !howToVideo.paused) {
+        howToVideo.pause();
+      }
+    });
+  }
+}
 
 document.getElementById('langToggle').addEventListener('click', () => {
   localStorage.setItem('lang', isPolish ? 'en' : 'pl');
@@ -231,6 +307,17 @@ function processNextCrop() {
 }
 
 /* ─── Cropper ─────────────────────────────────────── */
+function getResponsiveAutoCropArea() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Make the default crop box smaller on compact screens for easier framing.
+  if (vw <= 480) return 0.77;
+  if (vw <= 768) return 0.79;
+  if (vw <= 1366 || vh <= 820) return 0.82;
+  return 0.9;
+}
+
 function openCropper(src) {
   cropperImg.src = src;
   cropperModal.hidden = false;
@@ -240,7 +327,7 @@ function openCropper(src) {
     if (cropperInstance) cropperInstance.destroy();
     cropperInstance = new Cropper(cropperImg, {
       viewMode:     1,
-      autoCropArea: 0.9,
+      autoCropArea: getResponsiveAutoCropArea(),
       movable:      true,
       zoomable:     true,
       scalable:     false,

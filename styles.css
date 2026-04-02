@@ -55,14 +55,23 @@ body {
   color: #fff;
   white-space: nowrap;
   text-decoration: none;
+  line-height: 1;
+  padding: 2px;
 }
 
 .nav-lang-toggle {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  line-height: normal;
+
+background-color: black;
+
+	border: none;
+	padding: 2px;
+  font: inherit;
+  font-size: clamp(14px, 1.67vw, 32px);
+  font-weight: 400;
+  line-height: 1;
+	cursor: pointer;
+	outline: inherit;
+
 }
 
 .nav-labels--active {
@@ -106,15 +115,15 @@ body {
 
 .subtitle {
   font-weight: 600;
-  font-size: clamp(14px, 2.2vw, 32px);
+  font-size: calc(clamp(14px, 2.2vw, 32px) + 2px);
   color: #000;
   text-align: center;
 }
 
 .note {
   font-weight: 400;
-  font-size: clamp(8px, 0.75vw, 16px);
-  color: #888;
+  font-size: calc(clamp(8px, 0.75vw, 16px) + 2px);
+  color: #5f5f5f;
   text-align: center;
   line-height: 1.5;
 }
@@ -131,7 +140,6 @@ body {
 .choose-btn {
   background: linear-gradient(135deg, #130023 0%, 20%, #6600aa 40%, #6600aa 60%, 80%, #130023 100%);
   background-size: 150% 150%;
-  animation: btnGradientFlow 12s ease infinite;
   position: relative;
   overflow: hidden;
   margin-top: clamp(10px, 1.2vw, 18px);
@@ -155,7 +163,6 @@ body {
   border-radius: inherit;
   background: linear-gradient(135deg, #130023 0%, 20%, #8800dd 40%, #8800dd 60%, 80%, #130023 100%);
   background-size: 150% 150%;
-  animation: btnGradientFlow 12s ease infinite;
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -185,7 +192,7 @@ body {
 .drop-line-2 {
   font-weight: 400;
   font-size: clamp(11px, 0.8vw, 14px);
-  color: #999;
+  color: #666;
   text-align: center;
 }
 
@@ -198,6 +205,7 @@ body {
   width: 100%;
   padding-bottom: clamp(24px, 4vw, 60px);
   padding-top: clamp(8px, 1.2vw, 20px);
+  content-visibility: auto;
 }
 
 .how-to-section::before {
@@ -425,7 +433,6 @@ body {
   margin-top: 28px;
   background: linear-gradient(135deg, #130023 0%, 20%, #6600aa 40%, #6600aa 60%, 80%, #130023 100%);
   background-size: 150% 150%;
-  animation: btnGradientFlow 12s ease infinite;
   position: relative;
   overflow: hidden;
   height: clamp(54px, 6vw, 100px);
@@ -453,7 +460,6 @@ body {
   border-radius: inherit;
   background: linear-gradient(135deg, #130023 0%, 20%, #8800dd 40%, #8800dd 60%, 80%, #130023 100%);
   background-size: 150% 150%;
-  animation: btnGradientFlow 12s ease infinite;
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -751,6 +757,7 @@ body {
   font-size: 16px;
   font-weight: 400;
   color: #fff;
+  content-visibility: auto;
 }
 
 .site-footer strong {
@@ -769,6 +776,7 @@ body {
 .footer-email a {
   color: #fff;
   text-decoration: none;
+  padding: 2px;
 }
 
 .footer-email a:hover {
@@ -779,6 +787,7 @@ body {
   flex: 0 0 auto;
   color: #fff;
   text-decoration: none;
+  padding: 2px;
 }
 
 .footer-github:hover {
@@ -812,8 +821,8 @@ body {
 
 .update-modal-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   width: 34px;
   height: 34px;
   border: none;
@@ -824,6 +833,7 @@ body {
   line-height: 1;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
+  z-index: 2;
 }
 
 .update-modal-close:hover {
@@ -834,14 +844,17 @@ body {
 .update-modal-header {
   background: #fad300;
   text-align: center;
-  padding: 48px 16px 30px;
+  padding: 24px 10px 14px 10px;
 }
 
 .update-modal-title {
-  font-size: clamp(34px, 7vw, 44px);
+  font-size: 40px;
   line-height: 1.05;
   font-weight: 800;
   color: #111;
+  max-width: calc(100% - 44px);
+  margin: 0 auto;
+  white-space: normal;
 }
 
 .update-modal-subtitle {
@@ -950,13 +963,13 @@ body {
   }
 
   .update-modal-title {
-    font-size: clamp(30px, 3.6vw, 44px);
+    font-size: clamp(30px, 3.5vw, 40px);
   }
 
   .update-modal-header {
     background: #fad300;
     text-align: center;
-    padding: clamp(30px, 4vw, 48px) 16px clamp(16px, 2vw, 30px);
+    padding: 24px 10px 14px 10px;
   }
 
   .update-footer-subtitle {
@@ -982,6 +995,37 @@ body {
   .update-feature-text p {
     margin-top: 6px;
     line-height: 1.25;
+  }
+}
+
+@media (max-width: 920px) and (min-width: 481px) {
+  .update-modal-overlay {
+    padding: 8px;
+  }
+
+  .update-modal {
+    width: 430px;
+    max-height: calc(100vh - 16px);
+  }
+
+  .update-modal-header {
+    padding: 24px 10px 14px 10px;
+  }
+
+  
+
+  .update-modal-content {
+    overflow-y: hidden;
+    padding: 6px;
+    gap: 3px;
+  }
+
+  .update-feature-card {
+    padding: 8px;
+  }
+
+  .update-modal-footer {
+    padding: 10px 14px 12px;
   }
 }
 
@@ -1143,9 +1187,15 @@ body {
     right: 6px;
   }
 
+  .update-modal-header {
+    padding: 24px 10px 14px 10px;
+  }
+
   .nav-labels,
-  .nav-kontakt {
+  .nav-kontakt,
+  .nav-lang-toggle {
     font-size: 14px;
+    line-height: 1;
   }
 
   .main-content {
@@ -1256,11 +1306,11 @@ body {
   }
 
   .subtitle {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .note {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .choose-btn,
@@ -1289,6 +1339,7 @@ body {
   width: 100%;
   max-width: 980px;
   margin: 0 auto;
+  content-visibility: auto;
 }
 
 .labels-section-title {
