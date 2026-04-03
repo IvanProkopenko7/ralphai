@@ -46,7 +46,7 @@ const i18n = {
   howTo:           isPolish ? 'Jak kadrować zdjęcia?'                : 'How to crop photos?',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
-  updateModalTitle: isPolish ? '🎉 Mamy już 100 wizyt!'               : '🎉 First 100 visitors!',
+  updateModalTitle: isPolish ? '🎉 Pierwsze 100 wizyt!'               : '🎉 First 100 visitors!',
   updateModalSubtitle: isPolish ? 'Co nowego?'                        : "What's new:",
   updateFeatureAccuracyTitle: isPolish ? 'Lepsza skuteczność AI'      : 'AI accuracy has improved',
   updateFeatureAccuracyBody: isPolish

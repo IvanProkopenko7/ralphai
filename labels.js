@@ -79,21 +79,51 @@
     return encodeURIComponent(segment).replace(/%2F/g, '/');
   }
 
+  function buildCardHtml(baseDir, fileName) {
+    const src = `${baseDir}/${encodePathSegment(fileName)}`;
+    const label = fileName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
+    return `
+      <article class="label-card" role="listitem">
+        <div class="label-card-media">
+          <img data-src="${src}" alt="${label}" loading="lazy" decoding="async" fetchpriority="low" width="400" height="300" />
+        </div>
+      </article>
+    `;
+  }
+
+  function initLazyImages(scope) {
+    const images = Array.from(scope.querySelectorAll('img[data-src]'));
+    if (!images.length) return;
+
+    const loadImage = (img) => {
+      if (!img.dataset.src) return;
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
+    };
+
+    if (!('IntersectionObserver' in window)) {
+      images.forEach(loadImage);
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const img = entry.target;
+        loadImage(img);
+        obs.unobserve(img);
+      });
+    }, { rootMargin: '300px 0px', threshold: 0.01 });
+
+    images.forEach((img) => observer.observe(img));
+  }
+
   function renderGrid(gridId, baseDir, fileNames) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
 
-    grid.innerHTML = fileNames.map((fileName) => {
-      const src = `${baseDir}/${encodePathSegment(fileName)}`;
-      const label = fileName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
-      return `
-        <article class="label-card" role="listitem">
-          <div class="label-card-media">
-            <img src="${src}" alt="${label}" loading="lazy" />
-          </div>
-        </article>
-      `;
-    }).join('');
+    grid.innerHTML = fileNames.map((fileName) => buildCardHtml(baseDir, fileName)).join('');
+    initLazyImages(grid);
   }
 
   document.querySelectorAll('[data-i18n]').forEach((el) => {
