@@ -11,7 +11,10 @@
 	<link rel="shortcut icon" href="/favicon.ico" />
 	<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
 	<link rel="manifest" href="/favicon/site.webmanifest" />
+	<link rel="preload" href="labels.js" as="script" />
+	<link rel="preload" as="image" href="/label_images/supported_labels/polo_by_ralph_lauren/found-at-a-garage-sale-v0-h9bwe7alqbog1_cropped_processed_by_imagy_webp.rf.YQOFW5Yy9v79K8eWQ1W0.jpg" fetchpriority="high" />
 	<link rel="stylesheet" href="styles.css" />
+	<script defer src="labels.js"></script>
 </head>
 
 <body>
@@ -19,7 +22,7 @@
 		<a href="/" class="nav-logo">RALPHAI</a>
 		<nav class="nav-links">
 			<a href="labels.html" class="nav-labels nav-labels--active" data-i18n="navLabels">LABELS</a>
-			<a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
+			<a href="#" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
 			<button id="langToggle" class="nav-lang-toggle"></button>
 		</nav>
 	</header>
@@ -52,11 +55,9 @@
 
 	<footer class="site-footer">
 		<p class="footer-author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong></p>
-		<p class="footer-email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a></p>
+		<p class="footer-email">email: <a href="#" id="footerEmailLink">contact</a></p>
 		<a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
 	</footer>
-
-	<script src="labels.js"></script>
 </body>
 
 </html>
