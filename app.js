@@ -29,6 +29,7 @@ const isPolish = storedLang ? storedLang === 'pl' : (navigator.language || '').t
 
 const i18n = {
   navLabels:       isPolish ? 'METKI'                                : 'LABELS',
+  navAbout:        isPolish ? 'O NAS'                                : 'ABOUT',
   navContact:      isPolish ? 'KONTAKT'                              : 'CONTACT',
   subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the label',
   supportedLabelsNote: isPolish
@@ -44,6 +45,34 @@ const i18n = {
   checkTags:       (n) => isPolish ? `Sprawdź metki (${n})`          : `Check labels (${n})`,
   analyzing:       isPolish ? 'Analizowanie\u2026'                   : 'Analyzing\u2026',
   howTo:           isPolish ? 'Jak kadrować zdjęcia?'                : 'How to crop photos?',
+  howToGoodLabel:  isPolish ? 'DOBRZE'                               : 'GOOD',
+  howToBadLabel:   isPolish ? 'ŹLE'                                  : 'BAD',
+  extraChecksHeading: isPolish
+    ? 'Jakie dodatkowe sprawdzenia mogę przeprowadzić?'
+    : 'What additional checks can I do?',
+  extraChecksIntro: isPolish
+    ? 'Niestety nie ma zbyt wielu uniwersalnych sposobów na zweryfikowanie autentyczności ubrań Ralph Lauren. Metki, jeżdźce, metki pielęgnacyjne, jakość szwów i materiały różnią się znacznie w zależności od roku produkcji, kraju pochodzenia i kategorii produktu (metki na swetrach nie wyglądają tak samo jak te na krawatach), więc cechy pozwalające rozpoznać autentyczność są bardzo specyficzne. Są jednak 3 rzeczy, które możesz zrobić, aby zwiększyć swoje szanse:'
+    : 'Unfortunately, there are not a lot of universal ways of authenticating Ralph Lauren clothes. The tags, ponies, care labels, stitching quality and materials are very different depending on the year of manufacturing, region and category of piece (tags on sweaters are not like the ones on ties), so the telltale signs are very specific. But there are 3 things that you can do to increase your chances:',
+  extraChecksPoint1Title: isPolish
+    ? 'Zeskanuj kod QR znajdujący się na górnej metce.'
+    : 'Scan the QR code on the neck tag.',
+  extraChecksPoint1Body: isPolish
+    ? 'Większość ubrań marki Ralph Lauren wyprodukowanych po listopadzie 2019 roku posiada kod QR na metce górnej metce. Zeskanuj go swoim telefonem. Kod QR powinien przekierować Cię na oficjalną stronę Ralph Lauren służącą do weryfikacji autentyczności danego ubrania. Jeśli link przekieruje Cię na stronę „Authentication Check. We need a closer look at your QR code”, najprawdopodobniej jest to podróbka, choć zdarzają się przypadki, gdy strona ta wyświetla się nawet w przypadku oryginalnych ubrań Ralph Lauren. Dzieje się tak w przypadku produktów, które są sample\'ami i/lub zostały wyprodukowane do użytku wewnętrznego merch\'e i prezenty dla pracowników, lub gdy kod QR został zeskanowany zbyt wiele razy. Jeśli kod QR nie skanuje się lub przekierowuje Cię na jakąkolwiek inną stronę, to z pewnością jest to podróbka. Ponadto, jeśli kod QR skanuje się poprawnie i przekierowuje Cię na właściwą stronę, nie oznacza to, że produkt jest na pewno autentyczny. Kody QR można skopiować, więc powinny one stanowić tylko jeden z elementów procesu weryfikacji autentyczności odzieży, a nie pewną odpowiedź. Niemniej jednak kod QR zapewnia ponad 98+% skuteczności, więc jeśli to możliwe, zdecydowanie warto go zeskanować.'
+    : 'Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it with your phone. The QR code should send you to the Ralph Lauren\'s official authentication page of the piece of clothing that you are legit checking. If the link sends you to the "Authentication Check. We need a closer look at your QR code" page, then it\'s most likely fake, though there are instances of that page showing even on legitimate Ralph Lauren clothes. It happens with products that are either samples and/or manufactured for internal use - employee merch/gifts or when the QR code is scanned too many times. If the QR code doesn\'t scan or sends you to any other page, then it\'s certainly fake. Also, if the QR code scans correctly and sends you to the right page, it doesn\'t mean that the piece is certainly legit. QR codes can be copied, so it should serve as one of the parts of clothes\' authentication process, not a certain answer. But still, QR code gives you about 98+% accuracy, so if you can, you should certainly scan it.',
+  extraChecksRealLabel: isPolish ? 'ORYGINAŁ' : 'REAL',
+  extraChecksFakeLabel: isPolish ? 'PODRÓBKA' : 'FAKE',
+  extraChecksPoint2Title: isPolish
+    ? 'Znajdź podobne produkty u sprawdzonych sprzedawców w Internecie.'
+    : 'Find similar pieces from trusted sellers online.',
+  extraChecksPoint2Body: isPolish
+    ? 'Spróbuj znaleźć identyczne ubrania w sieci, korzystając z Google Lens i wykorzystując zdjęcia całego ubrania, haftów, metek itp. Możesz też spróbować wyszukiwać je za pomocą słów kluczowych, na przykład „vintage 80s made in korea ralph lauren jacket”. Następnie porównaj je ze swoim oryginalnym egzemplarzem.'
+    : 'Try finding same pieces online using the photos of the overall garment, embroidery, tags and so on via google lens. You can also try searching them with keywords like "vintage 80s made in korea ralph lauren jacket". After that, compare them to your original piece.',
+  extraChecksPoint3Title: isPolish
+    ? 'Opublikuj swoje zdjęcia na grupach Ralph Lauren.'
+    : 'Post your photos on Ralph Lauren LC groups.',
+  extraChecksPoint3BodyHtml: isPolish
+    ? 'Opublikuj je na grupach Reddit, takich jak <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; grupach na Facebooku, takich jak <a href="https://www.facebook.com/groups/1175276173603525/" target="_blank" rel="noopener">Ralph Lauren Legit Check PL</a>, <a href="https://www.facebook.com/groups/1626396554863125/" target="_blank" rel="noopener">Polo Ralph Lauren Talk PL</a> oraz serwerach Discord, takich jak <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> i podobnych. Pamiętaj, że nawet entuzjaści Polo Ralph Lauren popełniają błędy, więc im więcej opinii uzyskasz – tym lepiej.'
+    : 'Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a> and discord servers like <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get - the better.',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
   updateModalTitle: isPolish ? '🎉 Pierwsze 100 wizyt!'               : '🎉 First 100 visitors!',
@@ -170,6 +199,7 @@ document.getElementById('langToggle').addEventListener('click', () => {
 });
 
 /* ─── Update popup ───────────────────────────────── */
+const SHOW_UPDATE_POPUP = false;
 let previousBodyOverflow = '';
 
 function openUpdateModal() {
@@ -186,8 +216,8 @@ function closeUpdateModal() {
 }
 
 if (updateModalOverlay && updateModalClose) {
-  // Only show the modal if not already shown in this browser
-  if (!localStorage.getItem('updateModalShown')) {
+  // Keep the popup in code/DOM but disable showing it to users.
+  if (SHOW_UPDATE_POPUP && !localStorage.getItem('updateModalShown')) {
     openUpdateModal();
     localStorage.setItem('updateModalShown', '1');
   }

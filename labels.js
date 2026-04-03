@@ -5,6 +5,7 @@
 
   const i18n = {
     navLabels: isPolish ? 'METKI' : 'LABELS',
+    navAbout: isPolish ? 'O NAS' : 'ABOUT',
     supportedLabels: isPolish ? 'WSPIERANE METKI' : 'SUPPORTED LABELS',
     upcomingLabels: isPolish ? 'NADCHODZACE METKI' : 'UPCOMING LABELS',
     navContact: isPolish ? 'KONTAKT' : 'CONTACT',

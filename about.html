@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RalphAI - About</title>
+  <meta name="description" content="Learn how RalphAI helps people perform a fast, practical Ralph Lauren legit check using AI." />
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/favicon/site.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="about.js"></script>
+</head>
+
+<body>
+  <header class="navbar">
+    <a href="/" class="nav-logo">RALPHAI</a>
+    <nav class="nav-links">
+      <a href="labels.html" class="nav-labels" data-i18n="navLabels">LABELS</a>
+      <a href="about.html" class="nav-about nav-labels--active" data-i18n="navAbout">ABOUT</a>
+      <a href="#" class="nav-kontakt" data-i18n="navContact" id="navContactLink">CONTACT</a>
+      <button id="langToggle" class="nav-lang-toggle"></button>
+    </nav>
+  </header>
+
+  <main class="main-content main-content--about">
+    <section class="about-page-wrapper" aria-labelledby="aboutHeading">
+      <h1 id="aboutHeading" class="about-title" data-i18n="aboutTitle">About RalphAI</h1>
+
+      <article class="about-article">
+        <p data-i18n="aboutP1">
+          RalphAI was created for people who buy, sell, and collect Ralph Lauren pieces and need a fast first opinion before making a decision.
+          Instead of guessing from blurry marketplace photos or relying only on memory, users can upload label images and get an instant AI-based assessment.
+        </p>
+        <p data-i18n="aboutP2">
+          The project focuses on practical, real-world use. We train the model on varied label examples, then keep improving it as new formats and edge cases appear.
+          That means better coverage for vintage and modern tags, and more reliable confidence scores when the image quality is good.
+        </p>
+        <p data-i18n="aboutP3">
+          RalphAI is designed to save time, reduce obvious mistakes, and support the legit-check community. It is a strong assistant, not a replacement for expert judgment,
+          so uncertain cases should still be reviewed manually.
+        </p>
+      </article>
+
+      <section class="about-metrics" aria-label="RalphAI metrics">
+        <article class="about-metric-card">
+          <p class="about-metric-value">94.6%</p>
+          <p class="about-metric-label" data-i18n="metric1">Overall accuracy</p>
+        </article>
+        <article class="about-metric-card">
+          <p class="about-metric-value">97.9%</p>
+          <p class="about-metric-label" data-i18n="metric2">Accuracy above 80% confidence</p>
+        </article>
+        <article class="about-metric-card">
+          <p class="about-metric-value">3914</p>
+          <p class="about-metric-label" data-i18n="metric3">Photos in the dataset</p>
+        </article>
+        <article class="about-metric-card">
+          <p class="about-metric-value">28574</p>
+          <p class="about-metric-label" data-i18n="metric4">Photos after augmentation</p>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-author"><span data-i18n="footerCreatedBy">Created by</span> <strong>Ivan Prokopenko</strong></p>
+    <p class="footer-email">email: <a href="#" id="footerEmailLink">contact</a></p>
+    <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
+  </footer>
+</body>
+
+</html>

@@ -55,6 +55,7 @@
     <a href="/" class="nav-logo">RALPHAI</a>
     <nav class="nav-links">
       <a href="labels.html" class="nav-labels" data-i18n="navLabels">LABELS</a>
+      <a href="about.html" class="nav-about" data-i18n="navAbout">ABOUT</a>
       <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
       <button id="langToggle" class="nav-lang-toggle"></button>
     </nav>
@@ -99,10 +100,108 @@
     <!-- How-to section -->
     <section class="how-to-section">
       <h2 class="section-heading" data-i18n="howTo">Jak kadrować zdjęcia?</h2>
-      <video class="cropping-video" loop muted playsinline preload="none" id="howToVideo">
-        <source data-src="polo_by_cropping (online-video-cutter.com).mp4" type="video/mp4" />
-        <track id="howToVideoCaptions" kind="captions" srclang="en" label="English" src="captions/cropping.en.vtt" />
-      </video>
+      <div class="how-to-image-groups">
+        <section class="how-to-image-group" aria-label="Good crop examples">
+          <span class="how-to-group-label how-to-group-label--good" data-i18n="howToGoodLabel">DOBRZE</span>
+          <div class="how-to-grid" role="list" aria-label="Good crop examples">
+            <figure class="how-to-card how-to-card--good" role="listitem">
+              <img src="how-to-crop-images/good/js-l160010-ezgif.com-rotate.jpg" alt="Good crop example 1" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="how-to-card how-to-card--good" role="listitem">
+              <img src="how-to-crop-images/good/js-l160010-ezgif.com-rotate_1.jpg" alt="Good crop example 2" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </section>
+
+        <section class="how-to-image-group" aria-label="Bad crop examples">
+          <span class="how-to-group-label how-to-group-label--bad" data-i18n="howToBadLabel">ŹLE</span>
+          <div class="how-to-grid" role="list" aria-label="Bad crop examples">
+            <figure class="how-to-card how-to-card--bad" role="listitem">
+              <img src="how-to-crop-images/bad/js-l160010-ezgif.com-rotate_2.jpg" alt="Bad crop example 1" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="how-to-card how-to-card--bad" role="listitem">
+              <img src="how-to-crop-images/bad/js-l160010-ezgif.com-rotate_3.jpg" alt="Bad crop example 2" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="extra-checks-section" aria-labelledby="extraChecksHeading">
+      <h2 class="section-heading extra-checks-heading" id="extraChecksHeading" data-i18n="extraChecksHeading">What additional checks can I do?</h2>
+      <p class="extra-checks-intro" data-i18n="extraChecksIntro">
+        Unfortunately, there are not a lot of universal ways of authenticating Ralph Lauren clothes. The tags, ponies,
+        care labels, stitching quality and materials are very different depending on the year of manufacturing, region
+        and category of piece (tags on sweaters are not like the ones on ties), so the telltale signs are very
+        specific. But there are 3 things that you can do to increase your chances:
+      </p>
+
+      <ol class="extra-checks-list">
+        <li class="extra-checks-item">
+          <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint1Title">Scan the QR code on the neck tag.</h3>
+          <p data-i18n="extraChecksPoint1Body">
+            Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it
+            with your phone. The QR code should send you to the Ralph Lauren's official authentication page of the
+            piece of clothing that you are legit checking. If the link sends you to the "Authentication Check. We need
+            a closer look at your QR code" page, then it's most likely fake, though there are instances of that page
+            showing even on legitimate Ralph Lauren clothes. It happens with products that are either samples and/or
+            manufactured for internal use - employee merch/gifts or when the QR code is scanned too many times. If the
+            QR code doesn't scan or sends you to any other page, then it's certainly fake. Also, if the QR code scans
+            correctly and sends you to the right page, it doesn't mean that the piece is certainly legit. QR codes can
+            be copied, so it should serve as one of the parts of clothes' authentication process, not a certain
+            answer. But still, QR code gives you about 98+% accuracy, so if you can, you should certainly scan it.
+          </p>
+
+          <div class="qr-check-image-groups">
+            <section class="qr-check-image-group" aria-label="Real QR examples">
+              <span class="qr-check-group-label qr-check-group-label--real" data-i18n="extraChecksRealLabel">REAL</span>
+              <div class="qr-check-grid" role="list" aria-label="Real QR examples">
+                <figure class="qr-check-card qr-check-card--legit" role="listitem">
+                  <img src="using_images/LEGIT/real-QR-code-page-1.jpg" alt="Legit Ralph Lauren QR scan result example 1" loading="lazy" decoding="async" />
+                </figure>
+                <figure class="qr-check-card qr-check-card--legit" role="listitem">
+                  <img src="using_images/LEGIT/real-QR-code-page-2.jpg" alt="Legit Ralph Lauren QR scan result example 2" loading="lazy" decoding="async" />
+                </figure>
+              </div>
+            </section>
+
+            <section class="qr-check-image-group" aria-label="Fake QR examples">
+              <span class="qr-check-group-label qr-check-group-label--fake" data-i18n="extraChecksFakeLabel">FAKE</span>
+              <div class="qr-check-grid" role="list" aria-label="Fake QR examples">
+                <figure class="qr-check-card qr-check-card--fake" role="listitem">
+                  <img src="using_images/FAKE/closer-look-at-qr-code-polo-ralph-lauren-v0-85krh4puh0ed1.webp" alt="Fake Ralph Lauren QR scan result example 1" loading="lazy" decoding="async" />
+                </figure>
+                <figure class="qr-check-card qr-check-card--fake" role="listitem">
+                  <img src="using_images/FAKE/fake-QR-code_page.jpg" alt="Fake Ralph Lauren QR scan result example 2" loading="lazy" decoding="async" />
+                </figure>
+              </div>
+            </section>
+          </div>
+        </li>
+
+        <li class="extra-checks-item">
+          <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint2Title">Find similar pieces from trusted sellers online.</h3>
+          <p data-i18n="extraChecksPoint2Body">
+            Try finding same pieces online using the photos of the overall garment, embroidery, tags and so on via
+            google lens. You can also try searching them with keywords like "vintage 80s made in korea ralph lauren
+            jacket". After that, compare them to your original piece.
+          </p>
+        </li>
+
+        <li class="extra-checks-item">
+          <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint3Title">Post your photos on Ralph Lauren LC groups.</h3>
+          <p data-i18n-html="extraChecksPoint3BodyHtml">
+            Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>,
+            <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or
+            <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like
+            <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a>
+            and discord servers like
+            <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a>
+            and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get
+            - the better.
+          </p>
+        </li>
+      </ol>
     </section>
 
   </main>

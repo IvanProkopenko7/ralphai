@@ -23,8 +23,13 @@ secrets/
 
 # OS
 .DS_Store
+.DS_Store?
 Thumbs.db
+ehthumbs.db
 desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100/
+.Trashes/
 
 # Editor
 .vscode/
@@ -43,12 +48,24 @@ yarn-error.log*
 node_modules/
 package-lock.json
 yarn.lock
+.pnpm-store/
+.npm/
+.yarn/
 
 # Build / cache / test outputs
 dist/
 build/
 coverage/
 .cache/
+.parcel-cache/
+.next/
+.nuxt/
+.svelte-kit/
+*.tsbuildinfo
+.eslintcache
+
+# Generic local-only files
+*.local
 
 # Python / notebook artifacts
 __pycache__/
