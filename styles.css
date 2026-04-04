@@ -59,6 +59,20 @@ body {
   padding: 2px;
 }
 
+.nav-logo,
+.nav-labels,
+.nav-about,
+.nav-kontakt,
+.nav-lang-toggle,
+.choose-btn,
+.btn-analyze,
+.btn-crop-cancel,
+.btn-crop-confirm,
+.preview-thumb-remove,
+.preview-thumb-add {
+  touch-action: manipulation;
+}
+
 .nav-lang-toggle {
 
 background-color: black;
@@ -1262,6 +1276,11 @@ background-color: black;
 
 .btn-crop-confirm:hover {
   background: #ddd;
+}
+
+.btn-crop-confirm.is-processing {
+  opacity: 0.65;
+  cursor: wait;
 }
 
 /* ===== RESPONSIVE BREAKPOINTS ===== */

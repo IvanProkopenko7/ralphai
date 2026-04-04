@@ -238,6 +238,16 @@ let croppedImages   = [];
 let cropQueue       = [];
 let cropperInstance = null;
 
+function revokePreviewUrl(imageEntry) {
+  if (imageEntry && imageEntry.previewUrl) {
+    URL.revokeObjectURL(imageEntry.previewUrl);
+  }
+}
+
+function cleanupAllPreviewUrls() {
+  croppedImages.forEach(revokePreviewUrl);
+}
+
 /* ─── Warmup ping ─────────────────────────────────── */
 // Sends a real 1×1 JPEG so the Worker forwards it to Roboflow,
 // forcing the model to load before the user submits a photo.
@@ -260,6 +270,7 @@ let cropperInstance = null;
 /* ─── Logo → reset to start ───────────────────────── */
 document.querySelector('.nav-logo').addEventListener('click', (e) => {
   e.preventDefault();
+  cleanupAllPreviewUrls();
   croppedImages = [];
   cropQueue = [];
   renderGrid();
@@ -308,7 +319,6 @@ dropZone.addEventListener('drop', (e) => {
 
 /* Paste from clipboard */
 document.addEventListener('paste', (e) => {
-  e.preventDefault();
   const items = e.clipboardData && e.clipboardData.items;
   if (!items) return;
   const files = [];
@@ -318,7 +328,10 @@ document.addEventListener('paste', (e) => {
       if (file) files.push(file);
     }
   }
-  if (files.length) handleFiles(files);
+  if (files.length) {
+    e.preventDefault();
+    handleFiles(files);
+  }
 });
 
 /* ─── File handler ────────────────────────────────── */
@@ -372,22 +385,52 @@ function closeCropper() {
     cropperInstance.destroy();
     cropperInstance = null;
   }
+  btnCropConfirm.disabled = false;
+  btnCropConfirm.classList.remove('is-processing');
   cropperImg.src = '';
   // Reset file input so the same file can be re-selected
   fileInput.value = '';
 }
 
 btnCropConfirm.addEventListener('click', () => {
-  if (!cropperInstance) return;
+  if (!cropperInstance || btnCropConfirm.disabled) return;
 
-  const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 640, maxHeight: 640 });
-  if (!canvas) return;
-  canvas.toBlob((blob) => {
-    croppedImages.push({ blob, dataUrl: canvas.toDataURL('image/jpeg', 0.88) });
-    closeCropper();
-    renderGrid();
-    processNextCrop();
-  }, 'image/jpeg', 0.88);
+  btnCropConfirm.disabled = true;
+  btnCropConfirm.classList.add('is-processing');
+
+  // Yield one tick so the click feedback can paint before heavy canvas work.
+  setTimeout(() => {
+    if (!cropperInstance) {
+      btnCropConfirm.disabled = false;
+      btnCropConfirm.classList.remove('is-processing');
+      return;
+    }
+
+    const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 640, maxHeight: 640 });
+    if (!canvas) {
+      btnCropConfirm.disabled = false;
+      btnCropConfirm.classList.remove('is-processing');
+      return;
+    }
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        btnCropConfirm.disabled = false;
+        btnCropConfirm.classList.remove('is-processing');
+        showError(i18n.errorCannotRead);
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(blob);
+      croppedImages.push({ blob, previewUrl });
+
+      closeCropper();
+      btnCropConfirm.disabled = false;
+      btnCropConfirm.classList.remove('is-processing');
+      renderGrid();
+      processNextCrop();
+    }, 'image/jpeg', 0.88);
+  }, 0);
 });
 
 btnCropCancel.addEventListener('click', () => {
@@ -397,6 +440,7 @@ btnCropCancel.addEventListener('click', () => {
 
 /* ─── Clear all button ────────────────────────────── */
 previewClearAll.addEventListener('click', () => {
+  cleanupAllPreviewUrls();
   croppedImages = [];
   cropQueue = [];
   fileInput.value = '';
@@ -437,7 +481,7 @@ function renderGrid() {
   previewGrid.innerHTML = croppedImages.map((img, i) => `
     <div class="preview-card" data-card-index="${i}">
       <div class="preview-thumb">
-        <img src="${img.dataUrl}" alt="${i18n.photo(i + 1)}" />
+        <img src="${img.previewUrl}" alt="${i18n.photo(i + 1)}" />
         <button class="preview-thumb-remove" data-index="${i}" aria-label="Usuń">&#x2715;</button>
       </div>
       ${img.chip ? img.chip : ''}
@@ -447,7 +491,8 @@ function renderGrid() {
   previewGrid.querySelectorAll('.preview-thumb-remove').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const idx = parseInt(e.currentTarget.dataset.index, 10);
-      croppedImages.splice(idx, 1);
+      const removed = croppedImages.splice(idx, 1)[0];
+      revokePreviewUrl(removed);
       renderGrid();
     });
   });
@@ -466,10 +511,8 @@ btnAnalyze.addEventListener('click', async () => {
   btnAnalyze.disabled = true;
 
   try {
-    // We already have the max-640px JPEG dataUrl from the Cropper.
-    // Skip toResizedBase64 to prevent degrading the image with double-JPEG compression loss.
     const results = await Promise.all(
-      croppedImages.map(({ dataUrl }) => classifyImage(dataUrl.split(',')[1]))
+      croppedImages.map(async ({ blob }) => classifyImage(await blobToBase64(blob)))
     );
     displayResults(results);
   } catch (err) {
@@ -497,6 +540,28 @@ async function classifyImage(base64) {
   }
 
   return response.json();
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        reject(new Error(i18n.errorCannotRead));
+        return;
+      }
+
+      const parts = result.split(',');
+      if (parts.length < 2) {
+        reject(new Error(i18n.errorCannotRead));
+        return;
+      }
+      resolve(parts[1]);
+    };
+    reader.onerror = () => reject(new Error(i18n.errorCannotRead));
+    reader.readAsDataURL(blob);
+  });
 }
 
 /* ─── Display results ─────────────────────────────── */
