@@ -237,6 +237,11 @@ if (updateModalOverlay && updateModalClose) {
 let croppedImages   = [];
 let cropQueue       = [];
 let cropperInstance = null;
+let lastCropConfirmTouchTs = 0;
+
+const ua = navigator.userAgent || '';
+const isIOSDevice = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isMobileSafari = isIOSDevice && /AppleWebKit/i.test(ua) && !/(CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo)/i.test(ua);
 
 function revokePreviewUrl(imageEntry) {
   if (imageEntry && imageEntry.previewUrl) {
@@ -246,6 +251,126 @@ function revokePreviewUrl(imageEntry) {
 
 function cleanupAllPreviewUrls() {
   croppedImages.forEach(revokePreviewUrl);
+}
+
+function runAfterTwoPaints(task) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(task);
+  });
+}
+
+function setCropConfirmProcessing(isProcessing) {
+  btnCropConfirm.disabled = isProcessing;
+  btnCropConfirm.classList.toggle('is-processing', isProcessing);
+}
+
+function getCropExportOptions() {
+  if (!isMobileSafari) {
+    return { maxWidth: 640, maxHeight: 640, jpegQuality: 0.88 };
+  }
+
+  const isLowEndCpu = (navigator.hardwareConcurrency || 4) <= 2;
+  if (isLowEndCpu) {
+    return { maxWidth: 480, maxHeight: 480, jpegQuality: 0.78 };
+  }
+
+  return { maxWidth: 560, maxHeight: 560, jpegQuality: 0.82 };
+}
+
+function buildPreviewCardMarkup(img, index) {
+  return `
+    <div class="preview-card" data-card-index="${index}">
+      <div class="preview-thumb">
+        <img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />
+        <button class="preview-thumb-remove" data-index="${index}" aria-label="Usuń">&#x2715;</button>
+      </div>
+      ${img.chip ? img.chip : ''}
+    </div>
+  `;
+}
+
+function updatePreviewAreaMeta() {
+  previewGrid.hidden = false;
+  chooseBtn.hidden = true;
+  dropText.hidden = true;
+  btnAnalyze.hidden = false;
+  previewClearAllContainer.hidden = false;
+
+  const hasLowConfidence = croppedImages.some(img => img.chip && img.chip.includes('result-chip--unknown'));
+  if (uncertaintyMsg) uncertaintyMsg.hidden = !hasLowConfidence;
+
+  const n = croppedImages.length;
+  btnAnalyze.querySelector('span').textContent = n === 1 ? i18n.checkTag : i18n.checkTags(n);
+}
+
+function appendLastPreviewCard() {
+  if (!croppedImages.length) {
+    renderGrid();
+    return;
+  }
+
+  const addMoreBtn = previewGrid.querySelector('#addMoreBtn');
+  if (previewGrid.hidden || !addMoreBtn) {
+    renderGrid();
+    return;
+  }
+
+  updatePreviewAreaMeta();
+
+  const index = croppedImages.length - 1;
+  const img = croppedImages[index];
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = buildPreviewCardMarkup(img, index).trim();
+  const card = wrapper.firstElementChild;
+  if (!card) {
+    renderGrid();
+    return;
+  }
+
+  previewGrid.insertBefore(card, addMoreBtn);
+}
+
+function finalizeCrop(blob) {
+  const previewUrl = URL.createObjectURL(blob);
+  croppedImages.push({ blob, previewUrl });
+
+  // Keep layout work out of the crop interaction task.
+  requestAnimationFrame(() => {
+    closeCropper();
+    appendLastPreviewCard();
+    processNextCrop();
+  });
+}
+
+function handleCropConfirm() {
+  if (!cropperInstance || btnCropConfirm.disabled) return;
+
+  setCropConfirmProcessing(true);
+
+  // Let pressed/processing visual state paint before heavy canvas work.
+  runAfterTwoPaints(() => {
+    if (!cropperInstance) {
+      setCropConfirmProcessing(false);
+      return;
+    }
+
+    const { maxWidth, maxHeight, jpegQuality } = getCropExportOptions();
+    const canvas = cropperInstance.getCroppedCanvas({ maxWidth, maxHeight });
+    if (!canvas) {
+      setCropConfirmProcessing(false);
+      return;
+    }
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        setCropConfirmProcessing(false);
+        showError(i18n.errorCannotRead);
+        return;
+      }
+
+      finalizeCrop(blob);
+    }, 'image/jpeg', jpegQuality);
+  });
 }
 
 /* ─── Warmup ping ─────────────────────────────────── */
@@ -392,45 +517,18 @@ function closeCropper() {
   fileInput.value = '';
 }
 
+btnCropConfirm.addEventListener('pointerup', (e) => {
+  if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+
+  lastCropConfirmTouchTs = performance.now();
+  e.preventDefault();
+  handleCropConfirm();
+});
+
 btnCropConfirm.addEventListener('click', () => {
-  if (!cropperInstance || btnCropConfirm.disabled) return;
-
-  btnCropConfirm.disabled = true;
-  btnCropConfirm.classList.add('is-processing');
-
-  // Yield one tick so the click feedback can paint before heavy canvas work.
-  setTimeout(() => {
-    if (!cropperInstance) {
-      btnCropConfirm.disabled = false;
-      btnCropConfirm.classList.remove('is-processing');
-      return;
-    }
-
-    const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 640, maxHeight: 640 });
-    if (!canvas) {
-      btnCropConfirm.disabled = false;
-      btnCropConfirm.classList.remove('is-processing');
-      return;
-    }
-
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        btnCropConfirm.disabled = false;
-        btnCropConfirm.classList.remove('is-processing');
-        showError(i18n.errorCannotRead);
-        return;
-      }
-
-      const previewUrl = URL.createObjectURL(blob);
-      croppedImages.push({ blob, previewUrl });
-
-      closeCropper();
-      btnCropConfirm.disabled = false;
-      btnCropConfirm.classList.remove('is-processing');
-      renderGrid();
-      processNextCrop();
-    }, 'image/jpeg', 0.88);
-  }, 0);
+  // Ignore synthetic click right after a touch/pen pointerup.
+  if (performance.now() - lastCropConfirmTouchTs < 700) return;
+  handleCropConfirm();
 });
 
 btnCropCancel.addEventListener('click', () => {
@@ -462,43 +560,28 @@ function renderGrid() {
     return;
   }
 
-  let hasLowConfidence = false;
-  croppedImages.forEach(img => {
-    if (img.chip && img.chip.includes('result-chip--unknown')) {
-      hasLowConfidence = true;
-    }
-  });
-  if (uncertaintyMsg) uncertaintyMsg.hidden = !hasLowConfidence;
+  updatePreviewAreaMeta();
 
-  previewGrid.hidden = false;
-  chooseBtn.hidden = true;
-  dropText.hidden = true;
-  btnAnalyze.hidden = false;
-  previewClearAllContainer.hidden = false;
-  const n = croppedImages.length;
-  btnAnalyze.querySelector('span').textContent = n === 1 ? i18n.checkTag : i18n.checkTags(n);
+  previewGrid.innerHTML = croppedImages.map((img, i) => buildPreviewCardMarkup(img, i)).join('')
+    + `<button class="preview-thumb preview-thumb-add" id="addMoreBtn">+</button>`;
+}
 
-  previewGrid.innerHTML = croppedImages.map((img, i) => `
-    <div class="preview-card" data-card-index="${i}">
-      <div class="preview-thumb">
-        <img src="${img.previewUrl}" alt="${i18n.photo(i + 1)}" />
-        <button class="preview-thumb-remove" data-index="${i}" aria-label="Usuń">&#x2715;</button>
-      </div>
-      ${img.chip ? img.chip : ''}
-    </div>
-  `).join('') + `<button class="preview-thumb preview-thumb-add" id="addMoreBtn">+</button>`;
-
-  previewGrid.querySelectorAll('.preview-thumb-remove').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const idx = parseInt(e.currentTarget.dataset.index, 10);
+previewGrid.addEventListener('click', (e) => {
+  const removeButton = e.target.closest('.preview-thumb-remove');
+  if (removeButton) {
+    const idx = parseInt(removeButton.dataset.index, 10);
+    if (!Number.isNaN(idx)) {
       const removed = croppedImages.splice(idx, 1)[0];
       revokePreviewUrl(removed);
       renderGrid();
-    });
-  });
+    }
+    return;
+  }
 
-  document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
-}
+  if (e.target.closest('#addMoreBtn')) {
+    fileInput.click();
+  }
+});
 
 /* ─── Analyze button ──────────────────────────────── */
 btnAnalyze.addEventListener('click', async () => {
