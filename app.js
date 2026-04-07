@@ -26,6 +26,7 @@ const updateModalClose = document.getElementById('updateModalClose');
 /* ─── i18n ────────────────────────────────────────── */
 const storedLang = localStorage.getItem('lang');
 const isPolish = storedLang ? storedLang === 'pl' : (navigator.language || '').toLowerCase().startsWith('pl');
+const MAX_IMAGES = 4;
 
 const i18n = {
   navLabels:       isPolish ? 'METKI'                                : 'LABELS',
@@ -75,30 +76,30 @@ const i18n = {
     : 'Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a> and discord servers like <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get - the better.',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
-  updateModalTitle: isPolish ? '🎉 Pierwsze 100 wizyt!'               : '🎉 First 100 visitors!',
+  updateModalTitle: isPolish ? '🎉 Pierwsze 300 wizyt!'               : '🎉 First 300 visitors!',
   updateModalSubtitle: isPolish ? 'Co nowego?'                        : "What's new:",
-  updateFeatureAccuracyTitle: isPolish ? 'Lepsza skuteczność AI'      : 'AI accuracy has improved',
+  updateFeatureDatasetTitle: isPolish ? 'Większy zbiór danych'        : 'Bigger dataset',
+  updateFeatureDatasetBody: isPolish
+    ? 'Do zbioru danych dodano <strong>866</strong> zdjęć z górnych metek. <strong>10622</strong> zdjęcia po augmentacji danych.'
+    : '<strong>866</strong> more photos of tags in the dataset. <strong>10622</strong> more images after augmentation.',
+  updateFeatureAccuracyTitle: isPolish ? 'Wyższa dokładność modelu'   : 'Higher model accuracy',
   updateFeatureAccuracyBody: isPolish
-    ? 'Model AI został wytrenowany na <strong>4× większym zbiorze zdjęć</strong>.'
-    : 'The AI model is now trained on <strong>4× more images</strong> than before.',
-  updateFeatureVintageTitle: isPolish
-    ? 'Dodaliśmy metki vintage „Polo By Ralph Lauren”'
-    : 'Vintage "Polo By Ralph Lauren" tags have been added',
-  updateFeaturePoloTitle: isPolish
-    ? 'Dodaliśmy metki „Polo Ralph Lauren”'
-    : '"Polo Ralph Lauren" tags have been added',
-  updateFeatureDiversityTitle: isPolish ? 'Większa różnorodność metek' : 'Label diversity has been improved',
-  updateFeatureDiversityBody: isPolish
-    ? 'Teraz model obsługuje metki najróżniejszych kategorii: polo, koszule, kurtki, szorty, spodnie, czapki, szaliki, krawaty i inne.'
-    : 'Labels of all kinds are now available: polos, shirts, jackets, shorts, trousers, caps, scarves, ties, and more.',
-  updateFeatureCropTitle: isPolish
-    ? 'Zwiększyliśmy obszar kadrowania, żeby łatwiej i precyzyjniej przycinać zdjęcia'
-    : 'The cropping area has been increased to improve the cropping precision',
+    ? 'Dokładność modelu wzrosła z 94,6% do <strong>96,0%</strong>.'
+    : 'The accuracy of the model has been improved from 94.6% to <strong>96.0%</strong> now.',
+  updateFeatureSourcesTitle: isPolish ? 'Więcej kategorii metek'      : 'More label categories',
+  updateFeatureSourcesBody: isPolish
+    ? 'Nowe zdjęcia pochodzą z: vintage\'owych T-shirtów, kurtek, marynarek, linii japońskich, linii "sportsman", linii performance, czapek, szortów i tak dalej.'
+    : 'The new photos are from: vintage T-shirts, jackets, blazers, Japanese lines, sportsman lines, performance lines, caps, shorts, and so on.',
+  updateFeatureConfidenceTitle: isPolish ? 'Usunięto wyświetlanie pewności' : 'Confidence reveal removed',
+  updateFeatureConfidenceBody: isPolish
+    ? 'Usunięto próg pewności, co pozwoliło znacznie zmniejszyć liczbę wyników fałszywie ujemnych przy zachowaniu dokładności. <span class="update-note-muted">*Jeśli pewność prognoz jest niższa od progu, nadal będzie wyświetlany żółty komunikat ostrzegawczy.</span>'
+    : 'The confidence reveal was removed to largely decrease the amount of false negatives while maintaining the accuracy. <span class="update-note-muted">*If the confidence of the predictions will be less than the threshold, the yellow warning message will still be shown.</span>',
   updateFooterTitle: isPolish ? 'Dzięki, że korzystasz z RalphAI!'     : 'Thank you for checking out this website!',
   updateFooterSubtitle: isPolish ? 'Kolejne usprawnienia już w drodze.' : 'More improvements are coming soon.',
   footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
+  chipUncertain:   isPolish ? 'Nie pewien'                           : 'Uncertain',
   chipAuthentic:   isPolish ? 'Oryginał'                             : 'Authentic',
   chipFake:        'Fake',
   confidence:      (pct) => isPolish ? `pewność: ${pct}%`            : `confidence: ${pct}%`,
@@ -113,6 +114,7 @@ const i18n = {
 };
 
 const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
+const CONFIDENCE_THRESHOLD = 52;
 
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -199,7 +201,10 @@ document.getElementById('langToggle').addEventListener('click', () => {
 });
 
 /* ─── Update popup ───────────────────────────────── */
-const SHOW_UPDATE_POPUP = false;
+const SHOW_UPDATE_POPUP = true;
+// Bump this version for each new release note so each update is shown once per browser.
+const UPDATE_POPUP_VERSION = '2026-04-300-visitors';
+const updatePopupSeenKey = `updatePopupSeen:${UPDATE_POPUP_VERSION}`;
 let previousBodyOverflow = '';
 
 function openUpdateModal() {
@@ -216,10 +221,9 @@ function closeUpdateModal() {
 }
 
 if (updateModalOverlay && updateModalClose) {
-  // Keep the popup in code/DOM but disable showing it to users.
-  if (SHOW_UPDATE_POPUP && !localStorage.getItem('updateModalShown')) {
+  if (SHOW_UPDATE_POPUP && !localStorage.getItem(updatePopupSeenKey)) {
     openUpdateModal();
-    localStorage.setItem('updateModalShown', '1');
+    localStorage.setItem(updatePopupSeenKey, '1');
   }
 
   updateModalClose.addEventListener('click', closeUpdateModal);
@@ -238,6 +242,7 @@ let croppedImages   = [];
 let cropQueue       = [];
 let cropperInstance = null;
 let lastCropConfirmTouchTs = 0;
+let previousCropperBodyOverflow = '';
 
 const ua = navigator.userAgent || '';
 const isIOSDevice = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -334,11 +339,14 @@ function finalizeCrop(blob) {
   const previewUrl = URL.createObjectURL(blob);
   croppedImages.push({ blob, previewUrl });
 
-  // Keep layout work out of the crop interaction task.
+  // Keep the cropper open between queued images to avoid overlay close/reopen flicker.
   requestAnimationFrame(() => {
-    closeCropper();
     appendLastPreviewCard();
-    processNextCrop();
+    if (cropQueue.length) {
+      processNextCrop(true);
+      return;
+    }
+    closeCropper();
   });
 }
 
@@ -461,16 +469,23 @@ document.addEventListener('paste', (e) => {
 
 /* ─── File handler ────────────────────────────────── */
 function handleFiles(files) {
+  const imageFiles = files.filter((f) => f && f.type && f.type.startsWith('image/'));
+  if (!imageFiles.length) return;
   hideError();
-  files.forEach(f => cropQueue.push(f));
+
+  const remainingSlots = Math.max(0, MAX_IMAGES - (croppedImages.length + cropQueue.length));
+  if (remainingSlots === 0) return;
+
+  const filesToQueue = imageFiles.slice(0, remainingSlots);
+  filesToQueue.forEach(f => cropQueue.push(f));
   processNextCrop();
 }
 
-function processNextCrop() {
+function processNextCrop(keepModalOpen = false) {
   if (!cropQueue.length) return;
   const file = cropQueue.shift();
   const reader = new FileReader();
-  reader.onload = (ev) => openCropper(ev.target.result);
+  reader.onload = (ev) => openCropper(ev.target.result, keepModalOpen);
   reader.readAsDataURL(file);
 }
 
@@ -486,12 +501,19 @@ function getResponsiveAutoCropArea() {
   return 0.9;
 }
 
-function openCropper(src) {
-  cropperImg.src = src;
-  cropperModal.hidden = false;
+function openCropper(src, keepModalOpen = false) {
+  if (!keepModalOpen || cropperModal.hidden) {
+    previousCropperBodyOverflow = document.body.style.overflow;
+    cropperModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
 
-  // Small delay so the image renders before Cropper initialises
-  setTimeout(() => {
+  let hasInitialized = false;
+  const initCropper = () => {
+    if (hasInitialized) return;
+    hasInitialized = true;
+    cropperImg.onload = null;
+
     if (cropperInstance) cropperInstance.destroy();
     cropperInstance = new Cropper(cropperImg, {
       viewMode:     1,
@@ -501,11 +523,22 @@ function openCropper(src) {
       scalable:     false,
       rotatable:    false,
     });
-  }, 50);
+    setCropConfirmProcessing(false);
+  };
+
+  cropperImg.onload = initCropper;
+  cropperImg.src = src;
+
+  // Data URLs can decode immediately on some browsers.
+  if (cropperImg.complete && cropperImg.naturalWidth > 0) {
+    initCropper();
+  }
 }
 
 function closeCropper() {
   cropperModal.hidden = true;
+  document.body.style.overflow = previousCropperBodyOverflow || '';
+  previousCropperBodyOverflow = '';
   if (cropperInstance) {
     cropperInstance.destroy();
     cropperInstance = null;
@@ -562,8 +595,9 @@ function renderGrid() {
 
   updatePreviewAreaMeta();
 
+  const canAddMore = croppedImages.length + cropQueue.length < MAX_IMAGES;
   previewGrid.innerHTML = croppedImages.map((img, i) => buildPreviewCardMarkup(img, i)).join('')
-    + `<button class="preview-thumb preview-thumb-add" id="addMoreBtn">+</button>`;
+    + (canAddMore ? `<button class="preview-thumb preview-thumb-add" id="addMoreBtn">+</button>` : '');
 }
 
 previewGrid.addEventListener('click', (e) => {
@@ -662,6 +696,7 @@ function displayResults(dataArr) {
 function buildResultChip(data) {
   const predictedClass = (data.top || 'unknown').toLowerCase();
   const pct = Math.round((data.confidence ?? 0) * 100);
+  const isLowConfidence = pct < CONFIDENCE_THRESHOLD;
 
   let chipClass  = 'result-chip--unknown';
   let labelText  = i18n.chipUnknown;
@@ -674,11 +709,12 @@ function buildResultChip(data) {
     labelText = i18n.chipFake;
   }
 
-  if (pct <= 80) {
+  if (isLowConfidence) {
     chipClass = 'result-chip--unknown';
+    labelText = i18n.chipUncertain;
   }
 
-  return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span><span class="result-chip-pct">${i18n.confidence(pct)}</span></div>`;
+  return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span></div>`;
 }
 
 /* ─── Helpers ─────────────────────────────────────── */

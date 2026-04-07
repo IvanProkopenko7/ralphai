@@ -225,45 +225,40 @@
       <button class="update-modal-close" id="updateModalClose" aria-label="Close update popup">&times;</button>
 
       <div class="update-modal-header">
-        <h2 class="update-modal-title" id="updateModalTitle" data-i18n="updateModalTitle">🎉 First 100 visitors!</h2>
+        <h2 class="update-modal-title" id="updateModalTitle" data-i18n="updateModalTitle">🎉 First 300 visitors!</h2>
         <p class="update-modal-subtitle" data-i18n="updateModalSubtitle">What's new:</p>
       </div>
 
       <div class="update-modal-content">
         <article class="update-feature-card">
-          <div class="update-feature-icon" aria-hidden="true">&#9678;</div>
+          <div class="update-feature-icon" aria-hidden="true">&#9638;</div>
           <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureAccuracyTitle">AI accuracy has improved</h3>
-            <p data-i18n-html="updateFeatureAccuracyBody">The AI model is now trained on <strong>4× more images</strong> than before.</p>
+            <h3 data-i18n="updateFeatureDatasetTitle">Bigger dataset</h3>
+            <p data-i18n-html="updateFeatureDatasetBody"><strong>866</strong> more photos of tags in the dataset. <strong>10622</strong> more images after augmentation.</p>
+          </div>
+        </article>
+
+        <article class="update-feature-card">
+          <div class="update-feature-icon" aria-hidden="true">&#9651;</div>
+          <div class="update-feature-text">
+            <h3 data-i18n="updateFeatureAccuracyTitle">Higher model accuracy</h3>
+            <p data-i18n-html="updateFeatureAccuracyBody">The accuracy of the model has been improved from 94.6% to <strong>96.0%</strong> now.</p>
           </div>
         </article>
 
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#9873;</div>
           <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureVintageTitle">Vintage "Polo By Ralph Lauren" tags have been added</h3>
-          </div>
-        </article>
-
-        <article class="update-feature-card">
-          <div class="update-feature-icon" aria-hidden="true">&#9873;</div>
-          <div class="update-feature-text">
-            <h3 data-i18n="updateFeaturePoloTitle">"Polo Ralph Lauren" tags have been added</h3>
+            <h3 data-i18n="updateFeatureSourcesTitle">More label categories</h3>
+            <p data-i18n="updateFeatureSourcesBody">The new photos are from: vintage T-shirts, jackets, blazers, Japanese lines, sportsman lines, performance lines, caps, shorts, and so on.</p>
           </div>
         </article>
 
         <article class="update-feature-card">
           <div class="update-feature-icon" aria-hidden="true">&#10059;</div>
           <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureDiversityTitle">Label diversity has been improved</h3>
-            <p data-i18n="updateFeatureDiversityBody">Labels of all kinds are now available: polos, shirts, jackets, shorts, trousers, caps, scarves, ties, and more.</p>
-          </div>
-        </article>
-
-        <article class="update-feature-card">
-          <div class="update-feature-icon" aria-hidden="true">&#9635;</div>
-          <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureCropTitle">The cropping area has been increased to improve the cropping precision</h3>
+            <h3 data-i18n="updateFeatureConfidenceTitle">Confidence reveal removed</h3>
+            <p data-i18n-html="updateFeatureConfidenceBody">The confidence reveal was removed to largely decrease the amount of false negatives while maintaining the accuracy. <span class="update-note-muted">*If the confidence of the predictions will be less than the threshold, the yellow warning message will still be shown.</span></p>
           </div>
         </article>
       </div>
