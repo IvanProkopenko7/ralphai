@@ -48,6 +48,10 @@ const i18n = {
   howTo:           isPolish ? 'Jak kadrować zdjęcia?'                : 'How to crop photos?',
   howToGoodLabel:  isPolish ? 'DOBRZE'                               : 'GOOD',
   howToBadLabel:   isPolish ? 'ŹLE'                                  : 'BAD',
+  homeCredibilityHeading: isPolish ? 'RalphAI w liczbach'            : 'RalphAI in numbers',
+  homeMetricVisitors: isPolish ? 'Użytkownków'                       : 'Visitors',
+  homeMetricPrecision: isPolish ? 'Ogólna precyzja'                  : 'Overall precision',
+  homeMetricDatasetPhotos: isPolish ? 'Zdjęć metek w zbiorze danych' : 'Photos of tags in the dataset',
   extraChecksHeading: isPolish
     ? 'Jakie dodatkowe sprawdzenia mogę przeprowadzić?'
     : 'What additional checks can I do?',
@@ -109,6 +113,20 @@ const i18n = {
     : 'Some of the results are too uncertain. Please, try re-cropping yellow photos more closely and checking them again. If the result is still uncertain, then please send those photos to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
 };
 
+function applySharedMetrics() {
+  const metrics = window.RALPHAI_METRICS;
+  if (!metrics) return;
+
+  document.querySelectorAll('[data-metric-key]').forEach((el) => {
+    const key = el.dataset.metricKey;
+    if (!key) return;
+    const value = metrics[key];
+    if (value !== undefined && value !== null) {
+      el.textContent = String(value);
+    }
+  });
+}
+
 const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
 const CONFIDENCE_THRESHOLD = 78;
 
@@ -133,6 +151,8 @@ function applyTranslations() {
   if (uncertaintyMsgEl) {
     uncertaintyMsgEl.innerHTML = i18n.uncertaintyHtml;
   }
+
+  applySharedMetrics();
 }
 applyTranslations();
 
@@ -864,12 +884,4 @@ function hideError() {
 function hideResult() {
   resultRow.hidden = true;
   resultRow.innerHTML = '';
-}
-
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }

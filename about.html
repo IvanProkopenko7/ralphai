@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
   <link rel="manifest" href="/favicon/site.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
+  <script defer src="metrics.js"></script>
   <script defer src="about.js"></script>
 </head>
 
@@ -53,19 +54,19 @@
 
       <section class="about-metrics" aria-label="RalphAI metrics">
         <article class="about-metric-card">
-          <p class="about-metric-value">500+</p>
+          <p class="about-metric-value" data-metric-key="visitors">500+</p>
           <p class="about-metric-label" data-i18n="metric0">Visitors</p>
         </article>
         <article class="about-metric-card">
-          <p class="about-metric-value">98.6%</p>
+          <p class="about-metric-value" data-metric-key="overallPrecision">98.6%</p>
           <p class="about-metric-label" data-i18n="metric1">Overall precision</p>
         </article>
         <article class="about-metric-card">
-          <p class="about-metric-value">6020</p>
-          <p class="about-metric-label" data-i18n="metric3">Photos in the dataset</p>
+          <p class="about-metric-value" data-metric-key="datasetPhotos">6020</p>
+          <p class="about-metric-label" data-i18n="metric3">Photos of tags in the dataset</p>
         </article>
         <article class="about-metric-card">
-          <p class="about-metric-value">49364</p>
+          <p class="about-metric-value" data-metric-key="augmentedPhotos">49364</p>
           <p class="about-metric-label" data-i18n="metric4">Photos after augmentation</p>
         </article>
       </section>
