@@ -937,7 +937,7 @@ background-color: black;
 
 .footer-author {
   flex: 1;
-  padding-right: 14px;
+  padding-right: 20px;
 }
 
 .footer-email {
@@ -1121,6 +1121,22 @@ background-color: black;
 
 /* Narrow phones — full screen */
 @media (max-width: 600px) {
+  .footer-github, .footer-reddit {
+    padding: 0;
+  }
+    .site-footer {
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 6px 12px;
+  }
+    .footer-author,
+  .footer-email {
+    width: 100%;
+    flex: none;
+  }
   .preview-thumb {
     width: 180px;
     height: 90px;
@@ -1520,22 +1536,7 @@ background-color: black;
   }
 
 
-  /* Stack footer vertically */
-  .site-footer {
-    height: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    padding: 14px 16px;
-    gap: 6px 12px;
-    font-size: 14px;
-  }
 
-  .footer-author,
-  .footer-email {
-    width: 100%;
-    flex: none;
-  }
 
   .footer-reddit,
   .footer-github {
