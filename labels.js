@@ -9,56 +9,56 @@
     supportedLabels: isPolish ? 'WSPIERANE METKI' : 'SUPPORTED LABELS',
     upcomingLabels: isPolish ? 'NADCHODZACE METKI' : 'UPCOMING LABELS',
     navContact: isPolish ? 'KONTAKT' : 'CONTACT',
-    footerCreatedBy: isPolish ? 'Stworzone przez' : 'Created by'
+    footerCreatedBy: isPolish ? 'Stworzone przez' : 'Created by',
+    seeAll: isPolish ? 'Zobacz wszystkie' : 'See all'
   };
 
   const supportedPoloBy = [
-    '01020150-5_cropped_processed_by_imagy_webp.rf.GgsdY9WmvIG1CWehHxqT.jpg',
-    '1732463136_cropped_processed_by_imagy_webp_webp_webp.rf.AKlfoq9YxYkjlGamSwUS.jpg',
-    '1760451379_cropped_processed_by_imagy_webp.rf.KAaWuLkM67LWbP7Wdypm.jpg',
-    '1760466372_webp_webp_webp.rf.Sv5zn2B7XB7hdTyDdQgr.webp',
-    '1762255243_cropped_processed_by_imagy_webp_webp_webp.rf.NMfrUOi9AgHdXg6R1HoX.webp',
-    '1773857029_cropped_processed_by_imagy_webp.rf.6sEE2TvA1ZNd0Zn6nUKl.jpg',
-    '3s-l1600 (4)_cropped_processed_by_imagy_webp.rf.NUTRF4mdIlD9m9qgrb3H.jpg',
-    '614039665_122274818168034110_6614302298217007721_n_cropped_processed_by_imagy_jpg.rf.3kXArsroDPRqwAjpT8mP.jpg',
-    'anyone-seen-this-tag-before-v0-9fe1cvy5786f1_cropped_processed_by_imagy_webp.rf.FjE8TqjZf5Zi694pkthl.jpg',
-    'BbvVd77qNaZB19VENdWw_png_png_png.rf.v7uOLLPKKtVmpvc6k0z5.jpg',
-    'screenshot_2026-03-26_011251_cropped_processed_by_imagy_webp.rf.RZVxrJA87nNRWh1kuhH1.webp',
-    'found-at-a-garage-sale-v0-9urj57alqbog1_cropped_processed_by_imagy_webp.rf.l9qPoi8liGPHhBWp3Nje.jpg',
-    'found-at-a-garage-sale-v0-h9bwe7alqbog1_cropped_processed_by_imagy_webp.rf.YQOFW5Yy9v79K8eWQ1W0.jpg',
-    'fs-l1600_cropped_processed_by_imagy_webp.rf.zIeEeQZcwKLPFph9h1P7.jpg',
-    'gs-l1600 (12)_cropped_processed_by_imagy_webp.rf.oR2VFLTDbZMloFbEYWB8.jpg',
-    'il_1588xN-6968401628_d2u8_cropped_processed_by_imagy_jpg.rf.qJVCKfBR0XjLeL081Bq1.jpg',
-    'rl-polo-vintage-denim-full-zip-v0-pdpzxfeyzppg1_cropped_processed_by_imagy_webp.rf.XnNhGZUwv7OzwWyavPIq.jpg',
-    's-l1600 - 2026-03-17T172046-883_cropped_processed_by_imagy_webp.rf.v7HYW3lO7ZhNiGEU5AYA.jpg',
-    's-l1600 - 2026-03-18T211414-066_cropped_processed_by_imagy_webp.rf.XBvcbiGmprwCIERYOaJ8.webp',
-    's-l1600 - 2026-03-18T211705-669_cropped_processed_by_imagy_webp.rf.Lvsqh9eBRblvl6pm9z6D.jpg',
-    's-l1600 - 2026-03-19T131848-660_cropped_processed_by_imagy_webp.rf.ZJfx5c9cu74e0MaehagW.jpg',
-    's-l1600 - 2026-03-19T183804-739_cropped_processed_by_imagy_webp.rf.gQHzNZNeFwEEDlnF9bhr.jpg',
-    's-l1600 - 2026-03-19T184257-600_cropped_processed_by_imagy_webp.rf.CrjsSrm6SnNVJ3IBhx6q.jpg',
-    's-l1600 (12)_cropped_processed_by_imagy_webp.rf.mYN7iNTKc1X9de2jukjl.jpg',
-    's-l1600 (923)_cropped_processed_by_imagy_webp.rf.XuLYG7S15NRCL1O33Nmf.jpg',
-    's-l1600 (99)_cropped_processed_by_imagy_webp.rf.V95lqYH4eHNt2xZGu1Dr.webp'
+    '2020s_yellow_QR_code_sweater_01020150-5.jpg',
+    '2020s_sweater_1762255243.webp',
+    '2020s_sleepwear_shirt_1773857029.jpg',
+    '2020s_denim_jacket_s-l1600 (12).jpg',
+    '2018_palace_pants_3s-l1600 (4).jpg',
+    '2010s_lumberjack_shirt_1732463136.jpg',
+    '2010s_kids_polo_1760466372.webp',
+    '2010s_black_beanie.jpg',
+    '2000s_neck_tie.jpg',
+    '2000s_made_in_china_blazer.webp',
+    '2000s-blazer.jpg',
+    '1990s_t-shirt.webp',
+    '1990s_made_in_usa_wool_coat_s-l1600 (12).jpg',
+    '1990s_made_in_usa_silk_tie_s-l1600 (99).webp',
+    '1990s_made_in_usa_jacket.jpg',
+    '1990s_made_in_usa_flat_cap_s-l1600 (923).jpg',
+    '1990s_made_in_usa_chinos.jpg',
+    '1990s_made_in_taiwan_hat.jpg',
+    '1990s_made_in_honduras_t-shirt_1760451379.jpg',
+    '1990s_japanese_sweater_il_1588xN.6968401628_d2u8.jpg',
+    '1990s_denim_made_in_usa_jacket_rl-polo-vintage-denim-full-zip-v0-pdpzxfeyzppg1.jpg',
+    '1980s_made_in_usa_bullion patch_blazer_found-at-a-garage-sale-v0-9urj57alqbog1.jpg',
+    '1980s_made_in_korea_shirt_anyone-seen-this-tag-before-v0-9fe1cvy5786f1.jpg',
+    '1980s_made_in_hong_kong_sweater_BbvVd77qNaZB19VENdWw.jpg',
+    '1970s_made_in_indonesia_shirt_614039665_122274818168034110_6614302298217007721_n.jpg'
   ];
 
   const supportedPolo = [
-    '1765367939_cropped_processed_by_imagy_webp_webp.rf.nNSO1I6BlMpjJRMv9JmI.jpg',
-    '1770790076 (1)_cropped_processed_by_imagy_webp_webp.rf.GdRxdmOzpUoVpVUPOMjE.jpg',
-    '1773862739_cropped_processed_by_imagy.jpg',
-    '1773955410_cropped_processed_by_imagy.jpg',
-    '1774383455_cropped_processed_by_imagy.jpg',
-    'legit-check-plz-v0-4gkfrpelz8rg1_cropped_processed_by_imagy.jpg',
-    's-2l1600_cropped_processed_by_imagy.jpg',
-    's-l116200 (10)_cropped_processed_by_imagy.jpg',
-    's-l1600 - 2026;-03-18T212007-045_cropped_processed_by_imagy_webp.rf.cVsgqKCJLpuWcnaFxqC1.jpg',
-    's-l1600 - 2026-03-16T160340-827_cropped_processed_by_imagy_webp.rf.tmqlrnjHdCJgLCTnlotB.jpg',
-    's-l1600 - 2026-03-16T160830-579_cropped_processed_by_imagy_webp.rf.1V3F3BaTrqcPXuyGHsjZ.webp',
-    's-l1600 - 2026-03-19T145732-184_cropped_processed_by_imagy_webp.rf.MeBsYeZaZ60HgjMpeSZj.jpg',
-    's-l1600 - 2026-03-19T150302-531_cropped_processed_by_imagy_webp.rf.epOe7Av7IAnMkvX2fy0I.jpg',
-    's-l1600 - 2026-03-19T170406-768_cropped_processed_by_imagy_webp.rf.PDyMSUSGqomR9S9meIFO.jpg',
-    's-l1600 - 2026-03-19T170423-182_cropped_processed_by_imagy_webp.rf.J0ZWtPd3mNeiZgNGxAmm.jpg',
-    's-l1600 - 2026-03-26T165302.788_cropped_processed_by_imagy.jpg',
-    's-l16300 (7)_cropped_processed_by_imagy_webp.rf.hPWVqNBmSQHnpUXdVQWu.jpg'
+    '2020s_sleepwear_shirt_legit-check-plz-v0-4gkfrpelz8rg1.jpg',
+    '2020s_made_in_egypt_jacket.jpg',
+    '2020s_made_in_china_wool_hat_1773862739.jpg',
+    '2020s_made_in_china_scarf.jpg',
+    '2020s_made_in_china_performance_jacket.jpg',
+    '2020s_made_in_china_cardigan_1765367939.jpg',
+    '2020s_black_beanie_1774383455.jpg',
+    '2010s_tweed_blazer_s-l116200 (10).jpg',
+    '2010s_scarf_s-2l1600.jpg',
+    '2010s_pants.webp',
+    '2010s_kids_polo_1770790076 (1).jpg',
+    '2010s_cap_1773955410.jpg',
+    '2010s_blazer.jpg',
+    '2000s_denim_military_jacket.jpg',
+    '1990s_sportsman_shirt.jpg',
+    '1990s_made_in_philippines_denim_jacket.jpg',
+    '1980s_made_in_usa_chore_blanket_jacket_s-l16300 (7).jpg'
   ];
 
   const upcomingRalphLauren = [
@@ -78,7 +78,7 @@
     'IMG_7770.jpg'
   ];
 
-  const LCP_IMAGE_FILE = 'found-at-a-garage-sale-v0-h9bwe7alqbog1_cropped_processed_by_imagy_webp.rf.YQOFW5Yy9v79K8eWQ1W0.jpg';
+  const LCP_IMAGE_FILE = '2020s_yellow_QR_code_sweater_01020150-5.jpg';
 
   function encodePathSegment(segment) {
     return encodeURIComponent(segment).replace(/%2F/g, '/');
@@ -139,8 +139,38 @@
     const grid = document.getElementById(gridId);
     if (!grid) return;
 
-    grid.innerHTML = fileNames.map((fileName) => buildCardHtml(baseDir, fileName)).join('');
+    const initialCount = 12;
+    const initialFiles = fileNames.slice(0, initialCount);
+    let html = initialFiles.map((fileName) => buildCardHtml(baseDir, fileName)).join('');
+
+    if (fileNames.length > initialCount) {
+      html += `
+        <div class="labels-see-all-wrapper" style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 10px;">
+          <button class="labels-see-all-btn" style="padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid #e5e7eb; border-radius: 999px; background: transparent; color: #111; transition: all 0.2s;">
+            ${i18n.seeAll}
+          </button>
+        </div>
+      `;
+    }
+
+    grid.innerHTML = html;
     initLazyImages(grid);
+
+    const seeAllBtn = grid.querySelector('.labels-see-all-btn');
+    if (seeAllBtn) {
+      seeAllBtn.addEventListener('click', function() {
+        const remainingFiles = fileNames.slice(initialCount);
+        const remainingHtml = remainingFiles.map((fileName) => buildCardHtml(baseDir, fileName)).join('');
+        this.parentElement.outerHTML = remainingHtml;
+        initLazyImages(grid);
+      });
+      seeAllBtn.addEventListener('mouseover', function() {
+        this.style.backgroundColor = '#f3f4f6';
+      });
+      seeAllBtn.addEventListener('mouseout', function() {
+        this.style.backgroundColor = 'transparent';
+      });
+    }
   }
 
   document.querySelectorAll('[data-i18n]').forEach((el) => {

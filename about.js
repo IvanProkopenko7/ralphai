@@ -17,8 +17,9 @@
     aboutP3: isPolish
       ? 'Projekt jest stale rozwijany, ciągłe dodawane są nowe metki, zwiększana skuteczność modelu, strona staje się coraz bardziej rozbudowana. Kod jest dostępny wszystkim na GitHubie. Przesyłane zdjęcia nie są nigdzie zapisywane.'
       : 'The project is constantly being developed; new tags are continually being added, the model’s accuracy is being improved, and the website is becoming increasingly comprehensive. The code is available to everyone on GitHub. Uploaded photos are not stored anywhere.',
-    metric1: isPolish ? 'Skuteczność ogólna' : 'Overall accuracy',
-    metric2: isPolish ? 'Skuteczność przy pewności powyżej 80%' : 'Accuracy above 80% confidence',
+    metric0: isPolish ? 'Wizyt' : 'Visitors',
+    metric1: isPolish ? 'Skuteczność ogólna' : 'Overall precision',
+    metric2: isPolish ? 'Skuteczność przy pewności powyżej 78%' : 'Precision above 78% confidence',
     metric3: isPolish ? 'Liczba zdjęć w zbiorze danych' : 'Photos in the dataset',
     metric4: isPolish ? 'Liczba zdjęć po augmentacji' : 'Photos after augmentation',
     footerCreatedBy: isPolish ? 'Stworzone przez' : 'Created by'

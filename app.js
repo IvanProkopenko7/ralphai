@@ -32,10 +32,10 @@ const i18n = {
   navLabels:       isPolish ? 'METKI'                                : 'LABELS',
   navAbout:        isPolish ? 'O NAS'                                : 'ABOUT',
   navContact:      isPolish ? 'KONTAKT'                              : 'CONTACT',
-  subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the label',
+  subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the neck label',
   supportedLabelsNote: isPolish
-    ? '*Zobacz <a href="labels.html">listę wspieranych metek</a>'
-    : '*See the <a href="labels.html">list of supported labels</a>',
+    ? '*Wspierane są tylko metki Polo Ralph Lauren'
+    : '*Only Polo Ralph Lauren labels are supported',
   notePrefix:      isPolish ? '*Na razie obsługiwane są tylko metki' : "*Currently, only",
   noteBold:        isPolish ? ' \u201ePolo by Ralph Lauren\u201d'    : " 'Polo by Ralph Lauren' labels are supported",
   clearAll:        isPolish ? 'Wyczyść wszystko'                     : 'Clear all',
@@ -58,8 +58,8 @@ const i18n = {
     ? 'Zeskanuj kod QR znajdujący się na górnej metce.'
     : 'Scan the QR code on the neck tag.',
   extraChecksPoint1Body: isPolish
-    ? 'Większość ubrań marki Ralph Lauren wyprodukowanych po listopadzie 2019 roku posiada kod QR na metce górnej metce. Zeskanuj go swoim telefonem. Kod QR powinien przekierować Cię na oficjalną stronę Ralph Lauren służącą do weryfikacji autentyczności danego ubrania. Jeśli link przekieruje Cię na stronę „Authentication Check. We need a closer look at your QR code”, najprawdopodobniej jest to podróbka, choć zdarzają się przypadki, gdy strona ta wyświetla się nawet w przypadku oryginalnych ubrań Ralph Lauren. Dzieje się tak w przypadku produktów, które są sample\'ami i/lub zostały wyprodukowane do użytku wewnętrznego merch\'e i prezenty dla pracowników, lub gdy kod QR został zeskanowany zbyt wiele razy. Jeśli kod QR nie skanuje się lub przekierowuje Cię na jakąkolwiek inną stronę, to z pewnością jest to podróbka. Ponadto, jeśli kod QR skanuje się poprawnie i przekierowuje Cię na właściwą stronę, nie oznacza to, że produkt jest na pewno autentyczny. Kody QR można skopiować, więc powinny one stanowić tylko jeden z elementów procesu weryfikacji autentyczności odzieży, a nie pewną odpowiedź. Niemniej jednak kod QR zapewnia ponad 98+% skuteczności, więc jeśli to możliwe, zdecydowanie warto go zeskanować.'
-    : 'Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it with your phone. The QR code should send you to the Ralph Lauren\'s official authentication page of the piece of clothing that you are legit checking. If the link sends you to the "Authentication Check. We need a closer look at your QR code" page, then it\'s most likely fake, though there are instances of that page showing even on legitimate Ralph Lauren clothes. It happens with products that are either samples and/or manufactured for internal use - employee merch/gifts or when the QR code is scanned too many times. If the QR code doesn\'t scan or sends you to any other page, then it\'s certainly fake. Also, if the QR code scans correctly and sends you to the right page, it doesn\'t mean that the piece is certainly legit. QR codes can be copied, so it should serve as one of the parts of clothes\' authentication process, not a certain answer. But still, QR code gives you about 98+% accuracy, so if you can, you should certainly scan it.',
+    ? 'Większość ubrań marki Ralph Lauren wyprodukowanych po listopadzie 2019 roku posiada kod QR na metce górnej metce. Zeskanuj go swoim telefonem. Kod QR powinien przekierować Cię na oficjalną stronę Ralph Lauren służącą do weryfikacji autentyczności danego ubrania. Jeśli link przekieruje Cię na stronę „Authentication Check. We need a closer look at your QR code”, najprawdopodobniej jest to podróbka, choć zdarzają się przypadki, gdy strona ta wyświetla się nawet w przypadku oryginalnych ubrań Ralph Lauren. Dzieje się tak w przypadku produktów, które są sample\'ami i/lub zostały wyprodukowane do użytku wewnętrznego merch\'e i prezenty dla pracowników, lub gdy kod QR został zeskanowany zbyt wiele razy. Jeśli kod QR nie skanuje się lub przekierowuje Cię na jakąkolwiek inną stronę, to z pewnością jest to podróbka. Ponadto, jeśli kod QR skanuje się poprawnie i przekierowuje Cię na właściwą stronę, nie oznacza to, że produkt jest na pewno autentyczny. Kody QR można skopiować, więc powinny one stanowić tylko jeden z elementów procesu weryfikacji autentyczności odzieży, a nie pewną odpowiedź. Niemniej jednak kod QR zapewnia ponad 99% skuteczności, więc jeśli to możliwe, zdecydowanie warto go zeskanować.'
+    : 'Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it with your phone. The QR code should send you to the Ralph Lauren\'s official authentication page of the piece of clothing that you are authenticating. If the link sends you to the "Authentication Check. We need a closer look at your QR code" page, then it\'s most likely fake, though there are instances of that page showing even on legitimate Ralph Lauren clothes. It happens with products that are either samples and/or manufactured for internal use - employee merch/gifts or when the QR code is scanned too many times. If the QR code doesn\'t scan or sends you to any other page, then it\'s certainly fake. Also, if the QR code scans correctly and sends you to the right page, it doesn\'t mean that the piece is certainly legit. QR codes can be copied, so it should serve as one of the parts of clothes\' authentication process, not a certain answer. But still, QR code gives you about 99% accuracy, so if you can, you should certainly scan it.',
   extraChecksRealLabel: isPolish ? 'ORYGINAŁ' : 'REAL',
   extraChecksFakeLabel: isPolish ? 'PODRÓBKA' : 'FAKE',
   extraChecksPoint2Title: isPolish
@@ -76,26 +76,18 @@ const i18n = {
     : 'Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a> and discord servers like <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get - the better.',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
-  updateModalTitle: isPolish ? '🎉 Pierwsze 300 wizyt!'               : '🎉 First 300 visitors!',
+  updateModalTitle: isPolish ? '🎉 Pierwsze 500 wizyt!'               : '🎉 First 500 visitors!',
   updateModalSubtitle: isPolish ? 'Co nowego?'                        : "What's new:",
   updateFeatureDatasetTitle: isPolish ? 'Większy zbiór danych'        : 'Bigger dataset',
   updateFeatureDatasetBody: isPolish
-    ? 'Do zbioru danych dodano <strong>866</strong> zdjęć z górnych metek. <strong>10622</strong> zdjęcia po augmentacji danych.'
-    : '<strong>866</strong> more photos of tags in the dataset. <strong>10622</strong> more images after augmentation.',
-  updateFeatureAccuracyTitle: isPolish ? 'Wyższa dokładność modelu'   : 'Higher model accuracy',
+    ? 'Do zbioru danych dodano <strong>1240</strong> zdjęć górnych metek. Teraz cały zbiór zawiera aż <strong>6020</strong> zdjęć!'
+    : '<strong>1240</strong> more photos of tags in the dataset. Now dataset contains <strong>6020</strong> photos in total!',
+  updateFeatureAccuracyTitle: isPolish ? 'Wyższa precyzja modelu'   : 'Higher model precision',
   updateFeatureAccuracyBody: isPolish
-    ? 'Dokładność modelu wzrosła z 94,6% do <strong>96,0%</strong>.'
-    : 'The accuracy of the model has been improved from 94.6% to <strong>96.0%</strong> now.',
-  updateFeatureSourcesTitle: isPolish ? 'Więcej kategorii metek'      : 'More label categories',
-  updateFeatureSourcesBody: isPolish
-    ? 'Nowe zdjęcia pochodzą z: vintage\'owych T-shirtów, kurtek, marynarek, linii japońskich, linii "sportsman", linii performance, czapek, szortów i tak dalej.'
-    : 'The new photos are from: vintage T-shirts, jackets, blazers, Japanese lines, sportsman lines, performance lines, caps, shorts, and so on.',
-  updateFeatureConfidenceTitle: isPolish ? 'Usunięto wyświetlanie pewności' : 'Confidence reveal removed',
-  updateFeatureConfidenceBody: isPolish
-    ? 'Usunięto próg pewności, co pozwoliło znacznie zmniejszyć liczbę wyników fałszywie ujemnych przy zachowaniu dokładności. <span class="update-note-muted">*Jeśli pewność prognoz jest niższa od progu, nadal będzie wyświetlany żółty komunikat ostrzegawczy.</span>'
-    : 'The confidence reveal was removed to largely decrease the amount of false negatives while maintaining the accuracy. <span class="update-note-muted">*If the confidence of the predictions will be less than the threshold, the yellow warning message will still be shown.</span>',
+    ? 'Precyzja modelu wzrosła z 96.0% do <strong>98.6%</strong>.'
+    : 'The precision of the model has been improved from 96.0% to <strong>98.6%</strong> now.',
   updateFooterTitle: isPolish ? 'Dzięki, że korzystasz z RalphAI!'     : 'Thank you for checking out this website!',
-  updateFooterSubtitle: isPolish ? 'Kolejne usprawnienia już w drodze.' : 'More improvements are coming soon.',
+  updateFooterSubtitle: isPolish ? 'Kolejne aktualizacje już w drodze.' : 'More improvements are coming soon.',
   footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
@@ -114,7 +106,7 @@ const i18n = {
 };
 
 const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
-const CONFIDENCE_THRESHOLD = 52;
+const CONFIDENCE_THRESHOLD = 78;
 
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -181,7 +173,7 @@ if (howToVideo) {
         entries.forEach((entry) => {
           syncVideoPlayback(entry.isIntersecting);
         });
-      }, { rootMargin: '120px 0px', threshold: 0.15 });
+      }, { rootMargin: '8.5714rem 0rem', threshold: 0.15 });
       observer.observe(howToVideo);
     } else {
       loadVideoSource();
@@ -203,7 +195,7 @@ document.getElementById('langToggle').addEventListener('click', () => {
 /* ─── Update popup ───────────────────────────────── */
 const SHOW_UPDATE_POPUP = true;
 // Bump this version for each new release note so each update is shown once per browser.
-const UPDATE_POPUP_VERSION = '2026-04-300-visitors';
+const UPDATE_POPUP_VERSION = '2026-04-500-visitors';
 const updatePopupSeenKey = `updatePopupSeen:${UPDATE_POPUP_VERSION}`;
 let previousBodyOverflow = '';
 
@@ -243,10 +235,17 @@ let cropQueue       = [];
 let cropperInstance = null;
 let lastCropConfirmTouchTs = 0;
 let previousCropperBodyOverflow = '';
+let minCropperZoomRatio = 0;
+let touchCenterTriggerZoomRatio = 0;
+let touchZoomCenterTimer = null;
+let touchCenterAnimationFrame = null;
 
 const ua = navigator.userAgent || '';
 const isIOSDevice = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isMobileSafari = isIOSDevice && /AppleWebKit/i.test(ua) && !/(CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo)/i.test(ua);
+const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0;
+const MAX_TOUCH_ZOOM_OUT_PERCENT = 20;
+const TOUCH_CENTER_TRIGGER_REMAINING_PERCENT = 10;
 
 function revokePreviewUrl(imageEntry) {
   if (imageEntry && imageEntry.previewUrl) {
@@ -333,6 +332,11 @@ function appendLastPreviewCard() {
   }
 
   previewGrid.insertBefore(card, addMoreBtn);
+
+  const canAddMore = croppedImages.length + cropQueue.length < MAX_IMAGES;
+  if (!canAddMore) {
+    addMoreBtn.remove();
+  }
 }
 
 function finalizeCrop(blob) {
@@ -382,18 +386,15 @@ function handleCropConfirm() {
 }
 
 /* ─── Warmup ping ─────────────────────────────────── */
-// Sends a real 1×1 JPEG so the Worker forwards it to Roboflow,
-// forcing the model to load before the user submits a photo.
+// Sends an empty body so the frontend proxy wakes up.
+// For Hugging Face Spaces, just hitting the Worker should be enough to stay warm or
+// we can pass a special flag to wake up the HF space.
 (function scheduleWarmup() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 1;
-  c.getContext('2d').fillRect(0, 0, 1, 1);
-  const base64 = c.toDataURL('image/jpeg', 0.5).split(',')[1];
   function ping() {
     fetch(API_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    base64,
+      headers: { 'Content-Type': 'text/plain' },
+      body:    'ping',
     }).catch(() => {});
   }
   ping();
@@ -489,6 +490,107 @@ function processNextCrop(keepModalOpen = false) {
   reader.readAsDataURL(file);
 }
 
+function centerTouchCanvas(cropper) {
+  if (!isTouchDevice) return;
+
+  const canvasData = cropper.getCanvasData();
+  const containerData = cropper.getContainerData();
+  if (!canvasData || !containerData || canvasData.width <= 1 || canvasData.height <= 1 || containerData.width <= 1 || containerData.height <= 1) return;
+
+  const centeredLeft = (containerData.width - canvasData.width) / 2;
+  const centeredTop = (containerData.height - canvasData.height) / 2;
+
+  if (centeredLeft !== canvasData.left || centeredTop !== canvasData.top) {
+    cropper.setCanvasData({
+      left: centeredLeft,
+      top: centeredTop,
+    });
+  }
+}
+
+function stopTouchCenterAnimation() {
+  if (touchCenterAnimationFrame) {
+    cancelAnimationFrame(touchCenterAnimationFrame);
+    touchCenterAnimationFrame = null;
+  }
+}
+
+function animateCenterTouchCanvas(cropper) {
+  stopTouchCenterAnimation();
+
+  const canvasData = cropper.getCanvasData();
+  const containerData = cropper.getContainerData();
+  if (!canvasData || !containerData || canvasData.width <= 1 || canvasData.height <= 1 || containerData.width <= 1 || containerData.height <= 1) return;
+  const targetLeft = (containerData.width - canvasData.width) / 2;
+  const targetTop = (containerData.height - canvasData.height) / 2;
+
+  const deltaLeft = targetLeft - canvasData.left;
+  const deltaTop = targetTop - canvasData.top;
+  if (Math.abs(deltaLeft) < 0.5 && Math.abs(deltaTop) < 0.5) {
+    centerTouchCanvas(cropper);
+    return;
+  }
+
+  const durationMs = 180;
+  const startTs = performance.now();
+  const startLeft = canvasData.left;
+  const startTop = canvasData.top;
+
+  const step = (timestamp) => {
+    const t = Math.min(1, (timestamp - startTs) / durationMs);
+    const easedT = 1 - Math.pow(1 - t, 3);
+
+    cropper.setCanvasData({
+      left: startLeft + (targetLeft - startLeft) * easedT,
+      top: startTop + (targetTop - startTop) * easedT,
+    });
+
+    if (t < 1) {
+      touchCenterAnimationFrame = requestAnimationFrame(step);
+      return;
+    }
+
+    touchCenterAnimationFrame = null;
+  };
+
+  touchCenterAnimationFrame = requestAnimationFrame(step);
+}
+
+function scheduleCenterTouchCanvas(cropper, shouldCenter) {
+  if (touchZoomCenterTimer) {
+    clearTimeout(touchZoomCenterTimer);
+    touchZoomCenterTimer = null;
+  }
+
+  if (!shouldCenter) {
+    stopTouchCenterAnimation();
+    return;
+  }
+
+  touchZoomCenterTimer = setTimeout(() => {
+    const canvasData = cropper.getCanvasData();
+    if (!canvasData || canvasData.width <= 1 || canvasData.height <= 1) {
+      requestAnimationFrame(() => {
+        animateCenterTouchCanvas(cropper);
+      });
+    } else {
+      animateCenterTouchCanvas(cropper);
+    }
+    touchZoomCenterTimer = null;
+  }, 110);
+}
+
+function preventCropperContextMenu(e) {
+  if (!isTouchDevice || cropperModal.hidden) return;
+  e.preventDefault();
+}
+
+cropperModal.addEventListener('contextmenu', preventCropperContextMenu, { capture: true });
+cropperModal.addEventListener('dragstart', (e) => {
+  if (!isTouchDevice) return;
+  e.preventDefault();
+}, { capture: true });
+
 /* ─── Cropper ─────────────────────────────────────── */
 function getResponsiveAutoCropArea() {
   const vw = window.innerWidth;
@@ -509,29 +611,78 @@ function openCropper(src, keepModalOpen = false) {
   }
 
   let hasInitialized = false;
+  let initAttempts = 0;
   const initCropper = () => {
     if (hasInitialized) return;
+
+    const modalRect = cropperModal.getBoundingClientRect();
+    const imgWrap = cropperImg.parentElement;
+    const wrapRect = imgWrap ? imgWrap.getBoundingClientRect() : { width: 0, height: 0 };
+    const layoutReady = modalRect.width > 1 && modalRect.height > 1 && wrapRect.width > 1 && wrapRect.height > 1;
+
+    if (!layoutReady && initAttempts < 12) {
+      initAttempts += 1;
+      requestAnimationFrame(initCropper);
+      return;
+    }
+
     hasInitialized = true;
     cropperImg.onload = null;
+    minCropperZoomRatio = 0;
+    touchCenterTriggerZoomRatio = 0;
+    if (touchZoomCenterTimer) {
+      clearTimeout(touchZoomCenterTimer);
+      touchZoomCenterTimer = null;
+    }
+    stopTouchCenterAnimation();
 
     if (cropperInstance) cropperInstance.destroy();
     cropperInstance = new Cropper(cropperImg, {
       viewMode:     1,
       autoCropArea: getResponsiveAutoCropArea(),
-      movable:      true,
+      dragMode:     isTouchDevice ? 'none' : 'crop',
+      movable:      !isTouchDevice,
       zoomable:     true,
+      zoomOnTouch:  true,
       scalable:     false,
       rotatable:    false,
+      toggleDragModeOnDblclick: false,
+      ready() {
+        const imageData = this.cropper.getImageData();
+        const initialRatio = imageData.naturalWidth ? (imageData.width / imageData.naturalWidth) : 0;
+        const minRatioMultiplier = Math.max(0, 1 - (MAX_TOUCH_ZOOM_OUT_PERCENT / 100));
+        minCropperZoomRatio = initialRatio > 0 ? initialRatio * minRatioMultiplier : 0;
+
+        const triggerRemaining = Math.min(MAX_TOUCH_ZOOM_OUT_PERCENT, Math.max(0, TOUCH_CENTER_TRIGGER_REMAINING_PERCENT));
+        const triggerAtZoomOutPercent = MAX_TOUCH_ZOOM_OUT_PERCENT - triggerRemaining;
+        const triggerMultiplier = Math.max(0, 1 - (triggerAtZoomOutPercent / 100));
+        touchCenterTriggerZoomRatio = initialRatio > 0 ? initialRatio * triggerMultiplier : 0;
+
+        // Do not force centering on open; center only when user zooms near max zoom-out.
+      },
+      zoom(event) {
+        if (!isTouchDevice) return;
+
+        const isNearFullZoomOut = touchCenterTriggerZoomRatio > 0
+          && event.detail.ratio <= (touchCenterTriggerZoomRatio + 0.0005);
+
+        if (minCropperZoomRatio > 0 && event.detail.ratio < minCropperZoomRatio) {
+          event.preventDefault();
+          this.cropper.zoomTo(minCropperZoomRatio);
+        }
+
+        scheduleCenterTouchCanvas(this.cropper, isNearFullZoomOut);
+      },
     });
     setCropConfirmProcessing(false);
   };
 
-  cropperImg.onload = initCropper;
+  cropperImg.onload = () => runAfterTwoPaints(initCropper);
   cropperImg.src = src;
 
   // Data URLs can decode immediately on some browsers.
   if (cropperImg.complete && cropperImg.naturalWidth > 0) {
-    initCropper();
+    runAfterTwoPaints(initCropper);
   }
 }
 
@@ -539,6 +690,13 @@ function closeCropper() {
   cropperModal.hidden = true;
   document.body.style.overflow = previousCropperBodyOverflow || '';
   previousCropperBodyOverflow = '';
+  minCropperZoomRatio = 0;
+  touchCenterTriggerZoomRatio = 0;
+  if (touchZoomCenterTimer) {
+    clearTimeout(touchZoomCenterTimer);
+    touchZoomCenterTimer = null;
+  }
+  stopTouchCenterAnimation();
   if (cropperInstance) {
     cropperInstance.destroy();
     cropperInstance = null;
@@ -674,7 +832,7 @@ function blobToBase64(blob) {
         reject(new Error(i18n.errorCannotRead));
         return;
       }
-      resolve(parts[1]);
+      resolve(`data:${blob.type};base64,${parts[1]}`);
     };
     reader.onerror = () => reject(new Error(i18n.errorCannotRead));
     reader.readAsDataURL(blob);

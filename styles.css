@@ -14,7 +14,7 @@ html,
 body {
   width: 100%;
   min-height: 100vh;
-  background: #ffffff;
+  background-color: #ffffff;
   font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   font-style: normal;
 }
@@ -24,7 +24,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #000;
+  background-color: #000;
   height: 60px;
   display: flex;
   align-items: center;
@@ -107,7 +107,7 @@ background-color: black;
 }
 
 .main-content.drag-over {
-  background: rgba(0, 0, 0, 0.04);
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 /* ===== UPLOAD SECTION ===== */
@@ -129,7 +129,7 @@ background-color: black;
 
 .subtitle {
   font-weight: 600;
-  font-size: calc(clamp(18px, 3vw, 32px) + 2px);
+  font-size: calc(clamp(18px, 3vw, 32px));
   color: #000;
   text-align: center;
 }
@@ -156,7 +156,7 @@ background-color: black;
   background-size: 150% 150%;
   position: relative;
   overflow: hidden;
-  margin-top: clamp(10px, 1.2vw, 18px);
+  margin-top: clamp(14px, 1.4vw, 20px);
   height: clamp(54px, 6vw, 100px);
   width: clamp(200px, 30vw, 440px);
   max-width: 100%;
@@ -218,7 +218,7 @@ background-color: black;
   gap: clamp(14px, 2vw, 32px);
   width: 100%;
   padding-bottom: clamp(12px, 2vw, 50px);
-  padding-top: clamp(40px, 6vw, 60px);
+  padding-top: clamp(36px, 6vw, 60px);
   content-visibility: auto;
 }
 
@@ -299,7 +299,7 @@ background-color: black;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
+  background-color: #fff;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -317,7 +317,7 @@ background-color: black;
   height: auto;
   max-width: 100%;
   max-height: 100%;
-  background: #eceff3;
+  background-color: #eceff3;
 }
 
 /* ===== ADDITIONAL CHECKS SECTION ===== */
@@ -425,7 +425,7 @@ background-color: black;
 }
 
 .preview-clearAll {
-  background: #f44336;
+  background-color: #f44336;
   color: #fff;
   border: none;
   padding: 8px 16px;
@@ -472,7 +472,7 @@ background-color: black;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -484,7 +484,7 @@ background-color: black;
 }
 
 .preview-thumb-remove:hover {
-  background: rgba(0, 0, 0, 0.85);
+  background-color: rgba(0, 0, 0, 0.85);
 }
 
 .preview-thumb-add {
@@ -492,7 +492,7 @@ background-color: black;
   height: 110px;
   border-radius: 10px;
   border: 2px dashed #ccc;
-  background: #fafafa;
+  background-color: #fafafa;
   cursor: pointer;
   font-size: 32px;
   color: #bbb;
@@ -531,15 +531,15 @@ background-color: black;
 }
 
 .result-chip--authentic {
-  background: #dcfce7;
+  background-color: #dcfce7;
 }
 
 .result-chip--fake {
-  background: #fee2e2;
+  background-color: #fee2e2;
 }
 
 .result-chip--unknown {
-  background: #fef9c3;
+  background-color: #fef9c3;
 }
 
 .result-chip-verdict {
@@ -646,7 +646,7 @@ background-color: black;
 }
 
 .btn-analyze:disabled {
-  background: #aaa;
+  background-color: #aaa;
   cursor: not-allowed;
 }
 
@@ -695,7 +695,7 @@ background-color: black;
 .error-msg {
   width: clamp(200px, 28vw, 440px);
   max-width: 100%;
-  background: #f8d7da;
+  background-color: #f8d7da;
   color: #721c24;
   border-radius: 6px;
   padding: 12px 18px;
@@ -708,7 +708,7 @@ background-color: black;
 .result-card {
   width: clamp(280px, 40vw, 560px);
   max-width: 100%;
-  background: #fff;
+  background-color: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.13);
   overflow: hidden;
@@ -735,7 +735,7 @@ background-color: black;
 
 .result-divider {
   height: 1px;
-  background: #f0f0f0;
+  background-color: #f0f0f0;
   margin: 4px 0;
 }
 
@@ -756,19 +756,19 @@ background-color: black;
   gap: 10px;
   padding: 24px 20px;
   border-radius: 12px;
-  background: #f7f7f7;
+  background-color: #f7f7f7;
 }
 
 .result-verdict--authentic {
-  background: #f0fdf4;
+  background-color: #f0fdf4;
 }
 
 .result-verdict--fake {
-  background: #fff1f1;
+  background-color: #fff1f1;
 }
 
 .result-verdict--unknown {
-  background: #fefce8;
+  background-color: #fefce8;
 }
 
 .result-verdict-label {
@@ -803,17 +803,17 @@ background-color: black;
 }
 
 .badge.authentic {
-  background: #dcfce7;
+  background-color: #dcfce7;
   color: #166534;
 }
 
 .badge.fake {
-  background: #fee2e2;
+  background-color: #fee2e2;
   color: #991b1b;
 }
 
 .badge.unknown {
-  background: #fef9c3;
+  background-color: #fef9c3;
   color: #854d0e;
 }
 
@@ -840,7 +840,7 @@ background-color: black;
 .confidence-bar-wrap {
   flex: 1;
   height: 10px;
-  background: #ede9f4;
+  background-color: #ede9f4;
   border-radius: 100px;
   overflow: hidden;
 }
@@ -896,7 +896,7 @@ background-color: black;
 .pred-bar-wrap {
   flex: 1;
   height: 6px;
-  background: #ede9f4;
+  background-color: #ede9f4;
   border-radius: 100px;
   overflow: hidden;
 }
@@ -904,7 +904,7 @@ background-color: black;
 .pred-bar {
   height: 100%;
   border-radius: 100px;
-  background: #b48dd4;
+  background-color: #b48dd4;
 }
 
 .pred-pct {
@@ -917,7 +917,7 @@ background-color: black;
 
 /* ===== FOOTER ===== */
 .site-footer {
-  background: #000;
+  background-color: #000;
   height: 60px;
   width: 100%;
   display: flex;
@@ -954,14 +954,16 @@ background-color: black;
   text-decoration: underline;
 }
 
-.footer-github {
+.footer-github,
+.footer-reddit {
   flex: 0 0 auto;
   color: #fff;
   text-decoration: none;
   padding: 2px;
 }
 
-.footer-github:hover {
+.footer-github:hover,
+.footer-reddit:hover {
   text-decoration: underline;
 }
 
@@ -969,7 +971,7 @@ background-color: black;
 .update-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1200;
   display: flex;
   align-items: center;
@@ -978,10 +980,10 @@ background-color: black;
 }
 
 .update-modal {
-  width: 500px;
+  width: 450px;
   max-width: 100%;
   max-height: calc(100vh - 32px);
-  background: #fff;
+  background-color: #fff;
   border-radius: 20px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   display: flex;
@@ -998,22 +1000,22 @@ background-color: black;
   height: 34px;
   border: none;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.14);
+  background-color: rgba(0, 0, 0, 0.14);
   color: #111;
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   z-index: 2;
 }
 
 .update-modal-close:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background-color: rgba(0, 0, 0, 0.08);
   color: #111;
 }
 
 .update-modal-header {
-  background: #fad300;
+  background-color: #fad300;
   text-align: center;
   padding: 24px 10px 14px 10px;
 }
@@ -1048,7 +1050,7 @@ background-color: black;
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f7f7f7;
+  background-color: #f7f7f7;
   border-radius: 16px;
     padding: 12px 6px;
 }
@@ -1057,7 +1059,7 @@ background-color: black;
   width: 40px;
   height: 40px;
   border-radius: 999px;
-  background: #fad300;
+  background-color: #fad300;
   color: #111;
   font-size: 18px;
   flex: 0 0 40px;
@@ -1067,7 +1069,7 @@ background-color: black;
 }
 
 .update-feature-text h3 {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.35;
   font-weight: 700;
   color: #111;
@@ -1076,7 +1078,7 @@ background-color: black;
 .update-feature-text p {
   margin-top: 8px;
   color: #374151;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -1094,7 +1096,7 @@ background-color: black;
 }
 
 .update-modal-footer {
-  background: #f5e6c3;
+  background-color: #f5e6c3;
   border-top: 1px solid #e6d4a8;
   text-align: center;
   padding: 20px 26px 22px;
@@ -1146,7 +1148,7 @@ background-color: black;
   }
 
   .update-modal-header {
-    background: #fad300;
+    background-color: #fad300;
     text-align: center;
     padding: 24px 10px 14px 10px;
   }
@@ -1189,7 +1191,7 @@ background-color: black;
   }
 
   .update-modal {
-    width: 440px;
+    width: 380px;
     max-height: calc(100vh - 16px);
   }
 
@@ -1219,7 +1221,7 @@ background-color: black;
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
+  background-color: rgba(0, 0, 0, 0.88);
   z-index: 1000;
   align-items: center;
   justify-content: center;
@@ -1231,7 +1233,7 @@ background-color: black;
 }
 
 .cropper-modal-inner {
-  background: #111;
+  background-color: #111;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -1245,7 +1247,7 @@ background-color: black;
 .cropper-img-wrap {
   width: 100%;
   height: 80vh;
-  background: #000;
+  background-color: #000;
   overflow: hidden;
 }
 
@@ -1254,12 +1256,75 @@ background-color: black;
   max-width: 100%;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .cropper-overlay,
+  .cropper-overlay * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Keep the large bottom-right handle as-is, but enlarge the other 7 touch points. */
+  .cropper-point:not(.point-se) {
+    width: 12px;
+    height: 12px;
+    opacity: 1;
+  }
+
+  .cropper-point.point-n {
+    width: 6px;
+    height: 6px;
+    top: -3px;
+    left: 50%;
+    margin-left: -3px;
+  }
+
+  .cropper-point.point-s {
+    width: 6px;
+    height: 6px;
+    bottom: -3px;
+    left: 50%;
+    margin-left: -3px;
+  }
+
+  .cropper-point.point-e {
+    width: 6px;
+    height: 6px;
+    right: -3px;
+    top: 50%;
+    margin-top: -3px;
+  }
+
+  .cropper-point.point-w {
+    width: 6px;
+    height: 6px;
+    left: -3px;
+    top: 50%;
+    margin-top: -3px;
+  }
+
+  .cropper-point.point-nw {
+    top: -6px;
+    left: -6px;
+  }
+
+  .cropper-point.point-ne {
+    top: -6px;
+    right: -6px;
+  }
+
+  .cropper-point.point-sw {
+    bottom: -6px;
+    left: -6px;
+  }
+}
+
 .cropper-actions {
   display: flex;
   gap: 12px;
   padding: 16px 20px;
   justify-content: flex-end;
-  background: #1a1a1a;
+  background-color: #1a1a1a;
 }
 
 .btn-crop-cancel,
@@ -1271,25 +1336,25 @@ background-color: black;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background-color 0.2s;
 }
 
 .btn-crop-cancel {
-  background: #444;
+  background-color: #444;
   color: #fff;
 }
 
 .btn-crop-cancel:hover {
-  background: #555;
+  background-color: #555;
 }
 
 .btn-crop-confirm {
-  background: #fff;
+  background-color: #fff;
   color: #111;
 }
 
 .btn-crop-confirm:hover {
-  background: #ddd;
+  background-color: #ddd;
 }
 
 .btn-crop-confirm.is-processing {
@@ -1405,7 +1470,7 @@ background-color: black;
   .nav-about,
   .nav-kontakt,
   .nav-lang-toggle {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1;
   }
 
@@ -1454,15 +1519,21 @@ background-color: black;
   /* Stack footer vertically */
   .site-footer {
     height: auto;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     padding: 14px 16px;
-    gap: 6px;
+    gap: 6px 12px;
     font-size: 14px;
   }
 
   .footer-author,
-  .footer-email,
+  .footer-email {
+    width: 100%;
+    flex: none;
+  }
+
+  .footer-reddit,
   .footer-github {
     flex: none;
   }
@@ -1507,17 +1578,19 @@ background-color: black;
 
 /* Extra-small phones (≤360px) */
 @media (max-width: 360px) {
-
+  .nav-labels, .nav-about, .nav-kontakt, .nav-lang-toggle {
+        font-size: 14px;
+  }
   .update-modal-title {
     font-size: 18px;
   }
   .update-feature-text h3 {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .update-feature-text p {
     margin-top: 8px;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .update-note-muted {
@@ -1629,7 +1702,7 @@ background-color: black;
   aspect-ratio: 4 / 3;
   border-radius: 6px;
   border: 1px solid #d9d9d9;
-  background: #eceff3;
+  background-color: #eceff3;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1724,7 +1797,7 @@ background-color: black;
 .about-metrics {
   margin-top: clamp(24px, 3vw, 38px);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(14px, 2.2vw, 26px);
 }
 
@@ -1759,6 +1832,8 @@ background-color: black;
 @media (max-width: 600px) {
   .about-metrics {
     gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
   }
 
   .about-metric-card {

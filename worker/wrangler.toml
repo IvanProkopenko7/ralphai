@@ -5,5 +5,5 @@ compatibility_date = "2024-01-01"
 workers_dev = true
 
 # After deploying, run:
-#   wrangler secret put ROBOFLOW_API_KEY
-# and paste your API key when prompted.
+#   wrangler secret put RALPH_Ai_TOKEN
+# and paste your Hugging Face token when prompted.
