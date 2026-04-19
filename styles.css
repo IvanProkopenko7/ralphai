@@ -1068,6 +1068,10 @@ background-color: black;
   justify-content: center;
 }
 
+.update-feature-icon--precision {
+  font-size: 20px;
+}
+
 .update-feature-text h3 {
   font-size: 18px;
   line-height: 1.35;
@@ -1609,9 +1613,13 @@ background-color: black;
   }
 
   .update-feature-icon {
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+
+  .update-feature-icon--precision {
+    font-size: 16px;
   }
 
   .nav-logo {

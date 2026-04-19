@@ -86,6 +86,10 @@ const i18n = {
   updateFeatureAccuracyBody: isPolish
     ? 'Precyzja modelu wzrosła z 96.0% do <strong>98.6%</strong>.'
     : 'The precision of the model has been improved from 96.0% to <strong>98.6%</strong> now.',
+  updateFeatureCropTitle: isPolish ? 'Lepsze kadrowanie na telefonach' : 'Better cropping on phones',
+  updateFeatureCropBody: isPolish
+    ? 'Kadrowanie stało się znacznie przyjemniejsze. Zdjęcie nie może wychodzić poza granice i automatycznie centruje się po pomniejszeniu.'
+    : 'Now cropping is much nicer. The photo can\'t go out of bounds and it centers automatically when zoomed out.',
   updateFooterTitle: isPolish ? 'Dzięki, że korzystasz z RalphAI!'     : 'Thank you for checking out this website!',
   updateFooterSubtitle: isPolish ? 'Kolejne aktualizacje już w drodze.' : 'More improvements are coming soon.',
   footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
@@ -235,17 +239,15 @@ let cropQueue       = [];
 let cropperInstance = null;
 let lastCropConfirmTouchTs = 0;
 let previousCropperBodyOverflow = '';
-let minCropperZoomRatio = 0;
-let touchCenterTriggerZoomRatio = 0;
-let touchZoomCenterTimer = null;
-let touchCenterAnimationFrame = null;
+let activeCropSourceCleanup = null;
 
 const ua = navigator.userAgent || '';
 const isIOSDevice = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isMobileSafari = isIOSDevice && /AppleWebKit/i.test(ua) && !/(CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo)/i.test(ua);
 const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0;
-const MAX_TOUCH_ZOOM_OUT_PERCENT = 20;
-const TOUCH_CENTER_TRIGGER_REMAINING_PERCENT = 10;
+const ENABLE_TOUCH_SOURCE_DOWNSCALE = false;
+const TOUCH_CROP_MAX_SOURCE_SIDE = isMobileSafari ? 1850 : 2048;
+const TOUCH_CROP_REENCODE_QUALITY = isMobileSafari ? 0.84 : 0.88;
 
 function revokePreviewUrl(imageEntry) {
   if (imageEntry && imageEntry.previewUrl) {
@@ -255,6 +257,13 @@ function revokePreviewUrl(imageEntry) {
 
 function cleanupAllPreviewUrls() {
   croppedImages.forEach(revokePreviewUrl);
+}
+
+function releaseActiveCropSource() {
+  if (typeof activeCropSourceCleanup === 'function') {
+    activeCropSourceCleanup();
+  }
+  activeCropSourceCleanup = null;
 }
 
 function runAfterTwoPaints(task) {
@@ -485,99 +494,104 @@ function handleFiles(files) {
 function processNextCrop(keepModalOpen = false) {
   if (!cropQueue.length) return;
   const file = cropQueue.shift();
-  const reader = new FileReader();
-  reader.onload = (ev) => openCropper(ev.target.result, keepModalOpen);
-  reader.readAsDataURL(file);
-}
+  if (!file) return;
 
-function centerTouchCanvas(cropper) {
-  if (!isTouchDevice) return;
-
-  const canvasData = cropper.getCanvasData();
-  const containerData = cropper.getContainerData();
-  if (!canvasData || !containerData || canvasData.width <= 1 || canvasData.height <= 1 || containerData.width <= 1 || containerData.height <= 1) return;
-
-  const centeredLeft = (containerData.width - canvasData.width) / 2;
-  const centeredTop = (containerData.height - canvasData.height) / 2;
-
-  if (centeredLeft !== canvasData.left || centeredTop !== canvasData.top) {
-    cropper.setCanvasData({
-      left: centeredLeft,
-      top: centeredTop,
+  prepareCropSource(file)
+    .then((source) => {
+      releaseActiveCropSource();
+      activeCropSourceCleanup = source.cleanup;
+      openCropper(source.src, keepModalOpen);
+    })
+    .catch(() => {
+      showError(i18n.errorCannotRead);
+      processNextCrop(keepModalOpen);
     });
-  }
 }
 
-function stopTouchCenterAnimation() {
-  if (touchCenterAnimationFrame) {
-    cancelAnimationFrame(touchCenterAnimationFrame);
-    touchCenterAnimationFrame = null;
-  }
-}
+async function prepareCropSource(file) {
+  const optimizedBlob = await maybeDownscaleImageForTouchCrop(file);
+  const sourceBlob = optimizedBlob || file;
+  const objectUrl = URL.createObjectURL(sourceBlob);
 
-function animateCenterTouchCanvas(cropper) {
-  stopTouchCenterAnimation();
-
-  const canvasData = cropper.getCanvasData();
-  const containerData = cropper.getContainerData();
-  if (!canvasData || !containerData || canvasData.width <= 1 || canvasData.height <= 1 || containerData.width <= 1 || containerData.height <= 1) return;
-  const targetLeft = (containerData.width - canvasData.width) / 2;
-  const targetTop = (containerData.height - canvasData.height) / 2;
-
-  const deltaLeft = targetLeft - canvasData.left;
-  const deltaTop = targetTop - canvasData.top;
-  if (Math.abs(deltaLeft) < 0.5 && Math.abs(deltaTop) < 0.5) {
-    centerTouchCanvas(cropper);
-    return;
-  }
-
-  const durationMs = 180;
-  const startTs = performance.now();
-  const startLeft = canvasData.left;
-  const startTop = canvasData.top;
-
-  const step = (timestamp) => {
-    const t = Math.min(1, (timestamp - startTs) / durationMs);
-    const easedT = 1 - Math.pow(1 - t, 3);
-
-    cropper.setCanvasData({
-      left: startLeft + (targetLeft - startLeft) * easedT,
-      top: startTop + (targetTop - startTop) * easedT,
-    });
-
-    if (t < 1) {
-      touchCenterAnimationFrame = requestAnimationFrame(step);
-      return;
-    }
-
-    touchCenterAnimationFrame = null;
+  return {
+    src: objectUrl,
+    cleanup: () => URL.revokeObjectURL(objectUrl),
   };
-
-  touchCenterAnimationFrame = requestAnimationFrame(step);
 }
 
-function scheduleCenterTouchCanvas(cropper, shouldCenter) {
-  if (touchZoomCenterTimer) {
-    clearTimeout(touchZoomCenterTimer);
-    touchZoomCenterTimer = null;
+async function maybeDownscaleImageForTouchCrop(file) {
+  if (!ENABLE_TOUCH_SOURCE_DOWNSCALE) return null;
+  if (!isTouchDevice || !(file instanceof Blob)) return null;
+  if (!file.type || !file.type.startsWith('image/')) return null;
+
+  const bitmapFactory = await getImageBitmapFactory(file);
+  if (!bitmapFactory) return null;
+
+  const { bitmap, close } = bitmapFactory;
+  const maxSide = Math.max(bitmap.width, bitmap.height);
+  if (maxSide <= TOUCH_CROP_MAX_SOURCE_SIDE) {
+    close();
+    return null;
   }
 
-  if (!shouldCenter) {
-    stopTouchCenterAnimation();
-    return;
+  const scale = TOUCH_CROP_MAX_SOURCE_SIDE / maxSide;
+  const targetWidth = Math.max(1, Math.round(bitmap.width * scale));
+  const targetHeight = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+  if (!ctx) {
+    close();
+    return null;
   }
 
-  touchZoomCenterTimer = setTimeout(() => {
-    const canvasData = cropper.getCanvasData();
-    if (!canvasData || canvasData.width <= 1 || canvasData.height <= 1) {
-      requestAnimationFrame(() => {
-        animateCenterTouchCanvas(cropper);
-      });
-    } else {
-      animateCenterTouchCanvas(cropper);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+  close();
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, 'image/jpeg', TOUCH_CROP_REENCODE_QUALITY);
+  });
+
+  return blob || null;
+}
+
+async function getImageBitmapFactory(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return {
+        bitmap,
+        close: () => {
+          if (typeof bitmap.close === 'function') bitmap.close();
+        },
+      };
+    } catch (_) {
+      // Fallback to HTMLImageElement decode below.
     }
-    touchZoomCenterTimer = null;
-  }, 110);
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Image decode failed'));
+      image.src = objectUrl;
+    });
+
+    return {
+      bitmap: img,
+      close: () => URL.revokeObjectURL(objectUrl),
+    };
+  } catch (_) {
+    URL.revokeObjectURL(objectUrl);
+    return null;
+  }
 }
 
 function preventCropperContextMenu(e) {
@@ -628,13 +642,6 @@ function openCropper(src, keepModalOpen = false) {
 
     hasInitialized = true;
     cropperImg.onload = null;
-    minCropperZoomRatio = 0;
-    touchCenterTriggerZoomRatio = 0;
-    if (touchZoomCenterTimer) {
-      clearTimeout(touchZoomCenterTimer);
-      touchZoomCenterTimer = null;
-    }
-    stopTouchCenterAnimation();
 
     if (cropperInstance) cropperInstance.destroy();
     cropperInstance = new Cropper(cropperImg, {
@@ -647,32 +654,6 @@ function openCropper(src, keepModalOpen = false) {
       scalable:     false,
       rotatable:    false,
       toggleDragModeOnDblclick: false,
-      ready() {
-        const imageData = this.cropper.getImageData();
-        const initialRatio = imageData.naturalWidth ? (imageData.width / imageData.naturalWidth) : 0;
-        const minRatioMultiplier = Math.max(0, 1 - (MAX_TOUCH_ZOOM_OUT_PERCENT / 100));
-        minCropperZoomRatio = initialRatio > 0 ? initialRatio * minRatioMultiplier : 0;
-
-        const triggerRemaining = Math.min(MAX_TOUCH_ZOOM_OUT_PERCENT, Math.max(0, TOUCH_CENTER_TRIGGER_REMAINING_PERCENT));
-        const triggerAtZoomOutPercent = MAX_TOUCH_ZOOM_OUT_PERCENT - triggerRemaining;
-        const triggerMultiplier = Math.max(0, 1 - (triggerAtZoomOutPercent / 100));
-        touchCenterTriggerZoomRatio = initialRatio > 0 ? initialRatio * triggerMultiplier : 0;
-
-        // Do not force centering on open; center only when user zooms near max zoom-out.
-      },
-      zoom(event) {
-        if (!isTouchDevice) return;
-
-        const isNearFullZoomOut = touchCenterTriggerZoomRatio > 0
-          && event.detail.ratio <= (touchCenterTriggerZoomRatio + 0.0005);
-
-        if (minCropperZoomRatio > 0 && event.detail.ratio < minCropperZoomRatio) {
-          event.preventDefault();
-          this.cropper.zoomTo(minCropperZoomRatio);
-        }
-
-        scheduleCenterTouchCanvas(this.cropper, isNearFullZoomOut);
-      },
     });
     setCropConfirmProcessing(false);
   };
@@ -680,7 +661,7 @@ function openCropper(src, keepModalOpen = false) {
   cropperImg.onload = () => runAfterTwoPaints(initCropper);
   cropperImg.src = src;
 
-  // Data URLs can decode immediately on some browsers.
+  // Object URLs can decode immediately on some browsers.
   if (cropperImg.complete && cropperImg.naturalWidth > 0) {
     runAfterTwoPaints(initCropper);
   }
@@ -690,17 +671,11 @@ function closeCropper() {
   cropperModal.hidden = true;
   document.body.style.overflow = previousCropperBodyOverflow || '';
   previousCropperBodyOverflow = '';
-  minCropperZoomRatio = 0;
-  touchCenterTriggerZoomRatio = 0;
-  if (touchZoomCenterTimer) {
-    clearTimeout(touchZoomCenterTimer);
-    touchZoomCenterTimer = null;
-  }
-  stopTouchCenterAnimation();
   if (cropperInstance) {
     cropperInstance.destroy();
     cropperInstance = null;
   }
+  releaseActiveCropSource();
   btnCropConfirm.disabled = false;
   btnCropConfirm.classList.remove('is-processing');
   cropperImg.src = '';
