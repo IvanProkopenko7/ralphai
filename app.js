@@ -36,6 +36,9 @@ const i18n = {
   supportedLabelsNote: isPolish
     ? '*Wspierane są tylko metki Polo Ralph Lauren'
     : '*Only Polo Ralph Lauren labels are supported',
+  collectNote: isPolish
+    ? '*Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model'
+    : '*Photos with no detected label and low-confidence results may be anonymously stored to improve the model',
   notePrefix:      isPolish ? '*Na razie obsługiwane są tylko metki' : "*Currently, only",
   noteBold:        isPolish ? ' \u201ePolo by Ralph Lauren\u201d'    : " 'Polo by Ralph Lauren' labels are supported",
   clearAll:        isPolish ? 'Wyczyść wszystko'                     : 'Clear all',
@@ -128,7 +131,7 @@ function applySharedMetrics() {
 }
 
 const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
-const CONFIDENCE_THRESHOLD = 78;
+const CONFIDENCE_THRESHOLD = 70;
 
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -517,10 +520,20 @@ function processNextCrop(keepModalOpen = false) {
   if (!file) return;
 
   prepareCropSource(file)
-    .then((source) => {
+    .then(async (source) => {
       releaseActiveCropSource();
       activeCropSourceCleanup = source.cleanup;
-      openCropper(source.src, keepModalOpen);
+      // Auto-detect the label in-browser; null → manual crop fallback.
+      // Never blocks the flow: detection errors silently fall back.
+      let seedBox = null;
+      if (window.RalphAIDetect) {
+        seedBox = await window.RalphAIDetect.detectLabelBox(source.src);
+      }
+      if (!seedBox) {
+        // Detector saw no label — save the full image for retraining (sampled server-side).
+        reportFail('miss', source.blob, { detector: 'none' });
+      }
+      openCropper(source.src, keepModalOpen, seedBox);
     })
     .catch(() => {
       showError(i18n.errorCannotRead);
@@ -535,6 +548,7 @@ async function prepareCropSource(file) {
 
   return {
     src: objectUrl,
+    blob: sourceBlob,
     cleanup: () => URL.revokeObjectURL(objectUrl),
   };
 }
@@ -637,7 +651,7 @@ function getResponsiveAutoCropArea() {
   return 0.9;
 }
 
-function openCropper(src, keepModalOpen = false) {
+function openCropper(src, keepModalOpen = false, seedBox = null) {
   if (!keepModalOpen || cropperModal.hidden) {
     previousCropperBodyOverflow = document.body.style.overflow;
     cropperModal.hidden = false;
@@ -664,9 +678,8 @@ function openCropper(src, keepModalOpen = false) {
     cropperImg.onload = null;
 
     if (cropperInstance) cropperInstance.destroy();
-    cropperInstance = new Cropper(cropperImg, {
+    const cropperOptions = {
       viewMode:     1,
-      autoCropArea: getResponsiveAutoCropArea(),
       dragMode:     isTouchDevice ? 'none' : 'crop',
       movable:      !isTouchDevice,
       zoomable:     true,
@@ -674,7 +687,19 @@ function openCropper(src, keepModalOpen = false) {
       scalable:     false,
       rotatable:    false,
       toggleDragModeOnDblclick: false,
-    });
+    };
+    if (seedBox && seedBox.width > 1 && seedBox.height > 1) {
+      // Auto-detected label box (source pixels) — user can still adjust freely.
+      cropperOptions.data = {
+        x: seedBox.x,
+        y: seedBox.y,
+        width: seedBox.width,
+        height: seedBox.height,
+      };
+    } else {
+      cropperOptions.autoCropArea = getResponsiveAutoCropArea();
+    }
+    cropperInstance = new Cropper(cropperImg, cropperOptions);
     setCropConfirmProcessing(false);
   };
 
@@ -782,7 +807,13 @@ btnAnalyze.addEventListener('click', async () => {
 
   try {
     const results = await Promise.all(
-      croppedImages.map(async ({ blob }) => classifyImage(await blobToBase64(blob)))
+      croppedImages.map(async (entry) => {
+        // Reuse cached result — never re-request an already legit-checked label.
+        if (entry.result) return entry.result;
+        const data = await classifyImage(await blobToBase64(entry.blob));
+        entry.result = data;
+        return data;
+      })
     );
     displayResults(results);
   } catch (err) {
@@ -834,11 +865,66 @@ function blobToBase64(blob) {
   });
 }
 
+/* ─── Fail harvest (miss / low-confidence → R2 via Worker) ────────── *
+ * Fire-and-forget: never blocks UI, never shows errors. The Worker    *
+ * samples ~5% server-side and enforces size caps, so this is safe to  *
+ * call for every miss / low-confidence case.                          *
+ * ──────────────────────────────────────────────────────────────────── */
+function blobToJpegDataUrl(blob, maxSide, quality) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        URL.revokeObjectURL(url);
+        resolve(dataUrl);
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('decode failed'));
+    };
+    img.src = url;
+  });
+}
+
+function reportFail(kind, blob, meta) {
+  if (!blob) return;
+  // Misses send the full frame (downscaled); low-conf sends the crop as-is.
+  const maxSide = kind === 'miss' ? 1024 : 640;
+  blobToJpegDataUrl(blob, maxSide, 0.75)
+    .then((dataUrl) => fetch(`${API_URL}/collect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, image: dataUrl, meta: meta || {} }),
+    }))
+    .catch(() => {});
+}
+
 /* ─── Display results ─────────────────────────────── */
 function displayResults(dataArr) {
   dataArr.forEach((data, i) => {
     if (croppedImages[i]) {
       croppedImages[i].chip = buildResultChip(data);
+      if (!croppedImages[i].reported && (data.confidence ?? 0) < CONFIDENCE_THRESHOLD / 100) {
+        // Low-confidence crop — save once for retraining (sampled server-side).
+        croppedImages[i].reported = true;
+        reportFail('lowconf', croppedImages[i].blob, {
+          top: data.top || 'unknown',
+          confidence: data.confidence ?? 0,
+        });
+      }
     }
   });
 
@@ -847,6 +933,7 @@ function displayResults(dataArr) {
 }
 
 function buildResultChip(data) {
+  // Worker returns only 'fake' | 'real' | 'unknown' — never fine-grained classes.
   const predictedClass = (data.top || 'unknown').toLowerCase();
   const pct = Math.round((data.confidence ?? 0) * 100);
   const isLowConfidence = pct < CONFIDENCE_THRESHOLD;
@@ -854,10 +941,10 @@ function buildResultChip(data) {
   let chipClass  = 'result-chip--unknown';
   let labelText  = i18n.chipUnknown;
 
-  if (predictedClass.includes('authentic') || predictedClass.includes('original') || predictedClass.includes('oryginal') || predictedClass.includes('prawdziwy') || predictedClass === 'real') {
+  if (predictedClass === 'real') {
     chipClass = 'result-chip--authentic';
     labelText = i18n.chipAuthentic;
-  } else if (predictedClass.includes('fake') || predictedClass.includes('podróbka') || predictedClass.includes('replica') || predictedClass.includes('fals')) {
+  } else if (predictedClass === 'fake') {
     chipClass = 'result-chip--fake';
     labelText = i18n.chipFake;
   }

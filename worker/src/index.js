@@ -16,6 +16,136 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+/* ── Space host cache ──────────────────────────────────────────────── *
+ * The HF Hub /host endpoint is rate-limited (1000 req / 5 min), but   *
+ * the Space address rarely changes, so resolve it at most once per    *
+ * HOST_TTL_MS per isolate and re-resolve on Gradio-level failures.    *
+ * ─────────────────────────────────────────────────────────────────── */
+const HOST_TTL_MS = 10 * 60 * 1000;
+let cachedHost = null;
+let cachedHostAt = 0;
+
+async function fetchSpaceHost(apiKey) {
+  const hostRes = await fetch(`https://huggingface.co/api/spaces/${SPACE_ID}/host`, {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  if (!hostRes.ok) {
+    const details = await hostRes.text();
+    throw new Error(`host failed (${hostRes.status}): ${details}`);
+  }
+  const hostInfo = await hostRes.json();
+  if (!hostInfo.host) throw new Error('host failed: empty host in response');
+  return hostInfo.host;
+}
+
+function forgetSpaceHost() {
+  cachedHost = null;
+  cachedHostAt = 0;
+}
+
+async function resolveSpaceHost(apiKey, forceRefresh = false) {
+  if (!forceRefresh && cachedHost && (Date.now() - cachedHostAt) < HOST_TTL_MS) {
+    return cachedHost;
+  }
+  try {
+    const host = await fetchSpaceHost(apiKey);
+    cachedHost = host;
+    cachedHostAt = Date.now();
+    return host;
+  } catch (e) {
+    // Serve stale on transient Hub failures; throw only with no cache at all.
+    if (cachedHost) return cachedHost;
+    throw e;
+  }
+}
+
+/* Thrown for pre-inference transport failures (stale host candidates). */
+function retryableError(message) {
+  const e = new Error(message);
+  e.retryable = true;
+  return e;
+}
+
+/* ─── Fail harvest → R2 (cost-capped) ───────────────────────────────── *
+ * - 5% hash sampling: even if an attacker maxes the Worker's 100k      *
+ *   req/day free quota on /collect, writes stay ≤ ~300k Class A / mo   *
+ *   (limit: 1M) and 7-day lifecycle expiry caps storage at ~4-5 GB     *
+ *   (limit: 10 GB). Egress on R2 is always $0.                         *
+ * - Per-request image cap 400 KB; bucket is private (no public reads). *
+ * ──────────────────────────────────────────────────────────────────── */
+const COLLECT_SAMPLE_PCT = 5;
+const COLLECT_MAX_IMAGE_BYTES = 400 * 1024;
+
+function collectJson(status, obj) {
+  return new Response(JSON.stringify(obj), {
+    status, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleCollect(request, env) {
+  if (!env.FAILS_BUCKET) {
+    return collectJson(500, { saved: false, reason: 'storage not configured' });
+  }
+  // Cheap abuse gate: only accept calls coming from the site itself.
+  // (Spoofable — real cost safety comes from sampling + caps below.)
+  const ref = request.headers.get('Referer') || request.headers.get('Origin') || '';
+  if (!/(^|\.)ralphai\.tech$/.test(new URL(ref || 'https://invalid/', 'https://x').hostname) &&
+      !/^(localhost|127\.0\.0\.1)/.test(new URL(ref || 'https://invalid/', 'https://x').hostname)) {
+    return collectJson(403, { saved: false, reason: 'forbidden' });
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return collectJson(400, { saved: false, reason: 'bad json' });
+  }
+  const { kind, image, meta } = payload || {};
+  if (kind !== 'miss' && kind !== 'lowconf') {
+    return collectJson(400, { saved: false, reason: 'bad kind' });
+  }
+  if (typeof image !== 'string' || !image.startsWith('data:image/jpeg;base64,')) {
+    return collectJson(400, { saved: false, reason: 'bad image' });
+  }
+
+  // Stateless 5% sampling — uniform via uuid randomness (checked after uuid below).
+  const id = crypto.randomUUID();
+  const sampleByte = parseInt(id.slice(0, 2), 16); // 0..255 uniform
+  if (sampleByte >= Math.round((COLLECT_SAMPLE_PCT / 100) * 256)) {
+    return collectJson(200, { saved: false, reason: 'sampled_out' });
+  }
+
+  let bytes;
+  try {
+    const b64 = image.split(',', 2)[1] || '';
+    const bin = atob(b64);
+    if (bin.length === 0 || bin.length > COLLECT_MAX_IMAGE_BYTES) {
+      return collectJson(400, { saved: false, reason: 'bad size' });
+    }
+    bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  } catch {
+    return collectJson(400, { saved: false, reason: 'bad encoding' });
+  }
+
+  const day = new Date().toISOString().slice(0, 10);
+  const base = `fails/${kind}/${day}/${id}`;
+  const sidecar = JSON.stringify({
+    kind, id, day,
+    meta: meta && typeof meta === 'object' ? meta : {},
+    collectedAt: new Date().toISOString(),
+  });
+  try {
+    await Promise.all([
+      env.FAILS_BUCKET.put(`${base}.jpg`, bytes, { httpMetadata: { contentType: 'image/jpeg' } }),
+      env.FAILS_BUCKET.put(`${base}.json`, sidecar, { httpMetadata: { contentType: 'application/json' } }),
+    ]);
+  } catch (e) {
+    return collectJson(500, { saved: false, reason: 'store failed' });
+  }
+  return collectJson(200, { saved: true, key: base });
+}
+
 export default {
   async fetch(request, env) {
     /* ── CORS preflight ── */
@@ -28,6 +158,11 @@ export default {
       return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
     }
 
+    /* ── Fail-harvest endpoint (miss / low-confidence cases → R2) ── */
+    if (new URL(request.url).pathname === '/collect') {
+      return handleCollect(request, env);
+    }
+
     /* ── Read body explicitly ── */
     const base64Body = await request.text();
 
@@ -36,33 +171,32 @@ export default {
       try {
         const apiKey = env.RALPH_Ai_TOKEN;
         if (apiKey) {
-           const hostRes = await fetch(`https://huggingface.co/api/spaces/${SPACE_ID}/host`, {
-              headers: { 'Authorization': `Bearer ${apiKey}` }
-           });
-           if (hostRes.ok) {
-             const hostInfo = await hostRes.json();
-             const infoRes = await fetch(`${hostInfo.host}/gradio_api/info`, {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
+           let host;
+           try {
+             host = await resolveSpaceHost(apiKey);
+           } catch (e) {
+             return new Response(JSON.stringify({ error: 'host failed', body: e.message }), {
+               status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
              });
+           }
+           {
+              const infoRes = await fetch(`${host}/gradio_api/info`, {
+                 headers: { 'Authorization': `Bearer ${apiKey}` }
+              });
              if (infoRes.ok) {
                const infoData = await infoRes.json();
                return new Response(JSON.stringify({ warmup: true, api_info: infoData }), {
                  status: 200,
                  headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
                });
-             } else {
-               const d = await infoRes.text();
-               return new Response(JSON.stringify({ error: 'info failed', status: infoRes.status, body: d }), {
-                 status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-               });
-             }
-           } else {
-             const d = await hostRes.text();
-             return new Response(JSON.stringify({ error: 'host failed', status: hostRes.status, body: d }), {
-               status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-             });
-           }
-        }
+              } else {
+                const d = await infoRes.text();
+                return new Response(JSON.stringify({ error: 'info failed', status: infoRes.status, body: d }), {
+                  status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+                });
+              }
+            }
+         }
       } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), {
           status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
@@ -83,22 +217,18 @@ export default {
       );
     }
 
+    // 1. Resolve the Space host (cached; handles private spaces automatically).
+    // Pre-build the multipart payload once so a stale-host retry reuses it.
+    let host;
     try {
-      // 1. Get the actual host URL for the space (handles private spaces automatically)
-      const hostRes = await fetch(`https://huggingface.co/api/spaces/${SPACE_ID}/host`, {
-        headers: { 'Authorization': `Bearer ${apiKey}` }
-      });
-      
-      if (!hostRes.ok) {
-         const errText = await hostRes.text();
-         return new Response(JSON.stringify({ error: "Could not resolve HF Space host", details: errText, status: hostRes.status }), {
-            status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-         });
-      }
-      
-      const hostInfo = await hostRes.json();
-      
-      // 2. We need to upload the image to the Gradio space first
+      host = await resolveSpaceHost(apiKey);
+    } catch (e) {
+       return new Response(JSON.stringify({ error: "Could not resolve HF Space host", details: e.message }), {
+          status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+       });
+    }
+
+    // 2. We need to upload the image to the Gradio space first
       // Convert base64 to Blob, then POST as multipart/form-data
       let base64Chunk = base64Body;
       let mimeType = 'image/jpeg';
@@ -127,7 +257,11 @@ export default {
       multipartBody.set(bytes, fileHeaderBytes.length);
       multipartBody.set(fileFooterBytes, fileHeaderBytes.length + bytes.length);
 
-      const uploadUrl = `${hostInfo.host}/gradio_api/upload`;
+      // Runs upload → queue → SSE against one host. Throws retryableError()
+      // on pre-inference transport failures (stale-host candidates); all
+      // terminal outcomes (including model errors) are returned directly.
+      async function attempt(currentHost) {
+      const uploadUrl = `${currentHost}/gradio_api/upload`;
       const uploadRes = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
@@ -139,9 +273,7 @@ export default {
 
       if (!uploadRes.ok) {
         const uploadErr = await uploadRes.text();
-        return new Response(JSON.stringify({ error: "Failed to upload to Gradio", status: uploadRes.status, details: uploadErr }), {
-           status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-        });
+        throw retryableError(`Failed to upload to Gradio (${uploadRes.status}): ${uploadErr}`);
       }
 
       const uploadPaths = await uploadRes.json();
@@ -159,7 +291,7 @@ export default {
       };
 
       // 3. Submit inference task to Gradio 4.0 Queue via POST
-      const postUrl = `${hostInfo.host}/gradio_api/call/predict`;
+      const postUrl = `${currentHost}/gradio_api/call/predict`;
       const postAuth = { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
@@ -173,17 +305,23 @@ export default {
 
       if (!postRes.ok) {
          const errText = await postRes.text();
-         return new Response(JSON.stringify({ error: "Failed to join Gradio inference queue", status: postRes.status, debug: errText }), {
-            status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-         });
+         throw retryableError(`Failed to join Gradio inference queue (${postRes.status}): ${errText}`);
       }
 
       const { event_id } = await postRes.json();
 
       // 4. Poll / Consume the Server-Sent Events (SSE) inference results
-      const streamRes = await fetch(`${postUrl}/${event_id}`, {
-         headers: { 'Authorization': `Bearer ${apiKey}` }
-      });
+      let streamRes;
+      try {
+        streamRes = await fetch(`${postUrl}/${event_id}`, {
+           headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+      } catch (e) {
+        throw retryableError(`Failed to read Gradio result stream: ${e.message}`);
+      }
+      if (!streamRes.ok) {
+        throw retryableError(`Gradio result stream failed (${streamRes.status})`);
+      }
 
       // The HTTP fetch blocks until the SSE stream completes or errors out!
       const getParamsText = await streamRes.text();
@@ -209,17 +347,19 @@ export default {
          });
       }
 
-      // 6. Map Gradio response to what your frontend needs: { top: 'class', confidence: 0.99 }
+      // 6. Map Gradio response to fake/real only: { top: 'fake'|'real', confidence: 0.99 }
+      // Space returns fine-grained classes fake-class-0..3 / real-class-0..3; never leak those.
       if (hfData && hfData.length > 0) {
         const prediction = hfData[0];
-        
+
+        let rawLabel = 'unknown';
         // Handle various Gradio return formats
         if (typeof prediction === 'string') {
-          topLabel = prediction;
+          rawLabel = prediction;
           confidence = 1.0;
         } else if (prediction && typeof prediction === 'object') {
           if (prediction.label) {
-            topLabel = prediction.label;
+            rawLabel = prediction.label;
           }
           if (prediction.confidences && prediction.confidences.length > 0) {
             // Arrays are usually sorted by highest confidence
@@ -227,6 +367,15 @@ export default {
           } else {
             confidence = 1.0;
           }
+        }
+
+        const lowered = String(rawLabel).toLowerCase();
+        if (lowered.startsWith('fake')) {
+          topLabel = 'fake';
+        } else if (lowered.startsWith('real')) {
+          topLabel = 'real';
+        } else {
+          topLabel = 'unknown';
         }
       }
 
@@ -243,11 +392,35 @@ export default {
           'Content-Type': 'application/json',
         },
       });
-    } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), {
-        status: 500,
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      });
-    }
+      } // end attempt()
+
+      try {
+        return await attempt(host);
+      } catch (e) {
+        if (!e.retryable) {
+          return new Response(JSON.stringify({ error: e.message }), {
+            status: 500,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+          });
+        }
+        // Possibly stale host (migration/restart): forget, re-resolve, retry once.
+        forgetSpaceHost();
+        let freshHost;
+        try {
+          freshHost = await resolveSpaceHost(apiKey, true);
+        } catch (re) {
+          return new Response(JSON.stringify({ error: "Could not resolve HF Space host", details: re.message }), {
+            status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+          });
+        }
+        try {
+          return await attempt(freshHost);
+        } catch (e2) {
+          return new Response(JSON.stringify({ error: e2.message }), {
+            status: 500,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+          });
+        }
+      }
   },
 };
