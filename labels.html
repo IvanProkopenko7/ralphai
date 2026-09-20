@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -13,7 +13,7 @@
   <link rel="manifest" href="/favicon/site.webmanifest" />
   <link rel="preload" href="labels.js" as="script" />
   <link rel="preload" as="image"
-    href="/label_images/supported_labels/polo_by_ralph_lauren/2020s_yellow_QR_code_sweater_01020150-5.jpg"
+    href="/label_images/supported_labels/polo_by_ralph_lauren/2020s_yellow_QR_code_sweater.jpg"
     fetchpriority="high" />
   <link rel="stylesheet" href="styles.css" />
   <script defer src="labels.js"></script>
@@ -26,30 +26,18 @@
       <a href="about.html" class="nav-about" data-i18n="navAbout">ABOUT</a>
       <a href="labels.html" class="nav-labels nav-labels--active" data-i18n="navLabels">LABELS</a>
       <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
-      <button id="langToggle" class="nav-lang-toggle"></button>
     </nav>
   </header>
 
   <main class="main-content main-content--labels">
     <section class="labels-page-wrapper" aria-labelledby="supported-labels-heading">
-      <h2 id="supported-labels-heading" class="labels-section-title" data-i18n="supportedLabels">SUPPORTED LABELS</h2>
-      <div class="labels-subgroup">
-        <h3 class="labels-subgroup-title">polo by ralph lauren</h3>
-        <div id="grid-supported-polo-by" class="labels-grid" role="list"></div>
-      </div>
-      <div class="labels-subgroup">
-        <h3 class="labels-subgroup-title">polo ralph lauren</h3>
-        <div id="grid-supported-polo" class="labels-grid" role="list"></div>
-      </div>
+      <h2 id="supported-labels-heading" class="labels-section-title">SUPPORTED LABELS</h2>
+      <div id="supported-groups"></div>
     </section>
 
     <section class="labels-page-wrapper" aria-labelledby="upcoming-labels-heading">
-      <h2 id="upcoming-labels-heading" class="labels-section-title labels-section-title--upcoming"
-        data-i18n="upcomingLabels">UPCOMING LABELS</h2>
-      <div class="labels-subgroup">
-        <h3 class="labels-subgroup-title">ralph lauren</h3>
-        <div id="grid-upcoming-ralph" class="labels-grid" role="list"></div>
-      </div>
+      <h2 id="upcoming-labels-heading" class="labels-section-title labels-section-title--upcoming">UPCOMING LABELS</h2>
+      <div id="upcoming-groups"></div>
     </section>
   </main>
 
@@ -62,6 +50,7 @@
       rel="noopener">reddit</a>
     <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
   </footer>
+  <div class="footer-collect-bar"><span data-i18n="collectNote">Zdjecia bez wykrytej metki i wyniki o niskiej pewnosci moga byc anonimowo zapisywane, aby ulepszac model</span></div>
 </body>
 
 </html>

@@ -8,6 +8,11 @@ workers_dev = true
 bucket_name = "ralphai-fails"
 binding = "FAILS_BUCKET"
 
+# Keep-warm: ping the HF Space every 10 min so free-tier sleep (48h) never
+# triggers. ~144 req/day, far inside free quotas on both sides.
+[triggers]
+crons = ["*/10 * * * *"]
+
 # After deploying, run:
 #   wrangler secret put RALPH_Ai_TOKEN
 # and paste your Hugging Face token when prompted.

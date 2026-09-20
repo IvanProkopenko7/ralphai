@@ -11,46 +11,36 @@ const chooseBtn    = document.getElementById('chooseBtn');
 const dropText     = document.getElementById('dropTextGroup');
 const previewGrid  = document.getElementById('previewGrid');
 const resultRow    = document.getElementById('resultRow');
-const btnAnalyze   = document.getElementById('btnAnalyze');
 const uncertaintyMsg = document.getElementById('uncertaintyMsg');
 const errorMsg     = document.getElementById('errorMsg');
 const cropperModal  = document.getElementById('cropperModal');
 const cropperImg    = document.getElementById('cropperImg');
 const btnCropConfirm = document.getElementById('btnCropConfirm');
 const btnCropCancel  = document.getElementById('btnCropCancel');
-const previewClearAll = document.getElementById('previewClearAll');
-const previewClearAllContainer = document.getElementById('previewClearAllContainer');
-const updateModalOverlay = document.getElementById('updateModalOverlay');
-const updateModalClose = document.getElementById('updateModalClose');
 
 /* ─── i18n ────────────────────────────────────────── */
-const storedLang = localStorage.getItem('lang');
-const isPolish = storedLang ? storedLang === 'pl' : (navigator.language || '').toLowerCase().startsWith('pl');
-const MAX_IMAGES = 4;
+const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
+const MAX_IMAGES = 1;
+// Server-side detection budget (user requirement: max 10s, then manual crop).
+const DETECT_TIMEOUT_MS = 10000;
+const DETECT_MAX_SIDE = 480;
+const DETECT_UPLOAD_QUALITY = 0.85;
+const DETECT_SCORE_MIN = 0.5;
 
 const i18n = {
   navLabels:       isPolish ? 'METKI'                                : 'LABELS',
   navAbout:        isPolish ? 'O NAS'                                : 'ABOUT',
   navContact:      isPolish ? 'KONTAKT'                              : 'CONTACT',
   subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the neck label',
-  supportedLabelsNote: isPolish
-    ? '*Wspierane są tylko metki Polo Ralph Lauren'
-    : '*Only Polo Ralph Lauren labels are supported',
   collectNote: isPolish
-    ? '*Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model'
-    : '*Photos with no detected label and low-confidence results may be anonymously stored to improve the model',
+    ? 'Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model'
+    : 'Photos with no detected label and low-confidence results may be anonymously stored to improve the model',
   notePrefix:      isPolish ? '*Na razie obsługiwane są tylko metki' : "*Currently, only",
   noteBold:        isPolish ? ' \u201ePolo by Ralph Lauren\u201d'    : " 'Polo by Ralph Lauren' labels are supported",
-  clearAll:        isPolish ? 'Wyczyść wszystko'                     : 'Clear all',
   chooseBtn:       isPolish ? 'Wybierz zdjęcie'                      : 'Choose photo',
   dropLine1:       isPolish ? 'lub upuść zdjęcia tutaj'              : 'or drop photos here',
   dropLine2:       isPolish ? 'albo wklej z Ctrl+V'                  : 'or paste with Ctrl+V',
-  checkTag:        isPolish ? 'Sprawdź metkę'                        : 'Check label',
-  checkTags:       (n) => isPolish ? `Sprawdź metki (${n})`          : `Check labels (${n})`,
-  analyzing:       isPolish ? 'Analizowanie\u2026'                   : 'Analyzing\u2026',
-  howTo:           isPolish ? 'Jak kadrować zdjęcia?'                : 'How to crop photos?',
-  howToGoodLabel:  isPolish ? 'DOBRZE'                               : 'GOOD',
-  howToBadLabel:   isPolish ? 'ŹLE'                                  : 'BAD',
+  manualCrop:      isPolish ? 'Przytnij ręcznie'                     : 'Crop manually',
   homeCredibilityHeading: isPolish ? 'RalphAI w liczbach'            : 'RalphAI in numbers',
   homeMetricVisitors: isPolish ? 'Użytkownków'                       : 'Visitors',
   homeMetricPrecision: isPolish ? 'Ogólna precyzja'                  : 'Overall precision',
@@ -64,6 +54,7 @@ const i18n = {
   extraChecksPoint1Title: isPolish
     ? 'Zeskanuj kod QR znajdujący się na górnej metce.'
     : 'Scan the QR code on the neck tag.',
+  qrContinue: isPolish ? 'Kontynuuj…' : 'Continue…',
   extraChecksPoint1Body: isPolish
     ? 'Większość ubrań marki Ralph Lauren wyprodukowanych po listopadzie 2019 roku posiada kod QR na metce górnej metce. Zeskanuj go swoim telefonem. Kod QR powinien przekierować Cię na oficjalną stronę Ralph Lauren służącą do weryfikacji autentyczności danego ubrania. Jeśli link przekieruje Cię na stronę „Authentication Check. We need a closer look at your QR code”, najprawdopodobniej jest to podróbka, choć zdarzają się przypadki, gdy strona ta wyświetla się nawet w przypadku oryginalnych ubrań Ralph Lauren. Dzieje się tak w przypadku produktów, które są sample\'ami i/lub zostały wyprodukowane do użytku wewnętrznego merch\'e i prezenty dla pracowników, lub gdy kod QR został zeskanowany zbyt wiele razy. Jeśli kod QR nie skanuje się lub przekierowuje Cię na jakąkolwiek inną stronę, to z pewnością jest to podróbka. Ponadto, jeśli kod QR skanuje się poprawnie i przekierowuje Cię na właściwą stronę, nie oznacza to, że produkt jest na pewno autentyczny. Kody QR można skopiować, więc powinny one stanowić tylko jeden z elementów procesu weryfikacji autentyczności odzieży, a nie pewną odpowiedź. Niemniej jednak kod QR zapewnia ponad 99% skuteczności, więc jeśli to możliwe, zdecydowanie warto go zeskanować.'
     : 'Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it with your phone. The QR code should send you to the Ralph Lauren\'s official authentication page of the piece of clothing that you are authenticating. If the link sends you to the "Authentication Check. We need a closer look at your QR code" page, then it\'s most likely fake, though there are instances of that page showing even on legitimate Ralph Lauren clothes. It happens with products that are either samples and/or manufactured for internal use - employee merch/gifts or when the QR code is scanned too many times. If the QR code doesn\'t scan or sends you to any other page, then it\'s certainly fake. Also, if the QR code scans correctly and sends you to the right page, it doesn\'t mean that the piece is certainly legit. QR codes can be copied, so it should serve as one of the parts of clothes\' authentication process, not a certain answer. But still, QR code gives you about 99% accuracy, so if you can, you should certainly scan it.',
@@ -83,22 +74,6 @@ const i18n = {
     : 'Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a> and discord servers like <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get - the better.',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
-  updateModalTitle: isPolish ? '🎉 Pierwsze 500 wizyt!'               : '🎉 First 500 visitors!',
-  updateModalSubtitle: isPolish ? 'Co nowego?'                        : "What's new:",
-  updateFeatureDatasetTitle: isPolish ? 'Większy zbiór danych'        : 'Bigger dataset',
-  updateFeatureDatasetBody: isPolish
-    ? 'Do zbioru danych dodano <strong>1240</strong> zdjęć górnych metek. Teraz cały zbiór zawiera aż <strong>6020</strong> zdjęć!'
-    : '<strong>1240</strong> more photos of tags in the dataset. Now dataset contains <strong>6020</strong> photos in total!',
-  updateFeatureAccuracyTitle: isPolish ? 'Wyższa precyzja modelu'   : 'Higher model precision',
-  updateFeatureAccuracyBody: isPolish
-    ? 'Precyzja modelu wzrosła z 96.0% do <strong>98.6%</strong>.'
-    : 'The precision of the model has been improved from 96.0% to <strong>98.6%</strong> now.',
-  updateFeatureCropTitle: isPolish ? 'Lepsze kadrowanie na telefonach' : 'Better cropping on phones',
-  updateFeatureCropBody: isPolish
-    ? 'Kadrowanie stało się znacznie przyjemniejsze. Zdjęcie nie może wychodzić poza granice i automatycznie centruje się po pomniejszeniu.'
-    : 'Now cropping is much nicer. The photo can\'t go out of bounds and it centers automatically when zoomed out.',
-  updateFooterTitle: isPolish ? 'Dzięki, że korzystasz z RalphAI!'     : 'Thank you for checking out this website!',
-  updateFooterSubtitle: isPolish ? 'Kolejne aktualizacje już w drodze.' : 'More improvements are coming soon.',
   footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
@@ -143,8 +118,6 @@ function applyTranslations() {
     if (typeof i18n[key] === 'string') el.innerHTML = i18n[key];
   });
   if (!isPolish) document.documentElement.lang = 'en';
-  const langBtn = document.getElementById('langToggle');
-  if (langBtn) langBtn.textContent = isPolish ? 'EN' : 'PL';
   const navContact = document.getElementById('navContactLink');
   if (navContact) navContact.href = `mailto:${EMAIL}`;
   const footerEmail = document.getElementById('footerEmailLink');
@@ -159,102 +132,29 @@ function applyTranslations() {
 }
 applyTranslations();
 
-/* ─── Defer how-to video source load ───────────────── */
-const howToVideo = document.getElementById('howToVideo');
-if (howToVideo) {
-  const sourceEl = howToVideo.querySelector('source[data-src]');
-  const captionsTrack = howToVideo.querySelector('#howToVideoCaptions');
-
-  if (captionsTrack) {
-    captionsTrack.srclang = isPolish ? 'pl' : 'en';
-    captionsTrack.label = isPolish ? 'Polski' : 'English';
-    captionsTrack.src = isPolish ? 'captions/cropping.pl.vtt' : 'captions/cropping.en.vtt';
-  }
-
-  if (sourceEl) {
-    const loadVideoSource = () => {
-      if (sourceEl.src) return;
-      sourceEl.src = sourceEl.dataset.src;
-      howToVideo.preload = 'metadata';
-      howToVideo.load();
-    };
-
-    const playVideo = () => {
-      const playPromise = howToVideo.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {});
-      }
-    };
-
-    const syncVideoPlayback = (isVisible) => {
-      if (isVisible) {
-        loadVideoSource();
-        playVideo();
-      } else if (!howToVideo.paused) {
-        howToVideo.pause();
-      }
-    };
-
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          syncVideoPlayback(entry.isIntersecting);
-        });
-      }, { rootMargin: '8.5714rem 0rem', threshold: 0.15 });
-      observer.observe(howToVideo);
-    } else {
-      loadVideoSource();
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && !howToVideo.paused) {
-        howToVideo.pause();
-      }
-    });
-  }
-}
-
-document.getElementById('langToggle').addEventListener('click', () => {
-  localStorage.setItem('lang', isPolish ? 'en' : 'pl');
-  location.reload();
-});
-
-/* ─── Update popup ───────────────────────────────── */
-const SHOW_UPDATE_POPUP = true;
-// Bump this version for each new release note so each update is shown once per browser.
-const UPDATE_POPUP_VERSION = '2026-04-500-visitors';
-const updatePopupSeenKey = `updatePopupSeen:${UPDATE_POPUP_VERSION}`;
-let previousBodyOverflow = '';
-
-function openUpdateModal() {
-  if (!updateModalOverlay) return;
-  previousBodyOverflow = document.body.style.overflow;
-  updateModalOverlay.hidden = false;
-  document.body.style.overflow = 'hidden';
-}
-
-function closeUpdateModal() {
-  if (!updateModalOverlay) return;
-  updateModalOverlay.hidden = true;
-  document.body.style.overflow = previousBodyOverflow || '';
-}
-
-if (updateModalOverlay && updateModalClose) {
-  if (SHOW_UPDATE_POPUP && !localStorage.getItem(updatePopupSeenKey)) {
-    openUpdateModal();
-    localStorage.setItem(updatePopupSeenKey, '1');
-  }
-
-  updateModalClose.addEventListener('click', closeUpdateModal);
-
-  updateModalOverlay.addEventListener('click', (e) => {
-    if (e.target === updateModalOverlay) closeUpdateModal();
+/* ─── QR "Continue" collapse on phones (≤480px) ───────────────────── *
+ * Shows only the text up to the split marker + a Continue button;    *
+ * tapping restores the full paragraph. Desktop is unaffected.         *
+ * ─────────────────────────────────────────────────────────────────── */
+(function setupQrContinue() {
+  const body = document.getElementById('qrCheckPoint1Body');
+  if (!body) return;
+  if (!window.matchMedia('(max-width: 480px)').matches) return;
+  const marker = isPolish ? 'oryginalnych ubrań Ralph Lauren.' : 'on legitimate Ralph Lauren clothes.';
+  const full = body.textContent;
+  const cut = full.indexOf(marker);
+  if (cut === -1) return;
+  const head = full.slice(0, cut + marker.length);
+  body.textContent = head + ' ';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'qr-continue-btn';
+  btn.textContent = i18n.qrContinue;
+  btn.addEventListener('click', () => {
+    body.textContent = full;
   });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !updateModalOverlay.hidden) closeUpdateModal();
-  });
-}
+  body.appendChild(btn);
+})();
 
 /* ─── State ───────────────────────────────────────── */
 let croppedImages   = [];
@@ -263,6 +163,11 @@ let cropperInstance = null;
 let lastCropConfirmTouchTs = 0;
 let previousCropperBodyOverflow = '';
 let activeCropSourceCleanup = null;
+let activeCropSourceBlob = null;
+// Set when a miss is reported so the later manual-crop entry is not saved twice.
+let pendingMissSaved = false;
+// Entry being manually re-cropped from an uncertain result (modal target).
+let recropEntry = null;
 
 const ua = navigator.userAgent || '';
 const isIOSDevice = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -314,13 +219,25 @@ function getCropExportOptions() {
 }
 
 function buildPreviewCardMarkup(img, index) {
+  const thumbClass = img.pending
+    ? 'preview-thumb preview-thumb--pending'
+    : (['real', 'fake', 'unknown'].indexOf(img.verdict) !== -1
+      ? `preview-thumb preview-thumb--${img.verdict}`
+      : 'preview-thumb');
+  const media = img.pending
+    ? ''
+    : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
+  const manualBtn = (!img.pending && img.verdict === 'unknown' && img.result)
+    ? `<button class="preview-manual-crop" data-index="${index}">${i18n.manualCrop}</button>`
+    : '';
   return `
     <div class="preview-card" data-card-index="${index}">
-      <div class="preview-thumb">
-        <img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />
+      ${img.chip ? img.chip : ''}
+      <div class="${thumbClass}">
+        ${media}
         <button class="preview-thumb-remove" data-index="${index}" aria-label="Usuń">&#x2715;</button>
       </div>
-      ${img.chip ? img.chip : ''}
+      ${manualBtn}
     </div>
   `;
 }
@@ -329,61 +246,61 @@ function updatePreviewAreaMeta() {
   previewGrid.hidden = false;
   chooseBtn.hidden = true;
   dropText.hidden = true;
-  btnAnalyze.hidden = false;
-  previewClearAllContainer.hidden = false;
 
   const hasLowConfidence = croppedImages.some(img => img.chip && img.chip.includes('result-chip--unknown'));
   if (uncertaintyMsg) uncertaintyMsg.hidden = !hasLowConfidence;
-
-  const n = croppedImages.length;
-  btnAnalyze.querySelector('span').textContent = n === 1 ? i18n.checkTag : i18n.checkTags(n);
-}
-
-function appendLastPreviewCard() {
-  if (!croppedImages.length) {
-    renderGrid();
-    return;
-  }
-
-  const addMoreBtn = previewGrid.querySelector('#addMoreBtn');
-  if (previewGrid.hidden || !addMoreBtn) {
-    renderGrid();
-    return;
-  }
-
-  updatePreviewAreaMeta();
-
-  const index = croppedImages.length - 1;
-  const img = croppedImages[index];
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = buildPreviewCardMarkup(img, index).trim();
-  const card = wrapper.firstElementChild;
-  if (!card) {
-    renderGrid();
-    return;
-  }
-
-  previewGrid.insertBefore(card, addMoreBtn);
-
-  const canAddMore = croppedImages.length + cropQueue.length < MAX_IMAGES;
-  if (!canAddMore) {
-    addMoreBtn.remove();
-  }
 }
 
 function finalizeCrop(blob) {
   const previewUrl = URL.createObjectURL(blob);
-  croppedImages.push({ blob, previewUrl });
+  const entry = {
+    blob,
+    previewUrl,
+    originalBlob: activeCropSourceBlob,
+    savedToBucket: pendingMissSaved,
+    reported: false,
+    result: null,
+    chip: '',
+    verdict: '',
+    pending: true,
+  };
+  pendingMissSaved = false;
+  croppedImages.push(entry);
 
-  // Keep the cropper open between queued images to avoid overlay close/reopen flicker.
+  // Grey spinner card now; result card (colored thumb + chip) on settle.
+  // Modal advances immediately — completion re-renders from entry state.
   requestAnimationFrame(() => {
-    appendLastPreviewCard();
+    renderGrid();
     if (cropQueue.length) {
       processNextCrop(true);
-      return;
+    } else {
+      closeCropper();
     }
-    closeCropper();
+    classifyEntry(entry)
+      .catch(() => showError(i18n.errorAnalysis))
+      .finally(() => {
+        entry.pending = false;
+        renderGrid();
+      });
   });
+}
+
+function pushSilentEntry(cropBlob, originalBlob) {
+  const previewUrl = URL.createObjectURL(cropBlob);
+  const entry = {
+    blob: cropBlob,
+    previewUrl,
+    originalBlob,
+    savedToBucket: false,
+    reported: false,
+    result: null,
+    chip: '',
+    verdict: '',
+    pending: true,
+  };
+  croppedImages.push(entry);
+  // Rendered by the caller: grey spinner now, result card on settle.
+  return entry;
 }
 
 function handleCropConfirm() {
@@ -409,6 +326,30 @@ function handleCropConfirm() {
       if (!blob) {
         setCropConfirmProcessing(false);
         showError(i18n.errorCannotRead);
+        return;
+      }
+
+      if (recropEntry) {
+        // Manual re-crop of an uncertain result: replace the entry's crop
+        // in place (original + bucket flag carry over, no double-save).
+        const entry = recropEntry;
+        recropEntry = null;
+        revokePreviewUrl(entry);
+        entry.previewUrl = URL.createObjectURL(blob);
+        entry.blob = blob;
+        entry.result = null;
+        entry.chip = '';
+        entry.verdict = '';
+        entry.reported = false;
+        entry.pending = true;
+        closeCropper();
+        renderGrid();
+        classifyEntry(entry)
+          .catch(() => showError(i18n.errorAnalysis))
+          .finally(() => {
+            entry.pending = false;
+            renderGrid();
+          });
         return;
       }
 
@@ -439,6 +380,7 @@ document.querySelector('.nav-logo').addEventListener('click', (e) => {
   cleanupAllPreviewUrls();
   croppedImages = [];
   cropQueue = [];
+  recropEntry = null;
   renderGrid();
   hideError();
   hideResult();
@@ -523,17 +465,52 @@ function processNextCrop(keepModalOpen = false) {
     .then(async (source) => {
       releaseActiveCropSource();
       activeCropSourceCleanup = source.cleanup;
-      // Auto-detect the label in-browser; null → manual crop fallback.
-      // Never blocks the flow: detection errors silently fall back.
-      let seedBox = null;
-      if (window.RalphAIDetect) {
-        seedBox = await window.RalphAIDetect.detectLabelBox(source.src);
+      activeCropSourceBlob = source.blob;
+      pendingMissSaved = false;
+
+      // Server-side detection on a 480px downscale; any failure → miss path.
+      let hitBox = null;
+      try {
+        const down = await make480Downscale(source.blob);
+        const det = await detectServerSide(down.blob);
+        const best = det && Array.isArray(det.boxes) ? det.boxes[0] : null;
+        if (best && (best.confidence ?? 0) >= DETECT_SCORE_MIN && det.width > 0 && det.height > 0) {
+          const dims = await getImageDims(source.blob);
+          hitBox = mapBoxToOriginal(best, det.width, det.height, dims.w, dims.h);
+        }
+      } catch (_) {
+        hitBox = null;
       }
-      if (!seedBox) {
-        // Detector saw no label — save the full image for retraining (sampled server-side).
-        reportFail('miss', source.blob, { detector: 'none' });
+
+      if (hitBox) {
+        // Label found: silently crop from the ORIGINAL full-res image and
+        // classify — the cropper modal never opens on this path.
+        try {
+          const cropBlob = await cropBoxFromOriginal(source.blob, hitBox, getCropExportOptions());
+          releaseActiveCropSource();
+          activeCropSourceBlob = null;
+          const entry = pushSilentEntry(cropBlob, source.blob);
+          // Grey spinner thumb now; colored thumb + chip on settle.
+          renderGrid();
+          try {
+            await classifyEntry(entry);
+          } catch (_) {
+            showError(i18n.errorAnalysis);
+          } finally {
+            entry.pending = false;
+            renderGrid();
+          }
+          processNextCrop(false);
+          return;
+        } catch (_) {
+          // Silent-crop failure degrades to the miss path below.
+        }
       }
-      openCropper(source.src, keepModalOpen, seedBox);
+
+      // Miss path: save the ORIGINAL for retraining, manual crop on original.
+      pendingMissSaved = true;
+      reportFail('miss', file, { detector: 'server' });
+      openCropper(source.src, keepModalOpen);
     })
     .catch(() => {
       showError(i18n.errorCannotRead);
@@ -651,7 +628,7 @@ function getResponsiveAutoCropArea() {
   return 0.9;
 }
 
-function openCropper(src, keepModalOpen = false, seedBox = null) {
+function openCropper(src, keepModalOpen = false) {
   if (!keepModalOpen || cropperModal.hidden) {
     previousCropperBodyOverflow = document.body.style.overflow;
     cropperModal.hidden = false;
@@ -688,17 +665,8 @@ function openCropper(src, keepModalOpen = false, seedBox = null) {
       rotatable:    false,
       toggleDragModeOnDblclick: false,
     };
-    if (seedBox && seedBox.width > 1 && seedBox.height > 1) {
-      // Auto-detected label box (source pixels) — user can still adjust freely.
-      cropperOptions.data = {
-        x: seedBox.x,
-        y: seedBox.y,
-        width: seedBox.width,
-        height: seedBox.height,
-      };
-    } else {
-      cropperOptions.autoCropArea = getResponsiveAutoCropArea();
-    }
+    // Manual crop only (server found no label) — default framing.
+    cropperOptions.autoCropArea = getResponsiveAutoCropArea();
     cropperInstance = new Cropper(cropperImg, cropperOptions);
     setCropConfirmProcessing(false);
   };
@@ -721,6 +689,7 @@ function closeCropper() {
     cropperInstance = null;
   }
   releaseActiveCropSource();
+  activeCropSourceBlob = null;
   btnCropConfirm.disabled = false;
   btnCropConfirm.classList.remove('is-processing');
   cropperImg.src = '';
@@ -744,18 +713,8 @@ btnCropConfirm.addEventListener('click', () => {
 
 btnCropCancel.addEventListener('click', () => {
   cropQueue = [];
+  recropEntry = null;
   closeCropper();
-});
-
-/* ─── Clear all button ────────────────────────────── */
-previewClearAll.addEventListener('click', () => {
-  cleanupAllPreviewUrls();
-  croppedImages = [];
-  cropQueue = [];
-  fileInput.value = '';
-  hideError();
-  hideResult();
-  renderGrid();
 });
 
 /* ─── Preview grid ───────────────────────────────── */
@@ -765,8 +724,6 @@ function renderGrid() {
     previewGrid.innerHTML = '';
     chooseBtn.hidden = false;
     dropText.hidden = false;
-    btnAnalyze.hidden = true;
-    previewClearAllContainer.hidden = true;
     if (uncertaintyMsg) uncertaintyMsg.hidden = true;
     return;
   }
@@ -793,36 +750,18 @@ previewGrid.addEventListener('click', (e) => {
   if (e.target.closest('#addMoreBtn')) {
     fileInput.click();
   }
-});
 
-/* ─── Analyze button ──────────────────────────────── */
-btnAnalyze.addEventListener('click', async () => {
-  if (!croppedImages.length) return;
-  hideError();
-  hideResult();
-
-  btnAnalyze.classList.add('loading');
-  btnAnalyze.querySelector('span').textContent = i18n.analyzing;
-  btnAnalyze.disabled = true;
-
-  try {
-    const results = await Promise.all(
-      croppedImages.map(async (entry) => {
-        // Reuse cached result — never re-request an already legit-checked label.
-        if (entry.result) return entry.result;
-        const data = await classifyImage(await blobToBase64(entry.blob));
-        entry.result = data;
-        return data;
-      })
-    );
-    displayResults(results);
-  } catch (err) {
-    showError(err.message || i18n.errorAnalysis);
-  } finally {
-    btnAnalyze.classList.remove('loading');
-    const n = croppedImages.length;
-    btnAnalyze.querySelector('span').textContent = n === 1 ? i18n.checkTag : i18n.checkTags(n);
-    btnAnalyze.disabled = false;
+  const manualButton = e.target.closest('.preview-manual-crop');
+  if (manualButton) {
+    const idx = parseInt(manualButton.dataset.index, 10);
+    const entry = croppedImages[idx];
+    if (entry && entry.originalBlob && !entry.pending) {
+      recropEntry = entry;
+      releaseActiveCropSource();
+      const url = URL.createObjectURL(entry.originalBlob);
+      activeCropSourceCleanup = () => URL.revokeObjectURL(url);
+      openCropper(url, false);
+    }
   }
 });
 
@@ -865,45 +804,155 @@ function blobToBase64(blob) {
   });
 }
 
-/* ─── Fail harvest (miss / low-confidence → R2 via Worker) ────────── *
- * Fire-and-forget: never blocks UI, never shows errors. The Worker    *
- * samples ~5% server-side and enforces size caps, so this is safe to  *
- * call for every miss / low-confidence case.                          *
+/* ─── Server-side detection (480px upload → boxes) ──────────────── *
+ * Detection runs entirely on the HF Space via the Worker. Any failure *
+ * (timeout after DETECT_TIMEOUT_MS, error, no box ≥ 0.5) returns null  *
+ * and the caller falls back to manual crop — never throws outward.     *
  * ──────────────────────────────────────────────────────────────────── */
-function blobToJpegDataUrl(blob, maxSide, quality) {
+async function make480Downscale(blob) {
+  const img = await decodeImage(blob);
+  const scale = Math.min(1, DETECT_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * scale));
+  const h = Math.max(1, Math.round(img.naturalHeight * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+  if (img.close) img.close();
+  const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', DETECT_UPLOAD_QUALITY));
+  if (!out) throw new Error(i18n.errorCannotRead);
+  return { blob: out, w, h };
+}
+
+function decodeImage(blob) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob);
     const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.max(1, Math.round(img.naturalWidth * scale));
-        const h = Math.max(1, Math.round(img.naturalHeight * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        URL.revokeObjectURL(url);
-        resolve(dataUrl);
-      } catch (e) {
-        URL.revokeObjectURL(url);
-        reject(e);
-      }
-    };
+    img.onload = () => resolve(img);
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('decode failed'));
+      reject(new Error(i18n.errorCannotRead));
     };
     img.src = url;
   });
 }
 
+async function getImageDims(blob) {
+  const img = await decodeImage(blob);
+  const dims = { w: img.naturalWidth, h: img.naturalHeight };
+  return dims;
+}
+
+async function detectServerSide(downscaledBlob) {
+  const body = await blobToBase64(downscaledBlob);
+  const init = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  };
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    init.signal = AbortSignal.timeout(DETECT_TIMEOUT_MS);
+  }
+  const response = await fetch(`${API_URL}/detect`, init);
+  if (!response.ok) return null;
+  const data = await response.json();
+  if (!data || !Array.isArray(data.boxes)) return null;
+  return data;
+}
+
+function mapBoxToOriginal(box, sentW, sentH, origW, origH) {
+  const sx = origW / sentW;
+  const sy = origH / sentH;
+  const x = Math.max(0, box.x1 * sx);
+  const y = Math.max(0, box.y1 * sy);
+  const w = Math.min(origW - x, Math.max(1, (box.x2 - box.x1) * sx));
+  const h = Math.min(origH - y, Math.max(1, (box.y2 - box.y1) * sy));
+  return { x, y, width: w, height: h };
+}
+
+async function cropBoxFromOriginal(blob, box, exportOpts) {
+  const img = await decodeImage(blob);
+  try {
+    const sx = Math.max(0, Math.min(box.x, img.naturalWidth - 1));
+    const sy = Math.max(0, Math.min(box.y, img.naturalHeight - 1));
+    const sw = Math.max(1, Math.min(box.width, img.naturalWidth - sx));
+    const sh = Math.max(1, Math.min(box.height, img.naturalHeight - sy));
+    const scale = Math.min(1, exportOpts.maxWidth / sw, exportOpts.maxHeight / sh);
+    const dw = Math.max(1, Math.round(sw * scale));
+    const dh = Math.max(1, Math.round(sh * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = dw;
+    canvas.height = dh;
+    canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
+    const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', exportOpts.jpegQuality));
+    if (!out) throw new Error(i18n.errorCannotRead);
+    return out;
+  } finally {
+    if (img.close) img.close();
+  }
+}
+
+/* ─── Auto-classify (one entry) ─────────────────────────────────── */
+async function classifyEntry(entry) {
+  if (!entry || entry.result) return entry ? entry.result : null;
+  const data = await classifyImage(await blobToBase64(entry.blob));
+  entry.result = data;
+  applyResultToEntry(entry, data);
+  return data;
+}
+
+function verdictOf(data) {
+  const predictedClass = (data.top || 'unknown').toLowerCase();
+  const pct = Math.round((data.confidence ?? 0) * 100);
+  if (pct < CONFIDENCE_THRESHOLD) return 'unknown';
+  if (predictedClass === 'real' || predictedClass === 'fake') return predictedClass;
+  return 'unknown';
+}
+
+function applyResultToEntry(entry, data) {
+  entry.chip = buildResultChip(data);
+  entry.verdict = verdictOf(data);
+  entry.pending = false;
+  if (!entry.reported && (data.confidence ?? 0) < CONFIDENCE_THRESHOLD / 100) {
+    entry.reported = true;
+    // Low-confidence label — save the ORIGINAL once (miss path may have already sent it).
+    if (!entry.savedToBucket) {
+      entry.savedToBucket = true;
+      reportFail('lowconf', entry.originalBlob || entry.blob, {
+        top: data.top || 'unknown',
+        confidence: data.confidence ?? 0,
+      });
+    }
+  }
+  renderGrid();
+}
+
+/* ─── Fail harvest (miss / low-confidence ORIGINALS → R2) ───────── *
+ * Fire-and-forget: never blocks UI, never shows errors. The Worker   *
+ * samples ~5% server-side and enforces size caps, so this is safe to  *
+ * call for every miss / low-confidence case (free-tier safe).         *
+ * ──────────────────────────────────────────────────────────────────── */
+const COLLECT_ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+
+function blobToOriginalDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    if (!blob || COLLECT_ALLOWED_MIME.indexOf(blob.type) === -1) {
+      reject(new Error('unsupported type'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') reject(new Error(i18n.errorCannotRead));
+      else resolve(reader.result);
+    };
+    reader.onerror = () => reject(new Error(i18n.errorCannotRead));
+    reader.readAsDataURL(blob);
+  });
+}
 function reportFail(kind, blob, meta) {
   if (!blob) return;
-  // Misses send the full frame (downscaled); low-conf sends the crop as-is.
-  const maxSide = kind === 'miss' ? 1024 : 640;
-  blobToJpegDataUrl(blob, maxSide, 0.75)
+  // Misses and low-confidence cases send the ORIGINAL image bytes as-is.
+  blobToOriginalDataUrl(blob)
     .then((dataUrl) => fetch(`${API_URL}/collect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -913,24 +962,6 @@ function reportFail(kind, blob, meta) {
 }
 
 /* ─── Display results ─────────────────────────────── */
-function displayResults(dataArr) {
-  dataArr.forEach((data, i) => {
-    if (croppedImages[i]) {
-      croppedImages[i].chip = buildResultChip(data);
-      if (!croppedImages[i].reported && (data.confidence ?? 0) < CONFIDENCE_THRESHOLD / 100) {
-        // Low-confidence crop — save once for retraining (sampled server-side).
-        croppedImages[i].reported = true;
-        reportFail('lowconf', croppedImages[i].blob, {
-          top: data.top || 'unknown',
-          confidence: data.confidence ?? 0,
-        });
-      }
-    }
-  });
-
-  resultRow.hidden = true;
-  renderGrid();
-}
 
 function buildResultChip(data) {
   // Worker returns only 'fake' | 'real' | 'unknown' — never fine-grained classes.

@@ -1,0 +1,82 @@
+{
+ "sections": {
+  "supported": "supported labels",
+  "upcoming": "upcoming labels"
+ },
+ "supported": [
+  {
+   "folder": "polo_by_ralph_lauren",
+   "title": "polo by ralph lauren",
+   "baseDir": "/label_images/supported_labels/polo_by_ralph_lauren",
+   "files": [
+    "1970s_made_in_indonesia_shirt.jpg",
+    "1980s_made_in_hong_kong_sweater.jpg",
+    "1980s_made_in_korea_shirt.jpg",
+    "1980s_made_in_usa_bullion patch_blazer.jpg",
+    "1990s_denim_made_in_usa_jacket.jpg",
+    "1990s_japanese_sweater.jpg",
+    "1990s_made_in_honduras.jpg",
+    "1990s_made_in_taiwan_hat.jpg",
+    "1990s_made_in_usa_chinos.jpg",
+    "1990s_made_in_usa_flat_cap.jpg",
+    "1990s_made_in_usa_jacket.jpg",
+    "1990s_made_in_usa_silk_tie.webp",
+    "1990s_made_in_usa_wool_coat.jpg",
+    "1990s_T-shirt.webp",
+    "2000s_made_in_china_blazer.webp",
+    "2000s_neck_tie.jpg",
+    "2000s-blazer.jpg",
+    "2010s_black_beanie.jpg",
+    "2010s_kids_polo.webp",
+    "2010s_lumberjack_shirt.jpg",
+    "2018_palace_pants.jpg",
+    "2020s_denim_jacket.jpg",
+    "2020s_sleepwear_shirt.jpg",
+    "2020s_sweater.webp",
+    "2020s_yellow_QR_code_sweater.jpg"
+   ]
+  },
+  {
+   "folder": "polo_ralph_lauren",
+   "title": "polo ralph lauren",
+   "baseDir": "/label_images/supported_labels/polo_ralph_lauren",
+   "files": [
+    "1980s_made_in_usa_chore_blanket_jacket.jpg",
+    "1990s_made_in_philippines_denim_jacket.jpg",
+    "1990s_sportsman_shirt.jpg",
+    "2000s_denim_military_jacket.jpg",
+    "2010s_blazer.jpg",
+    "2010s_cap.jpg",
+    "2010s_kids_polo.jpg",
+    "2010s_pants.webp",
+    "2010s_scarf.jpg",
+    "2010s_tweed_blazer.jpg",
+    "2020s_black_beanie.jpg",
+    "2020s_made_in_china_cardigan.jpg",
+    "2020s_made_in_china_performance_jacket.jpg",
+    "2020s_made_in_china_scarf.jpg",
+    "2020s_made_in_china_wool_hat.jpg",
+    "2020s_made_in_egypt_jacket.jpg",
+    "2020s_sleepwear_shirt.jpg"
+   ]
+  },
+  {
+   "folder": "ralph_lauren",
+   "title": "ralph lauren",
+   "baseDir": "/label_images/supported_labels/ralph_lauren",
+   "files": [
+    "1970s_jacket.jpg",
+    "1979_women's_blazer.jpg",
+    "1980s_cardigan.jpg",
+    "1980s_denim_vest.jpg",
+    "late_1970s_blazer.jpg",
+    "late_1970s_tweed_suit.jpg",
+    "late_1980s_denim_jacket.jpg",
+    "mid_1980s_dress_2.jpg",
+    "mid_1980s_dress.jpg",
+    "pair_of_1990s_boots.jpg"
+   ]
+  }
+ ],
+ "upcoming": []
+}

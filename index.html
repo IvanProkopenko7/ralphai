@@ -58,7 +58,6 @@
       <a href="about.html" class="nav-about" data-i18n="navAbout">ABOUT</a>
       <a href="labels.html" class="nav-labels" data-i18n="navLabels">LABELS</a>
       <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
-      <button id="langToggle" class="nav-lang-toggle"></button>
     </nav>
   </header>
 
@@ -68,18 +67,9 @@
     <section class="upload-section">
       <h1 class="title">Legit check RALPH LAUREN</h1>
       <p class="subtitle" data-i18n="subtitle">Dodaj zdjęcie górnej metki</p>
-      <p class="note">
-        <span data-i18n="supportedLabelsNote">*Wspierane tylko metki Polo Ralph Lauren</span>
-      </p>
-      <p class="note collect-note">
-        <span data-i18n="collectNote">*Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model</span>
-      </p>
 
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <input type="file" id="fileInput" accept="image/*" hidden />
 
-      <div class="preview-clearAll-container" id="previewClearAllContainer" hidden>
-        <button id="previewClearAll" class="preview-clearAll" data-i18n="clearAll">Wyczyść wszystko</button>
-      </div>
       <div id="previewGrid" class="preview-grid" hidden></div>
 
       <div id="resultRow" class="result-row" hidden></div>
@@ -101,42 +91,7 @@
           href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>
       </div>
 
-      <button id="btnAnalyze" class="btn-analyze" hidden><span>Sprawdź metkę</span></button>
       <div id="errorMsg" class="error-msg" hidden></div>
-    </section>
-
-    <!-- How-to section -->
-    <section class="how-to-section">
-      <h2 class="section-heading" data-i18n="howTo">Jak kadrować zdjęcia?</h2>
-      <div class="how-to-image-groups">
-        <section class="how-to-image-group" aria-label="Good crop examples">
-          <span class="how-to-group-label how-to-group-label--good" data-i18n="howToGoodLabel">DOBRZE</span>
-          <div class="how-to-grid" role="list" aria-label="Good crop examples">
-            <figure class="how-to-card how-to-card--good" role="listitem">
-              <img src="how-to-crop-images/good/js-l160010-ezgif.com-rotate.jpg" alt="Good crop example 1"
-                loading="lazy" decoding="async" width="631" height="199" />
-            </figure>
-            <figure class="how-to-card how-to-card--good" role="listitem">
-              <img src="how-to-crop-images/good/js-l160010-ezgif.com-rotate_1.jpg" alt="Good crop example 2"
-                loading="lazy" decoding="async" width="631" height="302" />
-            </figure>
-          </div>
-        </section>
-
-        <section class="how-to-image-group" aria-label="Bad crop examples">
-          <span class="how-to-group-label how-to-group-label--bad" data-i18n="howToBadLabel">ŹLE</span>
-          <div class="how-to-grid" role="list" aria-label="Bad crop examples">
-            <figure class="how-to-card how-to-card--bad" role="listitem">
-              <img src="how-to-crop-images/bad/js-l160010-ezgif.com-rotate_2.jpg" alt="Bad crop example 1"
-                loading="lazy" decoding="async" width="693" height="385" />
-            </figure>
-            <figure class="how-to-card how-to-card--bad" role="listitem">
-              <img src="how-to-crop-images/bad/js-l160010-ezgif.com-rotate_3.jpg" alt="Bad crop example 2"
-                loading="lazy" decoding="async" width="577" height="135" />
-            </figure>
-          </div>
-        </section>
-      </div>
     </section>
 
     <section class="home-credibility-section" aria-labelledby="homeCredibilityHeading">
@@ -147,11 +102,11 @@
           <p class="about-metric-label" data-i18n="homeMetricVisitors">Visitors</p>
         </article>
         <article class="about-metric-card" role="listitem">
-          <p class="about-metric-value" data-metric-key="overallPrecision">98.6%</p>
+          <p class="about-metric-value" data-metric-key="overallPrecision">97.4%</p>
           <p class="about-metric-label" data-i18n="homeMetricPrecision">Overall precision</p>
         </article>
         <article class="about-metric-card" role="listitem">
-          <p class="about-metric-value" data-metric-key="datasetPhotos">6020</p>
+          <p class="about-metric-value" data-metric-key="datasetPhotos">7626</p>
           <p class="about-metric-label" data-i18n="homeMetricDatasetPhotos">Photos of tags in the dataset</p>
         </article>
       </div>
@@ -170,7 +125,7 @@
       <ol class="extra-checks-list">
         <li class="extra-checks-item">
           <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint1Title">Scan the QR code on the neck tag.</h3>
-          <p data-i18n="extraChecksPoint1Body">
+          <p data-i18n="extraChecksPoint1Body" id="qrCheckPoint1Body">
             Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it
             with your phone. The QR code should send you to the Ralph Lauren's official authentication page of the
             piece of clothing that you are authenticating. If the link sends you to the "Authentication Check. We need
@@ -264,52 +219,6 @@
     </div>
   </div>
 
-  <!-- Update popup modal -->
-  <div class="update-modal-overlay" id="updateModalOverlay" hidden>
-    <div class="update-modal" role="dialog" aria-modal="true" aria-labelledby="updateModalTitle">
-      <button class="update-modal-close" id="updateModalClose" aria-label="Close update popup">&times;</button>
-
-      <div class="update-modal-header">
-        <h2 class="update-modal-title" id="updateModalTitle" data-i18n="updateModalTitle">🎉 First 500 visitors!</h2>
-        <p class="update-modal-subtitle" data-i18n="updateModalSubtitle">What's new:</p>
-      </div>
-
-      <div class="update-modal-content">
-        <article class="update-feature-card">
-          <div class="update-feature-icon" aria-hidden="true">&#9638;</div>
-          <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureDatasetTitle">Bigger dataset</h3>
-            <p data-i18n-html="updateFeatureDatasetBody"><strong>1240</strong> more photos of tags in the dataset.
-              Dataset now contains <strong>6020</strong> photos in total!</p>
-          </div>
-        </article>
-
-        <article class="update-feature-card">
-          <div class="update-feature-icon update-feature-icon--precision" aria-hidden="true">&#9678;</div>
-          <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureAccuracyTitle">Higher model precision</h3>
-            <p data-i18n-html="updateFeatureAccuracyBody">The precision of the model has been improved from 96.0% to
-              <strong>98.6%</strong> now.</p>
-          </div>
-        </article>
-
-        <article class="update-feature-card">
-          <div class="update-feature-icon" aria-hidden="true">&#9986;</div>
-          <div class="update-feature-text">
-            <h3 data-i18n="updateFeatureCropTitle">Better cropping on phones</h3>
-            <p data-i18n="updateFeatureCropBody">Now cropping is much nicer. The photo can't go out of bounds and it
-              centers automatically when zoomed out.</p>
-          </div>
-        </article>
-      </div>
-
-      <div class="update-modal-footer">
-        <p class="update-footer-title" data-i18n="updateFooterTitle">Thank you for checking out this website!</p>
-        <p class="update-footer-subtitle" data-i18n="updateFooterSubtitle">More improvements are coming soon.</p>
-      </div>
-    </div>
-  </div>
-
   <footer class="site-footer">
     <p class="footer-author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong>
     </p>
@@ -319,9 +228,9 @@
       rel="noopener">reddit</a>
     <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
   </footer>
+  <div class="footer-collect-bar"><span data-i18n="collectNote">Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model</span></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script src="detect.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="metrics.js"></script>
   <script src="app.js"></script>
 </body>
