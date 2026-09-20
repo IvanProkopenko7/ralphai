@@ -486,7 +486,7 @@ function processNextCrop(keepModalOpen = false) {
         // Label found: silently crop from the ORIGINAL full-res image and
         // classify — the cropper modal never opens on this path.
         try {
-          const cropBlob = await cropBoxFromOriginal(source.blob, hitBox, getCropExportOptions());
+          const cropBlob = await cropBoxFromOriginal(source.blob, hitBox);
           releaseActiveCropSource();
           activeCropSourceBlob = null;
           const entry = pushSilentEntry(cropBlob, source.blob);
@@ -870,21 +870,44 @@ function mapBoxToOriginal(box, sentW, sentH, origW, origH) {
   return { x, y, width: w, height: h };
 }
 
-async function cropBoxFromOriginal(blob, box, exportOpts) {
+/* ─── label-to-square (mirrors detection/label-to-square.py) ───────── *
+ * Detected label → fit inside a 320x320 canvas, centered, remaining    *
+ * area padded black. Matches training preprocessing (LANCZOS fit,      *
+ * integer centering, JPEG default quality) so inference sees the same  *
+ * distribution the classifier was trained on. Canvas is exactly 320².  *
+ * ──────────────────────────────────────────────────────────────────── */
+const SQUARE_SIZE = 320;
+const SQUARE_JPEG_QUALITY = 0.75;
+
+async function cropBoxFromOriginal(blob, box) {
   const img = await decodeImage(blob);
   try {
     const sx = Math.max(0, Math.min(box.x, img.naturalWidth - 1));
     const sy = Math.max(0, Math.min(box.y, img.naturalHeight - 1));
     const sw = Math.max(1, Math.min(box.width, img.naturalWidth - sx));
     const sh = Math.max(1, Math.min(box.height, img.naturalHeight - sy));
-    const scale = Math.min(1, exportOpts.maxWidth / sw, exportOpts.maxHeight / sh);
-    const dw = Math.max(1, Math.round(sw * scale));
-    const dh = Math.max(1, Math.round(sh * scale));
+    const ratio = sw / sh;
+    let dw;
+    let dh;
+    if (sw >= sh) {
+      dw = SQUARE_SIZE;
+      dh = Math.max(1, Math.round(SQUARE_SIZE / ratio));
+    } else {
+      dh = SQUARE_SIZE;
+      dw = Math.max(1, Math.round(SQUARE_SIZE * ratio));
+    }
+    const left = Math.floor((SQUARE_SIZE - dw) / 2);
+    const top = Math.floor((SQUARE_SIZE - dh) / 2);
     const canvas = document.createElement('canvas');
-    canvas.width = dw;
-    canvas.height = dh;
-    canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
-    const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', exportOpts.jpegQuality));
+    canvas.width = SQUARE_SIZE;
+    canvas.height = SQUARE_SIZE;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, SQUARE_SIZE, SQUARE_SIZE);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, sx, sy, sw, sh, left, top, dw, dh);
+    const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', SQUARE_JPEG_QUALITY));
     if (!out) throw new Error(i18n.errorCannotRead);
     return out;
   } finally {
