@@ -98,7 +98,7 @@ async function handleCollect(request, env) {
     return collectJson(500, { saved: false, reason: 'storage not configured' });
   }
   // Cheap abuse gate: only accept calls coming from the site itself.
-  // (Spoofable — real cost safety comes from sampling + caps below.)
+  // (Spoofable — real cost safety comes from the daily cap + dedupe below.)
   const ref = request.headers.get('Referer') || request.headers.get('Origin') || '';
   if (!/(^|\.)ralphai\.tech$/.test(new URL(ref || 'https://invalid/', 'https://x').hostname) &&
       !/^(localhost|127\.0\.0\.1)/.test(new URL(ref || 'https://invalid/', 'https://x').hostname)) {
@@ -124,8 +124,7 @@ async function handleCollect(request, env) {
   }
   const imgExt = COLLECT_ALLOWED_MIME[imgMatch[1]];
 
-  // Hard daily cap — counts only successful writes (checked again below).
-  const id = crypto.randomUUID();
+  // Hard daily cap — counts only successful writes of NEW images (checked again below).
   const day = new Date().toISOString().slice(0, 10);
   if (day !== collectDay) {
     collectDay = day;
@@ -148,9 +147,22 @@ async function handleCollect(request, env) {
     return collectJson(400, { saved: false, reason: 'bad encoding' });
   }
 
-  const base = `fails/${kind}/${day}/${id}`;
+  // Content-hash key: identical originals always map to the same key, so
+  // re-uploads (same file twice, miss→lowconf resends) overwrite instead of
+  // duplicating. No day in the key — dedupe holds across days too.
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const hash = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, '0')).join('');
+  const base = `fails/${kind}/${hash}`;
+  try {
+    const existing = await env.FAILS_BUCKET.head(`${base}.${imgExt}`);
+    if (existing) {
+      return collectJson(200, { saved: true, key: base, duplicate: true });
+    }
+  } catch (_) {
+    // Head failed (missing or transient) — fall through to put.
+  }
   const sidecar = JSON.stringify({
-    kind, id, day,
+    kind, sha256: hash, day,
     meta: meta && typeof meta === 'object' ? meta : {},
     collectedAt: new Date().toISOString(),
   });
