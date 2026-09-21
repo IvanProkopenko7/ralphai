@@ -19,6 +19,10 @@ body {
   font-style: normal;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 /* ===== NAVBAR ===== */
 .navbar {
   position: sticky;
@@ -1450,6 +1454,12 @@ body {
 
 .label-card-media--skeleton {
   background-color: #fff;
+}
+
+/* Skeleton phase: keep the footer below the fold on any viewport height. */
+.labels-grid[aria-hidden="true"] {
+  min-height: calc(100vh - 200px);
+  min-height: calc(100svh - 200px);
 }
 
 .label-card-media img {

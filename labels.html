@@ -32,12 +32,30 @@
   <main class="main-content main-content--labels">
     <section class="labels-page-wrapper" aria-labelledby="supported-labels-heading">
       <h2 id="supported-labels-heading" class="labels-section-title">SUPPORTED LABELS</h2>
-      <div id="supported-groups"></div>
+      <div id="supported-groups">
+        <div class="labels-grid" aria-hidden="true">
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+        </div>
+      </div>
     </section>
 
     <section class="labels-page-wrapper" aria-labelledby="upcoming-labels-heading">
       <h2 id="upcoming-labels-heading" class="labels-section-title labels-section-title--upcoming">UPCOMING LABELS</h2>
-      <div id="upcoming-groups"></div>
+      <div id="upcoming-groups">
+        <div class="labels-grid" aria-hidden="true">
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -51,25 +69,6 @@
     <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
   </footer>
   <div class="footer-collect-bar"><span data-i18n="collectNote">Zdjecia bez wykrytej metki i wyniki o niskiej pewnosci moga byc anonimowo zapisywane, aby ulepszac model</span></div>
-  <script>
-    // Instant skeleton placeholders (white boxes + spinner) so the footer
-    // starts below the fold. labels.js replaces them with real cards.
-    (function () {
-      function paint(id, n) {
-        var host = document.getElementById(id);
-        if (!host) return;
-        var cards = '';
-        for (var i = 0; i < n; i++) {
-          cards += '<article class="label-card" aria-hidden="true">' +
-            '<div class="label-card-media label-card-media--skeleton label-card-media--loading"></div>' +
-            '<p class="label-card-caption">&nbsp;</p></article>';
-        }
-        host.innerHTML = '<div class="labels-grid" aria-hidden="true">' + cards + '</div>';
-      }
-      paint('supported-groups', 8);
-      paint('upcoming-groups', 4);
-    })();
-  </script>
 </body>
 
 </html>
