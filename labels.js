@@ -137,7 +137,7 @@
     if (eager) {
       return `
         <article class="label-card" role="listitem">
-          <div class="label-card-media">
+          <div class="label-card-media label-card-media--loading">
             <img src="${src}" alt="${caption}" loading="eager" decoding="async" fetchpriority="high" width="400" height="300" />
           </div>
           <p class="label-card-caption">${caption}</p>
@@ -147,12 +147,28 @@
 
     return `
       <article class="label-card" role="listitem">
-        <div class="label-card-media">
+        <div class="label-card-media label-card-media--loading">
           <img data-src="${src}" alt="${caption}" loading="lazy" decoding="async" fetchpriority="low" width="400" height="300" />
         </div>
         <p class="label-card-caption">${caption}</p>
       </article>
     `;
+  }
+
+  function clearCardLoading(img) {
+    const media = img.closest('.label-card-media');
+    if (media) media.classList.remove('label-card-media--loading');
+  }
+
+  function wireCardLoaders(scope) {
+    scope.querySelectorAll('.label-card-media img').forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        clearCardLoading(img);
+        return;
+      }
+      img.addEventListener('load', () => clearCardLoading(img), { once: true });
+      img.addEventListener('error', () => clearCardLoading(img), { once: true });
+    });
   }
 
   function initLazyImages(scope) {
@@ -203,6 +219,7 @@
 
     grid.innerHTML = html;
     initLazyImages(grid);
+    wireCardLoaders(grid);
 
     const seeAllBtn = grid.querySelector('.labels-see-all-btn');
     if (seeAllBtn) {
@@ -211,6 +228,7 @@
         const remainingHtml = remainingFiles.map((fileName) => buildCardHtml(baseDir, fileName, false)).join('');
         this.parentElement.outerHTML = remainingHtml;
         initLazyImages(grid);
+        wireCardLoaders(grid);
       });
       seeAllBtn.addEventListener('mouseover', function() {
         this.style.backgroundColor = '#f3f4f6';
