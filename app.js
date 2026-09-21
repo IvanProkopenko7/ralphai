@@ -205,19 +205,6 @@ function setCropConfirmProcessing(isProcessing) {
   btnCropConfirm.classList.toggle('is-processing', isProcessing);
 }
 
-function getCropExportOptions() {
-  if (!isMobileSafari) {
-    return { maxWidth: 640, maxHeight: 640, jpegQuality: 0.88 };
-  }
-
-  const isLowEndCpu = (navigator.hardwareConcurrency || 4) <= 2;
-  if (isLowEndCpu) {
-    return { maxWidth: 480, maxHeight: 480, jpegQuality: 0.78 };
-  }
-
-  return { maxWidth: 560, maxHeight: 560, jpegQuality: 0.82 };
-}
-
 function buildPreviewCardMarkup(img, index) {
   const thumbClass = img.pending
     ? 'preview-thumb preview-thumb--pending'
@@ -315,13 +302,15 @@ function handleCropConfirm() {
       return;
     }
 
-    const { maxWidth, maxHeight, jpegQuality } = getCropExportOptions();
-    const canvas = cropperInstance.getCroppedCanvas({ maxWidth, maxHeight });
-    if (!canvas) {
+    // Full-resolution region first, then the same 320-square black-pad
+    // the classifier was trained on (matches the detection hit path).
+    const region = cropperInstance.getCroppedCanvas();
+    if (!region) {
       setCropConfirmProcessing(false);
       return;
     }
 
+    const canvas = canvasToSquare320(region);
     canvas.toBlob((blob) => {
       if (!blob) {
         setCropConfirmProcessing(false);
@@ -354,7 +343,7 @@ function handleCropConfirm() {
       }
 
       finalizeCrop(blob);
-    }, 'image/jpeg', jpegQuality);
+    }, 'image/jpeg', SQUARE_JPEG_QUALITY);
   });
 }
 
@@ -871,13 +860,45 @@ function mapBoxToOriginal(box, sentW, sentH, origW, origH) {
 }
 
 /* ─── label-to-square (mirrors detection/label-to-square.py) ───────── *
- * Detected label → fit inside a 320x320 canvas, centered, remaining    *
- * area padded black. Matches training preprocessing (LANCZOS fit,      *
- * integer centering, JPEG default quality) so inference sees the same  *
- * distribution the classifier was trained on. Canvas is exactly 320².  *
+ * Fit inside a 320x320 canvas, centered, remaining area padded black.  *
+ * Matches training preprocessing (fit long side, integer centering,    *
+ * JPEG default quality) so inference sees the same distribution the    *
+ * classifier was trained on. Used by BOTH the detected-box path and    *
+ * the manual-crop path. Canvas is always exactly 320².                 *
  * ──────────────────────────────────────────────────────────────────── */
 const SQUARE_SIZE = 320;
 const SQUARE_JPEG_QUALITY = 0.75;
+
+function canvasToSquare320(src) {
+  const ratio = src.width / src.height;
+  let dw;
+  let dh;
+  if (src.width >= src.height) {
+    dw = SQUARE_SIZE;
+    dh = Math.max(1, Math.round(SQUARE_SIZE / ratio));
+  } else {
+    dh = SQUARE_SIZE;
+    dw = Math.max(1, Math.round(SQUARE_SIZE * ratio));
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = SQUARE_SIZE;
+  canvas.height = SQUARE_SIZE;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, SQUARE_SIZE, SQUARE_SIZE);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src, 0, 0, src.width, src.height,
+    Math.floor((SQUARE_SIZE - dw) / 2), Math.floor((SQUARE_SIZE - dh) / 2), dw, dh);
+  return canvas;
+}
+
+async function canvasToSquare320Blob(src) {
+  const out = await new Promise((resolve) =>
+    canvasToSquare320(src).toBlob(resolve, 'image/jpeg', SQUARE_JPEG_QUALITY));
+  if (!out) throw new Error(i18n.errorCannotRead);
+  return out;
+}
 
 async function cropBoxFromOriginal(blob, box) {
   const img = await decodeImage(blob);
@@ -886,30 +907,11 @@ async function cropBoxFromOriginal(blob, box) {
     const sy = Math.max(0, Math.min(box.y, img.naturalHeight - 1));
     const sw = Math.max(1, Math.min(box.width, img.naturalWidth - sx));
     const sh = Math.max(1, Math.min(box.height, img.naturalHeight - sy));
-    const ratio = sw / sh;
-    let dw;
-    let dh;
-    if (sw >= sh) {
-      dw = SQUARE_SIZE;
-      dh = Math.max(1, Math.round(SQUARE_SIZE / ratio));
-    } else {
-      dh = SQUARE_SIZE;
-      dw = Math.max(1, Math.round(SQUARE_SIZE * ratio));
-    }
-    const left = Math.floor((SQUARE_SIZE - dw) / 2);
-    const top = Math.floor((SQUARE_SIZE - dh) / 2);
-    const canvas = document.createElement('canvas');
-    canvas.width = SQUARE_SIZE;
-    canvas.height = SQUARE_SIZE;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, SQUARE_SIZE, SQUARE_SIZE);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(img, sx, sy, sw, sh, left, top, dw, dh);
-    const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', SQUARE_JPEG_QUALITY));
-    if (!out) throw new Error(i18n.errorCannotRead);
-    return out;
+    const region = document.createElement('canvas');
+    region.width = sw;
+    region.height = sh;
+    region.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    return await canvasToSquare320Blob(region);
   } finally {
     if (img.close) img.close();
   }
