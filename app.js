@@ -227,7 +227,7 @@ function buildPreviewCardMarkup(img, index) {
   const media = img.pending
     ? ''
     : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
-  const manualBtn = (!img.pending && img.verdict === 'unknown' && img.result)
+  const manualBtn = (!img.pending && img.result)
     ? `<button class="preview-manual-crop" data-index="${index}">${i18n.manualCrop}</button>`
     : '';
   return `
