@@ -291,11 +291,19 @@
     footerEmail.textContent = EMAIL;
   }
 
+  // Paint instantly from the bundled fallback so the page never flashes
+  // empty; refresh in the background only if the manifest actually changed.
+  renderAll(FALLBACK_MANIFEST);
+
   fetch('label_images/manifest.json', { cache: 'no-cache' })
     .then((res) => {
       if (!res.ok) throw new Error(`manifest ${res.status}`);
       return res.json();
     })
-    .then(renderAll)
-    .catch(() => renderAll(FALLBACK_MANIFEST));
+    .then((manifest) => {
+      if (JSON.stringify(manifest) !== JSON.stringify(FALLBACK_MANIFEST)) {
+        renderAll(manifest);
+      }
+    })
+    .catch(() => {});
 })();

@@ -1417,6 +1417,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
 }
 
 .label-card-media {
@@ -1444,6 +1446,10 @@ body {
   border-top-color: #374151;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+}
+
+.label-card-media--skeleton {
+  background-color: #fff;
 }
 
 .label-card-media img {
