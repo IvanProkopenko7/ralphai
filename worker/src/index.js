@@ -67,20 +67,25 @@ function retryableError(message) {
 }
 
 /* ─── Fail harvest → R2 (cost-capped) ───────────────────────────────── *
- * - 5% hash sampling: even if an attacker maxes the Worker's 100k      *
- *   req/day free quota on /collect, writes stay ≤ ~300k Class A / mo   *
- *   (limit: 1M) and 7-day lifecycle expiry caps storage (limit: 10 GB).*
- *   Egress on R2 is always $0. Only original full-scene images are     *
- *   stored (miss + low-confidence), capped per request below.          *
- * - Per-request image cap 12 MB; bucket is private (no public reads).  *
+ * - Hard cap: max 500 saves/day (per isolate, in-memory). 500 saves =   *
+ *   1k Class A writes/day ≈ 30k/month = 3% of the 1M free quota.        *
+ *   Worst realistic case stays two orders of magnitude under limits;    *
+ *   per-IP rate limiting above further bounds floods. For a globally    *
+ *   exact cap across isolates, this counter would need Workers KV.      *
+ * - Per-request image cap 12 MB (originals); bucket is private, 7-day   *
+ *   lifecycle expiry caps storage (limit: 10 GB). Egress on R2 is $0.   *
  * ──────────────────────────────────────────────────────────────────── */
-const COLLECT_SAMPLE_PCT = 5;
+const COLLECT_DAILY_MAX = 500;
 const COLLECT_MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 const COLLECT_ALLOWED_MIME = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
 };
+
+// Daily save counter (UTC day rollover). Counts only successful writes.
+let collectDay = '';
+let collectCount = 0;
 
 function collectJson(status, obj) {
   return new Response(JSON.stringify(obj), {
@@ -119,11 +124,15 @@ async function handleCollect(request, env) {
   }
   const imgExt = COLLECT_ALLOWED_MIME[imgMatch[1]];
 
-  // Stateless 5% sampling — uniform via uuid randomness (checked after uuid below).
+  // Hard daily cap — counts only successful writes (checked again below).
   const id = crypto.randomUUID();
-  const sampleByte = parseInt(id.slice(0, 2), 16); // 0..255 uniform
-  if (sampleByte >= Math.round((COLLECT_SAMPLE_PCT / 100) * 256)) {
-    return collectJson(200, { saved: false, reason: 'sampled_out' });
+  const day = new Date().toISOString().slice(0, 10);
+  if (day !== collectDay) {
+    collectDay = day;
+    collectCount = 0;
+  }
+  if (collectCount >= COLLECT_DAILY_MAX) {
+    return collectJson(200, { saved: false, reason: 'daily_cap' });
   }
 
   let bytes;
@@ -139,7 +148,6 @@ async function handleCollect(request, env) {
     return collectJson(400, { saved: false, reason: 'bad encoding' });
   }
 
-  const day = new Date().toISOString().slice(0, 10);
   const base = `fails/${kind}/${day}/${id}`;
   const sidecar = JSON.stringify({
     kind, id, day,
@@ -154,6 +162,7 @@ async function handleCollect(request, env) {
   } catch (e) {
     return collectJson(500, { saved: false, reason: 'store failed' });
   }
+  collectCount += 1;
   return collectJson(200, { saved: true, key: base });
 }
 

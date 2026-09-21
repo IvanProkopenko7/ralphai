@@ -953,9 +953,9 @@ function applyResultToEntry(entry, data) {
 }
 
 /* ─── Fail harvest (miss / low-confidence ORIGINALS → R2) ───────── *
- * Fire-and-forget: never blocks UI, never shows errors. The Worker   *
- * samples ~5% server-side and enforces size caps, so this is safe to  *
- * call for every miss / low-confidence case (free-tier safe).         *
+ * Fire-and-forget: never blocks UI, never shows errors. The Worker    *
+ * enforces a hard 500/day cap and size caps, so this is safe to call   *
+ * for every miss / low-confidence case (free-tier safe).               *
  * ──────────────────────────────────────────────────────────────────── */
 const COLLECT_ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 
