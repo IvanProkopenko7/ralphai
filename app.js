@@ -21,10 +21,8 @@ const btnCropCancel  = document.getElementById('btnCropCancel');
 /* ─── i18n ────────────────────────────────────────── */
 const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
 const MAX_IMAGES = 1;
-// Server-side detection budget (user requirement: max 10s, then manual crop).
-const DETECT_TIMEOUT_MS = 10000;
-const DETECT_MAX_SIDE = 480;
-const DETECT_UPLOAD_QUALITY = 0.85;
+// Server-side detection budget: full originals can take longer to upload.
+const DETECT_TIMEOUT_MS = 30000;
 const DETECT_SCORE_MIN = 0.5;
 
 const i18n = {
@@ -457,14 +455,13 @@ function processNextCrop(keepModalOpen = false) {
       activeCropSourceBlob = source.blob;
       pendingMissSaved = false;
 
-      // Server-side detection on a 480px downscale; any failure → miss path.
+      // Server-side detection on the FULL ORIGINAL image; any failure → miss path.
       let hitBox = null;
       try {
-        const down = await make480Downscale(source.blob);
-        const det = await detectServerSide(down.blob);
+        const dims = await getImageDims(source.blob);
+        const det = await detectServerSide(source.blob);
         const best = det && Array.isArray(det.boxes) ? det.boxes[0] : null;
         if (best && (best.confidence ?? 0) >= DETECT_SCORE_MIN && det.width > 0 && det.height > 0) {
-          const dims = await getImageDims(source.blob);
           hitBox = mapBoxToOriginal(best, det.width, det.height, dims.w, dims.h);
         }
       } catch (_) {
@@ -793,26 +790,12 @@ function blobToBase64(blob) {
   });
 }
 
-/* ─── Server-side detection (480px upload → boxes) ──────────────── *
- * Detection runs entirely on the HF Space via the Worker. Any failure *
- * (timeout after DETECT_TIMEOUT_MS, error, no box ≥ 0.5) returns null  *
- * and the caller falls back to manual crop — never throws outward.     *
+/* ─── Server-side detection (full-original upload → boxes) ───────── *
+ * Detection runs entirely on the HF Space via the Worker (it letter-  *
+ * boxes to 480 internally, same as training). Any failure (timeout    *
+ * after DETECT_TIMEOUT_MS, error, no box ≥ 0.5) returns null and the   *
+ * caller falls back to manual crop — never throws outward.             *
  * ──────────────────────────────────────────────────────────────────── */
-async function make480Downscale(blob) {
-  const img = await decodeImage(blob);
-  const scale = Math.min(1, DETECT_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
-  const w = Math.max(1, Math.round(img.naturalWidth * scale));
-  const h = Math.max(1, Math.round(img.naturalHeight * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-  if (img.close) img.close();
-  const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', DETECT_UPLOAD_QUALITY));
-  if (!out) throw new Error(i18n.errorCannotRead);
-  return { blob: out, w, h };
-}
-
 function decodeImage(blob) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob);
@@ -832,8 +815,8 @@ async function getImageDims(blob) {
   return dims;
 }
 
-async function detectServerSide(downscaledBlob) {
-  const body = await blobToBase64(downscaledBlob);
+async function detectServerSide(originalBlob) {
+  const body = await blobToBase64(originalBlob);
   const init = {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

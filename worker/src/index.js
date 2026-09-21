@@ -167,15 +167,15 @@ async function handleCollect(request, env) {
 }
 
 /* ─── Label detection → HF Space (server-side only) ─────────────────── *
- * Client uploads a ~480px downscaled image; Space runs                  *
- * detection-n-480-90deg.pt and returns boxes in upload-pixel coords.    *
+ * Client uploads the FULL ORIGINAL image; Space letterboxes to 480     *
+ * internally (same as training). Returns boxes in upload-pixel coords. *
  * Any failure (timeout/cold/error) → non-200, client falls back to      *
- * manual crop. 9s per-attempt cap keeps us inside the client's 10s      *
- * budget; one stale-host retry may catch a freshly-woken Space.         *
- * Free-tier safe: tiny uploads, short timeouts, no extra services.      *
+ * manual crop. 25s per-attempt cap fits the client's 30s budget; one    *
+ * stale-host retry may catch a freshly-woken Space.                     *
+ * Free-tier safe: short timeouts, no extra services.                    *
  * ──────────────────────────────────────────────────────────────────── */
-const DETECT_TIMEOUT_MS = 9000;
-const DETECT_MAX_IMAGE_BYTES = 600 * 1024;
+const DETECT_TIMEOUT_MS = 25000;
+const DETECT_MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 
 function detectJson(status, obj) {
   return new Response(JSON.stringify(obj), {
