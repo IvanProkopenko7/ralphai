@@ -10,6 +10,12 @@ const path = require('path');
 const ROOT = __dirname;
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']);
 
+// Sections display first by image count (most images first),
+// alphabetically on ties — so newly added photos reorder automatically.
+function orderGroups(groups) {
+  return groups.sort((a, b) => b.files.length - a.files.length || a.folder.localeCompare(b.folder));
+}
+
 // Only "_" becomes " " — dashes, apostrophes and other symbols are preserved.
 function folderToTitle(folder) {
   return String(folder).replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -47,8 +53,8 @@ const manifest = {
     supported: folderToTitle('supported_labels'),
     upcoming: folderToTitle('upcoming_labels')
   },
-  supported: scanGroup('label_images/supported_labels', '/label_images/supported_labels'),
-  upcoming: scanGroup('label_images/upcoming_labels', '/label_images/upcoming_labels')
+  supported: orderGroups(scanGroup('label_images/supported_labels', '/label_images/supported_labels')),
+  upcoming: orderGroups(scanGroup('label_images/upcoming_labels', '/label_images/upcoming_labels'))
 };
 
 const outPath = path.join(ROOT, 'label_images', 'manifest.json');

@@ -61,18 +61,6 @@
    ]
   },
   {
-   "folder": "polo_sport",
-   "title": "polo sport",
-   "baseDir": "/label_images/supported_labels/polo_sport",
-   "files": [
-    "1990s_made_in_china_sweatpants.jpg",
-    "1990s_made_in_honduras_T-shirt.jpg",
-    "1990s_made_in_peru_shirt.webp",
-    "1990s_made_in_usa_cap.jpg",
-    "sportswoman_1990s_sweater.jpg"
-   ]
-  },
-  {
    "folder": "ralph_lauren",
    "title": "ralph lauren",
    "baseDir": "/label_images/supported_labels/ralph_lauren",
@@ -88,7 +76,48 @@
     "mid_1980s_dress.jpg",
     "pair_of_1990s_boots.jpg"
    ]
+  },
+  {
+   "folder": "polo_sport",
+   "title": "polo sport",
+   "baseDir": "/label_images/supported_labels/polo_sport",
+   "files": [
+    "1990s_made_in_china_sweatpants.jpg",
+    "1990s_made_in_honduras_T-shirt.jpg",
+    "1990s_made_in_peru_shirt.webp",
+    "1990s_made_in_usa_cap.jpg",
+    "sportswoman_1990s_sweater.jpg"
+   ]
   }
  ],
- "upcoming": []
+ "upcoming": [
+  {
+   "folder": "polo_ralph_lauren_print_label",
+   "title": "polo ralph lauren print label",
+   "baseDir": "/label_images/upcoming_labels/polo_ralph_lauren_print_label",
+   "files": [
+    "2019_wimbledon_T-shirt.jpg",
+    "2020s_made_in_turkey_T-shirt.jpg",
+    "late_2010s_made_in_indonesia_performance_jacket.jpg"
+   ]
+  },
+  {
+   "folder": "ralph_lauren_purple_label",
+   "title": "ralph lauren purple label",
+   "baseDir": "/label_images/upcoming_labels/ralph_lauren_purple_label",
+   "files": [
+    "early_2000s_made_in_usa_collection_pants.jpg",
+    "early_2020s_made_in_italy_T-shirt.jpg",
+    "late_1990s_women's_jacket.jpg"
+   ]
+  },
+  {
+   "folder": "double_RL",
+   "title": "double RL",
+   "baseDir": "/label_images/upcoming_labels/double_RL",
+   "files": [
+    "late_2024_30th_anniversary_valero_jacket.png"
+   ]
+  }
+ ]
 }
