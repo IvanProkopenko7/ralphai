@@ -89,6 +89,7 @@ const i18n = {
     ? `Błąd API ${st}: ${d || 'nieznany błąd serwera.'}`
     : `API error ${st}: ${d || 'unknown server error.'}`,
   errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
+  wakingUp:        isPolish ? 'Model wybudza się po przerwie — potrwa to około minuty. Ponawiam automatycznie…' : 'Model is waking up after idle — this takes about a minute. Retrying automatically…',
   uncertaintyHtml: isPolish 
     ? 'Niektóre wyniki są zbyt niepewne. Spróbuj ponownie zrobić zdjęcia i przyciąć je dokładniej. Jeśli wynik nadal jest niepewny, prześlij te zdjęcia na <a href="mailto:kontakt@ralphai.tech">adres e-mail strony</a> w celu weryfikacji przez człowieka lub opublikuj je na grupach takich jak <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.'
     : 'Some of the results are too uncertain. Please, try re-cropping yellow photos more closely and checking them again. If the result is still uncertain, then please send those photos to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
@@ -171,6 +172,8 @@ let activeCropSourceBlob = null;
 let pendingMissSaved = false;
 // Entry being manually re-cropped from an uncertain result (modal target).
 let recropEntry = null;
+// Bounded auto-retries while the Space wakes (reset on each terminal path).
+let detectWakeTries = 0;
 
 const ua = navigator.userAgent || '';
 const isIOSDevice = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -266,7 +269,7 @@ function finalizeCrop(blob) {
     } else {
       closeCropper();
     }
-    classifyEntry(entry)
+    classifyWithWakeRetry(entry)
       .catch(() => showError(i18n.errorAnalysis))
       .finally(() => {
         entry.pending = false;
@@ -336,7 +339,7 @@ function handleCropConfirm() {
         entry.pending = true;
         closeCropper();
         renderGrid();
-        classifyEntry(entry)
+        classifyWithWakeRetry(entry)
           .catch(() => showError(i18n.errorAnalysis))
           .finally(() => {
             entry.pending = false;
@@ -460,8 +463,10 @@ function processNextCrop(keepModalOpen = false) {
       activeCropSourceBlob = source.blob;
       pendingMissSaved = false;
 
-      // Server-side detection on the FULL ORIGINAL image; any failure → miss path.
+      // Server-side detection on the downscaled upload (mapped back to the
+      // original); any failure → miss path, except a waking Space → retry.
       let hitBox = null;
+      let waking = false;
       try {
         const dims = await getImageDims(source.blob);
         const det = await detectServerSide(source.blob);
@@ -469,9 +474,28 @@ function processNextCrop(keepModalOpen = false) {
         if (best && (best.confidence ?? 0) >= DETECT_SCORE_MIN && det.width > 0 && det.height > 0) {
           hitBox = mapBoxToOriginal(best, det.width, det.height, dims.w, dims.h);
         }
-      } catch (_) {
+      } catch (e) {
+        if (isWakingError(e)) waking = true;
         hitBox = null;
       }
+
+      if (waking && !hitBox) {
+        // Sleeping Space wakes in the background — re-queue and retry the
+        // same file after a delay instead of dropping to manual crop.
+        if (detectWakeTries < WAKE_MAX_RETRIES) {
+          detectWakeTries += 1;
+          cropQueue.unshift(file);
+          showError(i18n.wakingUp);
+          setTimeout(() => {
+            hideError();
+            processNextCrop(keepModalOpen);
+          }, WAKE_RETRY_MS);
+          return;
+        }
+      }
+
+      // Detect phase for this file is over — reset for the next file.
+      detectWakeTries = 0;
 
       if (hitBox) {
         // Label found: silently crop from the ORIGINAL full-res image and
@@ -484,7 +508,7 @@ function processNextCrop(keepModalOpen = false) {
           // Grey spinner thumb now; colored thumb + chip on settle.
           renderGrid();
           try {
-            await classifyEntry(entry);
+            await classifyWithWakeRetry(entry);
           } catch (_) {
             showError(i18n.errorAnalysis);
           } finally {
@@ -767,10 +791,58 @@ async function classifyImage(base64) {
   if (!response.ok) {
     let detail = '';
     try { detail = await response.text(); } catch (_) {}
-    throw new Error(i18n.errorApi(response.status, detail));
+    const err = new Error(i18n.errorApi(response.status, detail));
+    if (isWakingResponse(response.status, detail)) err.code = 'space_waking';
+    throw err;
   }
 
   return response.json();
+}
+
+/* ─── Space waking (free-tier sleep recovery) ─────────────────────── *
+ * The Worker answers 503 {error:'space_waking'} while it wakes the    *
+ * sleeping HF Space in the background (~30–90s). Callers show a notice *
+ * and retry the same request after WAKE_RETRY_MS, bounded by           *
+ * WAKE_MAX_RETRIES — then degrade to the usual miss/error paths.       *
+ * ──────────────────────────────────────────────────────────────────── */
+const WAKE_RETRY_MS = 45000;
+const WAKE_MAX_RETRIES = 2;
+
+function isWakingResponse(status, detail) {
+  if (status === 503) return true;
+  try {
+    return !!detail && JSON.parse(detail).error === 'space_waking';
+  } catch (_) {
+    return false;
+  }
+}
+
+function isWakingError(e) {
+  return !!e && e.code === 'space_waking';
+}
+
+function markWakingError(e) {
+  const err = e instanceof Error ? e : new Error('space_waking');
+  err.code = 'space_waking';
+  return err;
+}
+
+async function classifyWithWakeRetry(entry) {
+  entry._wakeTries = entry._wakeTries || 0;
+  for (;;) {
+    try {
+      return await classifyEntry(entry);
+    } catch (e) {
+      if (isWakingError(e) && entry._wakeTries < WAKE_MAX_RETRIES) {
+        entry._wakeTries += 1;
+        showError(i18n.wakingUp);
+        await new Promise((r) => setTimeout(r, WAKE_RETRY_MS));
+        hideError();
+        continue;
+      }
+      throw e;
+    }
+  }
 }
 
 function blobToBase64(blob) {
@@ -854,7 +926,16 @@ async function detectServerSide(originalBlob) {
     init.signal = AbortSignal.timeout(DETECT_TIMEOUT_MS);
   }
   const response = await fetch(`${API_URL}/detect`, init);
-  if (!response.ok) return null;
+  if (!response.ok) {
+    // Sleeping Space: Worker wakes it in the background — throw a coded
+    // error so the caller can notice + retry instead of manual-cropping.
+    if (response.status === 503) {
+      let detail = '';
+      try { detail = await response.text(); } catch (_) {}
+      if (isWakingResponse(response.status, detail)) throw markWakingError();
+    }
+    return null;
+  }
   const data = await response.json();
   if (!data || !Array.isArray(data.boxes)) return null;
   return data;

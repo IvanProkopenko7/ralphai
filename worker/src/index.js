@@ -66,6 +66,82 @@ function retryableError(message) {
   return e;
 }
 
+/* 503 from the Space means it is asleep (free-tier 48h idle) or just
+ * restarted — not a dead end. Marked separately so callers can trigger
+ * a background wake and answer {error:'space_waking'} for client retry. */
+function wakeableError(message) {
+  const e = retryableError(message);
+  e.wakeable = true;
+  return e;
+}
+
+function throwForStatus(res, label) {
+  if (res.ok) return;
+  throw res.status === 503
+    ? wakeableError(`${label} failed (503)`)
+    : retryableError(`${label} failed (${res.status})`);
+}
+
+/* ─── Space auto-wake (free-tier sleep recovery) ──────────────────── *
+ * Any observed 503 triggers a shared background wake (deduped per      *
+ * isolate) while the client gets {error:'space_waking'} and retries    *
+ * after a delay. The cron keep-warm deliberately does NOT wake — idle  *
+ * Spaces should sleep to save monthly CPU hours; only real user        *
+ * traffic wakes. Concurrent uploads share one in-flight wake.          *
+ * ─────────────────────────────────────────────────────────────────── */
+const WAKE_TIMEOUT_MS = 120000;
+const WAKE_POLL_MS = 5000;
+let wakePromise = null;
+
+async function wakeSpace(apiKey) {
+  if (!wakePromise) {
+    wakePromise = (async () => {
+      try {
+        // Poke the hub page + last-known direct host: traffic through the
+        // Spaces proxy is what wakes a sleeping Space (~30–90s w/ models).
+        try {
+          await fetch(`https://huggingface.co/spaces/${SPACE_ID}`, {
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+          });
+        } catch (_) {}
+        try {
+          const known = cachedHost || (await resolveSpaceHost(apiKey));
+          await fetch(`${known}/`, {
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+          });
+        } catch (_) {}
+        const start = Date.now();
+        for (;;) {
+          try {
+            const host = await resolveSpaceHost(apiKey, true);
+            const infoRes = await fetch(`${host}/gradio_api/info`, {
+              headers: { 'Authorization': `Bearer ${apiKey}` },
+            });
+            if (infoRes.ok) return true;
+          } catch (_) {}
+          if (Date.now() - start > WAKE_TIMEOUT_MS) return false;
+          await new Promise((r) => setTimeout(r, WAKE_POLL_MS));
+        }
+      } finally {
+        wakePromise = null;
+      }
+    })();
+  }
+  return wakePromise;
+}
+
+function triggerWake(ctx, apiKey) {
+  try {
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(wakeSpace(apiKey).catch(() => {}));
+  } catch (_) {}
+}
+
+function wakingResponse() {
+  return new Response(JSON.stringify({ error: 'space_waking' }), {
+    status: 503, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  });
+}
+
 /* ─── Fail harvest → R2 (cost-capped) ───────────────────────────────── *
  * - Hard cap: max 500 saves/day (per isolate, in-memory). 500 saves =   *
  *   1k Class A writes/day ≈ 30k/month = 3% of the 1M free quota.        *
@@ -195,7 +271,7 @@ function detectJson(status, obj) {
   });
 }
 
-async function handleDetect(request, env) {
+async function handleDetect(request, env, ctx) {
   const apiKey = env.RALPH_Ai_TOKEN;
   if (!apiKey) {
     return detectJson(500, { error: 'RALPH_Ai_TOKEN secret is not set on this Worker.' });
@@ -271,7 +347,7 @@ async function handleDetect(request, env) {
       body: multipartBody,
     });
     if (!uploadRes.ok) {
-      throw retryableError(`detect upload failed (${uploadRes.status})`);
+      throwForStatus(uploadRes, 'detect upload');
     }
     const uploadPaths = await uploadRes.json();
     const pathValue = Array.isArray(uploadPaths) ? uploadPaths[0] : uploadPaths;
@@ -283,7 +359,7 @@ async function handleDetect(request, env) {
       body: JSON.stringify({ data: [{ path: pathValue, meta: { _type: 'gradio.FileData' } }] }),
     });
     if (!postRes.ok) {
-      throw retryableError(`detect queue join failed (${postRes.status})`);
+      throwForStatus(postRes, 'detect queue join');
     }
     const { event_id } = await postRes.json();
 
@@ -291,7 +367,7 @@ async function handleDetect(request, env) {
       headers: { 'Authorization': `Bearer ${apiKey}` },
     });
     if (!streamRes.ok) {
-      throw retryableError(`detect result stream failed (${streamRes.status})`);
+      throwForStatus(streamRes, 'detect result stream');
     }
     const text = await streamRes.text();
     if (text.includes('event: error')) {
@@ -326,19 +402,25 @@ async function handleDetect(request, env) {
   try {
     return await attemptDetect(host);
   } catch (e) {
+    // Sleeping Space: wake in background, answer space_waking for client
+    // retry; the fresh-host attempt below also covers a merely stale host.
+    if (e.wakeable) triggerWake(ctx, apiKey);
     if (!e.retryable) {
-      return detectJson(500, { error: e.message });
+      return detectJson(e.wakeable ? 503 : 500, { error: e.wakeable ? 'space_waking' : e.message });
     }
     forgetSpaceHost();
     let freshHost;
     try {
       freshHost = await resolveSpaceHost(apiKey, true);
     } catch (re) {
+      if (e.wakeable) return detectJson(503, { error: 'space_waking' });
       return detectJson(500, { error: 'Could not resolve HF Space host', details: re.message });
     }
     try {
       return await attemptDetect(freshHost);
     } catch (e2) {
+      if (e2.wakeable) triggerWake(ctx, apiKey);
+      if (e2.wakeable) return detectJson(503, { error: 'space_waking' });
       return detectJson(500, { error: e2.retryable ? e2.message.replace(/^detect /, '') : e2.message });
     }
   }
@@ -415,7 +497,7 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(warmSpace(env));
   },
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     /* ── CORS preflight ── */
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -435,11 +517,11 @@ export default {
       return handleCollect(request, env);
     }
 
-    /* ── Label detection endpoint (480px image → boxes) ── */
+    /* ── Label detection endpoint (640px image → boxes) ── */
     if (pathname === '/detect') {
       const limited = rateLimited(request, 'inference');
       if (limited) return limited;
-      return handleDetect(request, env);
+      return handleDetect(request, env, ctx);
     }
 
     /* ── Read body explicitly ── */
@@ -554,7 +636,9 @@ export default {
 
       if (!uploadRes.ok) {
         const uploadErr = await uploadRes.text();
-        throw retryableError(`Failed to upload to Gradio (${uploadRes.status}): ${uploadErr}`);
+        throw uploadRes.status === 503
+          ? wakeableError(`Failed to upload to Gradio (503)`)
+          : retryableError(`Failed to upload to Gradio (${uploadRes.status}): ${uploadErr}`);
       }
 
       const uploadPaths = await uploadRes.json();
@@ -586,7 +670,9 @@ export default {
 
       if (!postRes.ok) {
          const errText = await postRes.text();
-         throw retryableError(`Failed to join Gradio inference queue (${postRes.status}): ${errText}`);
+         throw postRes.status === 503
+           ? wakeableError(`Failed to join Gradio inference queue (503)`)
+           : retryableError(`Failed to join Gradio inference queue (${postRes.status}): ${errText}`);
       }
 
       const { event_id } = await postRes.json();
@@ -601,7 +687,9 @@ export default {
         throw retryableError(`Failed to read Gradio result stream: ${e.message}`);
       }
       if (!streamRes.ok) {
-        throw retryableError(`Gradio result stream failed (${streamRes.status})`);
+        throw streamRes.status === 503
+          ? wakeableError(`Gradio result stream failed (503)`)
+          : retryableError(`Gradio result stream failed (${streamRes.status})`);
       }
 
       // The HTTP fetch blocks until the SSE stream completes or errors out!
@@ -678,6 +766,8 @@ export default {
       try {
         return await attempt(host);
       } catch (e) {
+        if (e.wakeable) triggerWake(ctx, apiKey);
+        if (e.wakeable) return wakingResponse();
         if (!e.retryable) {
           return new Response(JSON.stringify({ error: e.message }), {
             status: 500,
@@ -697,6 +787,8 @@ export default {
         try {
           return await attempt(freshHost);
         } catch (e2) {
+          if (e2.wakeable) triggerWake(ctx, apiKey);
+          if (e2.wakeable) return wakingResponse();
           return new Response(JSON.stringify({ error: e2.message }), {
             status: 500,
             headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
