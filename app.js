@@ -21,8 +21,13 @@ const btnCropCancel  = document.getElementById('btnCropCancel');
 /* ─── i18n ────────────────────────────────────────── */
 const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
 const MAX_IMAGES = 1;
-// Server-side detection budget: full originals can take longer to upload.
+// Server-side detection budget: 640px JPEG uploads match full-original
+// accuracy (480px missed a real label in testing) at ~10x fewer bytes.
 const DETECT_TIMEOUT_MS = 30000;
+const DETECT_MAX_SIDE = 640;
+const DETECT_UPLOAD_QUALITY = 0.82;
+const DETECT_PNG_QUALITY = 0.9;
+const DETECT_PNG_MIN_BYTES = 300 * 1024;
 const DETECT_SCORE_MIN = 0.5;
 
 const i18n = {
@@ -790,12 +795,35 @@ function blobToBase64(blob) {
   });
 }
 
-/* ─── Server-side detection (full-original upload → boxes) ───────── *
+/* ─── Server-side detection (640px upload → boxes) ─────────────── *
  * Detection runs entirely on the HF Space via the Worker (it letter-  *
- * boxes to 480 internally, same as training). Any failure (timeout    *
- * after DETECT_TIMEOUT_MS, error, no box ≥ 0.5) returns null and the   *
- * caller falls back to manual crop — never throws outward.             *
+ * boxes to 480 internally, same as training). The upload is downscaled *
+ * to 640px JPEG first: 480px missed a real label, full originals waste *
+ * ~10x bytes (e.g. pasted PNGs) with no accuracy gain. Any failure      *
+ * (timeout after DETECT_TIMEOUT_MS, error, no box ≥ 0.5) returns null   *
+ * and the caller falls back to manual crop — never throws outward.     *
  * ──────────────────────────────────────────────────────────────────── */
+async function makeDetectDownscale(blob) {
+  try {
+    const img = await decodeImage(blob);
+    const longSide = Math.max(img.naturalWidth, img.naturalHeight);
+    const isBigPng = blob.type === 'image/png' && blob.size > DETECT_PNG_MIN_BYTES;
+    if (longSide <= DETECT_MAX_SIDE && !isBigPng) return blob;
+    const scale = Math.min(1, DETECT_MAX_SIDE / longSide);
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const out = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', scale < 1 ? DETECT_UPLOAD_QUALITY : DETECT_PNG_QUALITY));
+    return out || blob;
+  } catch (_) {
+    return blob;
+  }
+}
+
 function decodeImage(blob) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob);
@@ -816,7 +844,7 @@ async function getImageDims(blob) {
 }
 
 async function detectServerSide(originalBlob) {
-  const body = await blobToBase64(originalBlob);
+  const body = await blobToBase64(await makeDetectDownscale(originalBlob));
   const init = {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
