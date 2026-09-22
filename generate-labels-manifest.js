@@ -36,7 +36,9 @@ function scanGroup(groupDir, urlPrefix) {
         baseDir: `${urlPrefix}/${folder}`,
         files
       };
-    });
+    })
+    // Skip folders with no images so the page never renders empty sections.
+    .filter((g) => g.files.length > 0);
 }
 
 const manifest = {

@@ -78,6 +78,18 @@
       ]
     },
     {
+      "folder": "polo_sport",
+      "title": "polo sport",
+      "baseDir": "/label_images/supported_labels/polo_sport",
+      "files": [
+        "1990s_made_in_china_sweatpants.jpg",
+        "1990s_made_in_honduras_T-shirt.jpg",
+        "1990s_made_in_peru_shirt.webp",
+        "1990s_made_in_usa_cap.jpg",
+        "sportswoman_1990s_sweater.jpg"
+      ]
+    },
+    {
       "folder": "ralph_lauren",
       "title": "ralph lauren",
       "baseDir": "/label_images/supported_labels/ralph_lauren",
