@@ -12,6 +12,7 @@ const dropText     = document.getElementById('dropTextGroup');
 const previewGrid  = document.getElementById('previewGrid');
 const resultRow    = document.getElementById('resultRow');
 const uncertaintyMsg = document.getElementById('uncertaintyMsg');
+const tooSmallMsg = document.getElementById('tooSmallMsg');
 const errorMsg     = document.getElementById('errorMsg');
 const cropperModal  = document.getElementById('cropperModal');
 const cropperImg    = document.getElementById('cropperImg');
@@ -29,6 +30,7 @@ const DETECT_UPLOAD_QUALITY = 0.82;
 const DETECT_PNG_QUALITY = 0.9;
 const DETECT_PNG_MIN_BYTES = 300 * 1024;
 const DETECT_SCORE_MIN = 0.5;
+const TOO_SMALL_MAX_SIDE = 48;
 
 const i18n = {
   navLabels:       isPolish ? 'METKI'                                : 'LABELS',
@@ -91,8 +93,11 @@ const i18n = {
   errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
   wakingUp:        isPolish ? 'Model wybudza się po przerwie — potrwa to około minuty. Ponawiam automatycznie…' : 'Model is waking up after idle — this takes about a minute. Retrying automatically…',
   uncertaintyHtml: isPolish 
-    ? 'Niektóre wyniki są zbyt niepewne. Spróbuj ponownie zrobić zdjęcia i przyciąć je dokładniej. Jeśli wynik nadal jest niepewny, prześlij te zdjęcia na <a href="mailto:kontakt@ralphai.tech">adres e-mail strony</a> w celu weryfikacji przez człowieka lub opublikuj je na grupach takich jak <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.'
-    : 'Some of the results are too uncertain. Please, try re-cropping yellow photos more closely and checking them again. If the result is still uncertain, then please send those photos to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
+    ? 'Pewność klasyfikacji jest zbyt niska. Spróbuj przyciąć swoje zdjęcie dokładniej i sprawdź je ponownie. Jeśli wynik nadal jest niepewny, prześlij zdjęcie na <a href="mailto:kontakt@ralphai.tech">adres e-mail strony</a> w celu weryfikacji przez człowieka lub opublikuj je na grupach takich jak <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.'
+    : 'Classification confidence is too low. Please, try re-cropping your photo more closely and checking it again. If the result is still uncertain, then please send the photo to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
+  tooSmallHtml: isPolish
+    ? 'Etykieta na Twoim zdjęciu jest zbyt mała. Spróbuj zrobić zdjęcie bliżej metki i upewnij się, że metka jest wyraźnie widoczna.'
+    : 'The label on your photo is too small. Try taking your photo closer to the label and make sure that the label is clearly visible.',
 };
 
 function applySharedMetrics() {
@@ -130,6 +135,10 @@ function applyTranslations() {
   const uncertaintyMsgEl = document.getElementById('uncertaintyMsg');
   if (uncertaintyMsgEl) {
     uncertaintyMsgEl.innerHTML = i18n.uncertaintyHtml;
+  }
+  const tooSmallMsgEl = document.getElementById('tooSmallMsg');
+  if (tooSmallMsgEl) {
+    tooSmallMsgEl.innerHTML = i18n.tooSmallHtml;
   }
 
   applySharedMetrics();
@@ -242,6 +251,8 @@ function updatePreviewAreaMeta() {
 
   const hasLowConfidence = croppedImages.some(img => img.chip && img.chip.includes('result-chip--unknown'));
   if (uncertaintyMsg) uncertaintyMsg.hidden = !hasLowConfidence;
+  const hasTooSmall = croppedImages.some(img => img.tooSmall);
+  if (tooSmallMsg) tooSmallMsg.hidden = !hasTooSmall;
 }
 
 function finalizeCrop(blob) {
@@ -466,12 +477,18 @@ function processNextCrop(keepModalOpen = false) {
       // Server-side detection on the downscaled upload (mapped back to the
       // original); any failure → miss path, except a waking Space → retry.
       let hitBox = null;
+      let tooSmallBox = false;
       let waking = false;
       try {
         const dims = await getImageDims(source.blob);
         const det = await detectServerSide(source.blob);
         const best = det && Array.isArray(det.boxes) ? det.boxes[0] : null;
         if (best && (best.confidence ?? 0) >= DETECT_SCORE_MIN && det.width > 0 && det.height > 0) {
+          const sentW = best.x2 - best.x1;
+          const sentH = best.y2 - best.y1;
+          if (Number.isFinite(sentW) && Number.isFinite(sentH) && Math.max(sentW, sentH) < TOO_SMALL_MAX_SIDE) {
+            tooSmallBox = true;
+          }
           hitBox = mapBoxToOriginal(best, det.width, det.height, dims.w, dims.h);
         }
       } catch (e) {
@@ -496,6 +513,49 @@ function processNextCrop(keepModalOpen = false) {
 
       // Detect phase for this file is over — reset for the next file.
       detectWakeTries = 0;
+
+      if (tooSmallBox && hitBox) {
+        // Label found but too small in the sent image: skip classification
+        // entirely and show the "too small" banner (same look as uncertain).
+        try {
+          const cropBlob = await cropBoxFromOriginal(source.blob, hitBox);
+          releaseActiveCropSource();
+          activeCropSourceBlob = null;
+          const previewUrl = URL.createObjectURL(cropBlob);
+          croppedImages.push({
+            blob: cropBlob,
+            previewUrl,
+            originalBlob: source.blob,
+            savedToBucket: false,
+            reported: false,
+            result: null,
+            chip: '',
+            verdict: '',
+            pending: false,
+            tooSmall: true,
+          });
+        } catch (_) {
+          // Crop failed: still show the banner with the original as preview.
+          releaseActiveCropSource();
+          activeCropSourceBlob = null;
+          const previewUrl = URL.createObjectURL(source.blob);
+          croppedImages.push({
+            blob: source.blob,
+            previewUrl,
+            originalBlob: source.blob,
+            savedToBucket: false,
+            reported: false,
+            result: null,
+            chip: '',
+            verdict: '',
+            pending: false,
+            tooSmall: true,
+          });
+        }
+        renderGrid();
+        processNextCrop(false);
+        return;
+      }
 
       if (hitBox) {
         // Label found: silently crop from the ORIGINAL full-res image and
@@ -740,6 +800,7 @@ function renderGrid() {
     chooseBtn.hidden = false;
     dropText.hidden = false;
     if (uncertaintyMsg) uncertaintyMsg.hidden = true;
+    if (tooSmallMsg) tooSmallMsg.hidden = true;
     return;
   }
 
