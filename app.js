@@ -83,6 +83,7 @@ const i18n = {
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
   chipUncertain:   isPolish ? 'Nie pewien'                           : 'Uncertain',
+  chipTooSmall:    isPolish ? 'Za mała'                              : 'Too small',
   chipAuthentic:   isPolish ? 'Oryginał'                             : 'Authentic',
   chipFake:        'Fake',
   confidence:      (pct) => isPolish ? `pewność: ${pct}%`            : `confidence: ${pct}%`,
@@ -223,13 +224,13 @@ function setCropConfirmProcessing(isProcessing) {
 function buildPreviewCardMarkup(img, index) {
   const thumbClass = img.pending
     ? 'preview-thumb preview-thumb--pending'
-    : (['real', 'fake', 'unknown'].indexOf(img.verdict) !== -1
+    : (['real', 'fake', 'unknown', 'too-small'].indexOf(img.verdict) !== -1
       ? `preview-thumb preview-thumb--${img.verdict}`
       : 'preview-thumb');
   const media = img.pending
     ? ''
     : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
-  const manualBtn = (!img.pending && img.result)
+  const manualBtn = (!img.pending && (img.result || img.tooSmall))
     ? `<button class="preview-manual-crop" data-index="${index}">${i18n.manualCrop}</button>`
     : '';
   return `
@@ -255,7 +256,21 @@ function updatePreviewAreaMeta() {
   if (tooSmallMsg) tooSmallMsg.hidden = !hasTooSmall;
 }
 
-function finalizeCrop(blob) {
+function finalizeCrop(blob, tooSmall = false) {
+  if (tooSmall) {
+    // Manual crop too small for reliable classification: yellow chip +
+    // banner, no inference call.
+    pushTooSmallEntry(blob, activeCropSourceBlob);
+    requestAnimationFrame(() => {
+      renderGrid();
+      if (cropQueue.length) {
+        processNextCrop(true);
+      } else {
+        closeCropper();
+      }
+    });
+    return;
+  }
   const previewUrl = URL.createObjectURL(blob);
   const entry = {
     blob,
@@ -307,6 +322,29 @@ function pushSilentEntry(cropBlob, originalBlob) {
   return entry;
 }
 
+function buildTooSmallChip() {
+  return `<div class="result-chip result-chip--too-small"><span class="result-chip-verdict">${i18n.chipTooSmall}</span></div>`;
+}
+
+function pushTooSmallEntry(cropBlob, originalBlob) {
+  const previewUrl = URL.createObjectURL(cropBlob);
+  const entry = {
+    blob: cropBlob,
+    previewUrl,
+    originalBlob,
+    savedToBucket: pendingMissSaved,
+    reported: false,
+    result: null,
+    chip: buildTooSmallChip(),
+    verdict: 'too-small',
+    pending: false,
+    tooSmall: true,
+  };
+  pendingMissSaved = false;
+  croppedImages.push(entry);
+  return entry;
+}
+
 function handleCropConfirm() {
   if (!cropperInstance || btnCropConfirm.disabled) return;
 
@@ -326,6 +364,10 @@ function handleCropConfirm() {
       setCropConfirmProcessing(false);
       return;
     }
+
+    // Manual-crop counterpart of the sent-image 48px rule: a tiny crop
+    // cannot classify reliably, so it becomes "too small" (no inference).
+    const manualTooSmall = isCropRegionTooSmall(region);
 
     const canvas = canvasToSquare320(region);
     canvas.toBlob((blob) => {
@@ -347,6 +389,16 @@ function handleCropConfirm() {
         entry.chip = '';
         entry.verdict = '';
         entry.reported = false;
+        entry.tooSmall = false;
+        if (manualTooSmall) {
+          entry.chip = buildTooSmallChip();
+          entry.verdict = 'too-small';
+          entry.pending = false;
+          entry.tooSmall = true;
+          closeCropper();
+          renderGrid();
+          return;
+        }
         entry.pending = true;
         closeCropper();
         renderGrid();
@@ -359,7 +411,7 @@ function handleCropConfirm() {
         return;
       }
 
-      finalizeCrop(blob);
+      finalizeCrop(blob, manualTooSmall);
     }, 'image/jpeg', SQUARE_JPEG_QUALITY);
   });
 }
@@ -516,41 +568,17 @@ function processNextCrop(keepModalOpen = false) {
 
       if (tooSmallBox && hitBox) {
         // Label found but too small in the sent image: skip classification
-        // entirely and show the "too small" banner (same look as uncertain).
+        // entirely and show the "too small" chip + banner (same look as uncertain).
         try {
           const cropBlob = await cropBoxFromOriginal(source.blob, hitBox);
           releaseActiveCropSource();
           activeCropSourceBlob = null;
-          const previewUrl = URL.createObjectURL(cropBlob);
-          croppedImages.push({
-            blob: cropBlob,
-            previewUrl,
-            originalBlob: source.blob,
-            savedToBucket: false,
-            reported: false,
-            result: null,
-            chip: '',
-            verdict: '',
-            pending: false,
-            tooSmall: true,
-          });
+          pushTooSmallEntry(cropBlob, source.blob);
         } catch (_) {
-          // Crop failed: still show the banner with the original as preview.
+          // Crop failed: still show the chip + banner with the original as preview.
           releaseActiveCropSource();
           activeCropSourceBlob = null;
-          const previewUrl = URL.createObjectURL(source.blob);
-          croppedImages.push({
-            blob: source.blob,
-            previewUrl,
-            originalBlob: source.blob,
-            savedToBucket: false,
-            reported: false,
-            result: null,
-            chip: '',
-            verdict: '',
-            pending: false,
-            tooSmall: true,
-          });
+          pushTooSmallEntry(source.blob, source.blob);
         }
         renderGrid();
         processNextCrop(false);
@@ -1010,6 +1038,16 @@ function mapBoxToOriginal(box, sentW, sentH, origW, origH) {
   const w = Math.min(origW - x, Math.max(1, (box.x2 - box.x1) * sx));
   const h = Math.min(origH - y, Math.max(1, (box.y2 - box.y1) * sy));
   return { x, y, width: w, height: h };
+}
+
+// Manual-crop counterpart of the sent-image 48px rule: the cropper region
+// is in source-image px, so scale it to sent-image px the same way
+// makeDetectDownscale does before comparing against TOO_SMALL_MAX_SIDE.
+function isCropRegionTooSmall(region) {
+  const srcW = (cropperImg && cropperImg.naturalWidth) || region.width;
+  const srcH = (cropperImg && cropperImg.naturalHeight) || region.height;
+  const sentScale = Math.min(1, DETECT_MAX_SIDE / Math.max(srcW, srcH));
+  return Math.max(region.width, region.height) * sentScale < TOO_SMALL_MAX_SIDE;
 }
 
 /* ─── label-to-square (mirrors detection/label-to-square.py) ───────── *

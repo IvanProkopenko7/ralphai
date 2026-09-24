@@ -459,6 +459,10 @@ html {
   background-color: #fef9c3;
 }
 
+.preview-thumb--too-small {
+  background-color: #fef9c3;
+}
+
 .preview-manual-crop {
   margin-top: 8px;
   padding: 8px 16px;
@@ -573,6 +577,10 @@ html {
   background-color: #fef9c3;
 }
 
+.result-chip--too-small {
+  background-color: #fef9c3;
+}
+
 .result-chip-verdict {
   font-family: 'Inter', sans-serif;
   font-size: 22px;
@@ -591,6 +599,10 @@ html {
 }
 
 .result-chip--unknown .result-chip-verdict {
+  color: #854d0e;
+}
+
+.result-chip--too-small .result-chip-verdict {
   color: #854d0e;
 }
 
@@ -1582,7 +1594,12 @@ html {
   line-height: 1.35;
   font-weight: 600;
 }
-
+@media (max-width:360px) {
+  .preview-thumb {
+    width: 80vw;
+    height: auto;
+  }
+}
 @media (max-width: 600px) {
   .about-metrics {
     flex-wrap: wrap;
