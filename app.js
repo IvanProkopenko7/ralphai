@@ -93,6 +93,8 @@ const i18n = {
     : `API error ${st}: ${d || 'unknown server error.'}`,
   errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
   wakingUp:        isPolish ? 'Model wybudza się po przerwie — potrwa to około minuty. Ponawiam automatycznie…' : 'Model is waking up after idle — this takes about a minute. Retrying automatically…',
+  statusSending:   isPolish ? 'Wysyłanie zdjęcia na serwer…' : 'Sending photo to the server…',
+  statusAuthenticating: isPolish ? 'Uwierzytelnianie…' : 'Authenticating…',
   uncertaintyHtml: isPolish 
     ? 'Pewność klasyfikacji jest zbyt niska. Spróbuj przyciąć swoje zdjęcie dokładniej i sprawdź je ponownie. Jeśli wynik nadal jest niepewny, prześlij zdjęcie na <a href="mailto:kontakt@ralphai.tech">adres e-mail strony</a> w celu weryfikacji przez człowieka lub opublikuj je na grupach takich jak <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.'
     : 'Classification confidence is too low. Please, try re-cropping your photo more closely and checking it again. If the result is still uncertain, then please send the photo to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
@@ -228,7 +230,7 @@ function buildPreviewCardMarkup(img, index) {
       ? `preview-thumb preview-thumb--${img.verdict}`
       : 'preview-thumb');
   const media = img.pending
-    ? ''
+    ? `<div class="preview-pending-label">${img.status === 'authenticating' ? i18n.statusAuthenticating : i18n.statusSending}</div>`
     : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
   const manualBtn = (!img.pending && (img.result || img.tooSmall))
     ? `<button class="preview-manual-crop" data-index="${index}">${i18n.manualCrop}</button>`
@@ -282,6 +284,7 @@ function finalizeCrop(blob, tooSmall = false) {
     chip: '',
     verdict: '',
     pending: true,
+    status: 'sending',
   };
   pendingMissSaved = false;
   croppedImages.push(entry);
@@ -316,6 +319,7 @@ function pushSilentEntry(cropBlob, originalBlob) {
     chip: '',
     verdict: '',
     pending: true,
+    status: 'sending',
   };
   croppedImages.push(entry);
   // Rendered by the caller: grey spinner now, result card on settle.
@@ -400,6 +404,7 @@ function handleCropConfirm() {
           return;
         }
         entry.pending = true;
+        entry.status = 'sending';
         closeCropper();
         renderGrid();
         classifyWithWakeRetry(entry)
@@ -519,8 +524,37 @@ function processNextCrop(keepModalOpen = false) {
   const file = cropQueue.shift();
   if (!file) return;
 
+  // Immediate grey spinner placeholder — render BEFORE any async work
+  // (decode, downscale, or server detection) so the user sees feedback
+  // the same frame the image is submitted.
+  let placeholder = croppedImages.find((e) => e.placeholder && e.pending);
+  if (!placeholder) {
+    placeholder = {
+      blob: null,
+      previewUrl: '',
+      originalBlob: null,
+      savedToBucket: false,
+      reported: false,
+      result: null,
+      chip: '',
+      verdict: '',
+      pending: true,
+      placeholder: true,
+      status: 'sending',
+    };
+    croppedImages.push(placeholder);
+  }
+  placeholder.status = 'sending';
+  renderGrid();
+
   prepareCropSource(file)
     .then(async (source) => {
+      // User removed the spinner while detection was in flight → abort.
+      if (croppedImages.indexOf(placeholder) === -1) {
+        try { source.cleanup(); } catch (_) {}
+        processNextCrop(keepModalOpen);
+        return;
+      }
       releaseActiveCropSource();
       activeCropSourceCleanup = source.cleanup;
       activeCropSourceBlob = source.blob;
@@ -549,11 +583,14 @@ function processNextCrop(keepModalOpen = false) {
       }
 
       if (waking && !hitBox) {
-        // Sleeping Space wakes in the background — re-queue and retry the
-        // same file after a delay instead of dropping to manual crop.
+        // Sleeping Space wakes in the background — keep the spinner
+        // visible and retry the same file after a delay instead of
+        // dropping to manual crop. Placeholder is reused by the retry.
         if (detectWakeTries < WAKE_MAX_RETRIES) {
           detectWakeTries += 1;
           cropQueue.unshift(file);
+          releaseActiveCropSource();
+          activeCropSourceBlob = null;
           showError(i18n.wakingUp);
           setTimeout(() => {
             hideError();
@@ -566,6 +603,13 @@ function processNextCrop(keepModalOpen = false) {
       // Detect phase for this file is over — reset for the next file.
       detectWakeTries = 0;
 
+      if (croppedImages.indexOf(placeholder) === -1) {
+        releaseActiveCropSource();
+        activeCropSourceBlob = null;
+        processNextCrop(false);
+        return;
+      }
+
       if (tooSmallBox && hitBox) {
         // Label found but too small in the sent image: skip classification
         // entirely and show the "too small" chip + banner (same look as uncertain).
@@ -573,12 +617,12 @@ function processNextCrop(keepModalOpen = false) {
           const cropBlob = await cropBoxFromOriginal(source.blob, hitBox);
           releaseActiveCropSource();
           activeCropSourceBlob = null;
-          pushTooSmallEntry(cropBlob, source.blob);
+          fillPlaceholderAsTooSmall(placeholder, cropBlob, source.blob);
         } catch (_) {
           // Crop failed: still show the chip + banner with the original as preview.
           releaseActiveCropSource();
           activeCropSourceBlob = null;
-          pushTooSmallEntry(source.blob, source.blob);
+          fillPlaceholderAsTooSmall(placeholder, source.blob, source.blob);
         }
         renderGrid();
         processNextCrop(false);
@@ -588,19 +632,26 @@ function processNextCrop(keepModalOpen = false) {
       if (hitBox) {
         // Label found: silently crop from the ORIGINAL full-res image and
         // classify — the cropper modal never opens on this path.
+        // Reuse the immediate spinner placeholder (no second card).
+        // Photo arrived at the server → flip from "sending" to "authenticating".
         try {
           const cropBlob = await cropBoxFromOriginal(source.blob, hitBox);
           releaseActiveCropSource();
           activeCropSourceBlob = null;
-          const entry = pushSilentEntry(cropBlob, source.blob);
-          // Grey spinner thumb now; colored thumb + chip on settle.
+          if (croppedImages.indexOf(placeholder) === -1) {
+            processNextCrop(false);
+            return;
+          }
+          fillPlaceholderWithCrop(placeholder, cropBlob, source.blob);
+          // Grey spinner thumb already visible; colored thumb + chip on settle.
           renderGrid();
           try {
-            await classifyWithWakeRetry(entry);
+            await classifyWithWakeRetry(placeholder);
           } catch (_) {
             showError(i18n.errorAnalysis);
           } finally {
-            entry.pending = false;
+            placeholder.pending = false;
+            placeholder.placeholder = false;
             renderGrid();
           }
           processNextCrop(false);
@@ -611,14 +662,53 @@ function processNextCrop(keepModalOpen = false) {
       }
 
       // Miss path: save the ORIGINAL for retraining, manual crop on original.
+      // Drop the spinner before opening the manual cropper so we don't
+      // end up with a duplicate card after the user confirms the crop.
+      removePlaceholder(placeholder);
       pendingMissSaved = true;
       reportFail('miss', file, { detector: 'server' });
       openCropper(source.src, keepModalOpen);
     })
     .catch(() => {
+      removePlaceholder(placeholder);
       showError(i18n.errorCannotRead);
       processNextCrop(keepModalOpen);
     });
+}
+
+function removePlaceholder(placeholder) {
+  const idx = croppedImages.indexOf(placeholder);
+  if (idx !== -1) croppedImages.splice(idx, 1);
+  renderGrid();
+}
+
+function fillPlaceholderWithCrop(placeholder, cropBlob, originalBlob) {
+  placeholder.blob = cropBlob;
+  placeholder.previewUrl = URL.createObjectURL(cropBlob);
+  placeholder.originalBlob = originalBlob;
+  placeholder.savedToBucket = false;
+  placeholder.reported = false;
+  placeholder.result = null;
+  placeholder.chip = '';
+  placeholder.verdict = '';
+  placeholder.pending = true;
+  placeholder.placeholder = false;
+  placeholder.status = 'authenticating';
+}
+
+function fillPlaceholderAsTooSmall(placeholder, cropBlob, originalBlob) {
+  placeholder.blob = cropBlob;
+  placeholder.previewUrl = URL.createObjectURL(cropBlob);
+  placeholder.originalBlob = originalBlob;
+  placeholder.savedToBucket = pendingMissSaved;
+  pendingMissSaved = false;
+  placeholder.reported = false;
+  placeholder.result = null;
+  placeholder.chip = buildTooSmallChip();
+  placeholder.verdict = 'too-small';
+  placeholder.pending = false;
+  placeholder.placeholder = false;
+  placeholder.tooSmall = true;
 }
 
 async function prepareCropSource(file) {
@@ -1111,7 +1201,16 @@ async function cropBoxFromOriginal(blob, box) {
 /* ─── Auto-classify (one entry) ─────────────────────────────────── */
 async function classifyEntry(entry) {
   if (!entry || entry.result) return entry ? entry.result : null;
-  const data = await classifyImage(await blobToBase64(entry.blob));
+  if (entry.status !== 'authenticating') {
+    entry.status = 'sending';
+    renderGrid();
+  }
+  const body = await blobToBase64(entry.blob);
+  const request = classifyImage(body);
+  // Upload dispatched, photo on the server → flip to "authenticating".
+  entry.status = 'authenticating';
+  renderGrid();
+  const data = await request;
   entry.result = data;
   applyResultToEntry(entry, data);
   return data;

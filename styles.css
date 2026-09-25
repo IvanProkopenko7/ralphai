@@ -493,6 +493,16 @@ html {
   animation: spin 0.7s linear infinite;
 }
 
+.preview-thumb--pending .preview-pending-label {
+  position: absolute;
+  top: calc(50% + 30px);
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  font-size: 16px;
+  color: #4b5563;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
