@@ -26,8 +26,9 @@ const MAX_IMAGES = 1;
 // accuracy (480px missed a real label in testing) at ~10x fewer bytes.
 const DETECT_TIMEOUT_MS = 30000;
 const DETECT_MAX_SIDE = 640;
-const DETECT_UPLOAD_QUALITY = 0.82;
+const DETECT_UPLOAD_QUALITY = 0.85;
 const DETECT_PNG_QUALITY = 0.9;
+const DETECT_RETRY_WEBP_QUALITY = 0.85;
 const DETECT_PNG_MIN_BYTES = 300 * 1024;
 const DETECT_SCORE_MIN = 0.5;
 const TOO_SMALL_MAX_SIDE = 48;
@@ -1050,9 +1051,13 @@ function blobToBase64(blob) {
  * Detection runs entirely on the HF Space via the Worker (it letter-  *
  * boxes to 480 internally, same as training). The upload is downscaled *
  * to 640px JPEG first: 480px missed a real label, full originals waste *
- * ~10x bytes (e.g. pasted PNGs) with no accuracy gain. Any failure      *
- * (timeout after DETECT_TIMEOUT_MS, error, no box ≥ 0.5) returns null   *
- * and the caller falls back to manual crop — never throws outward.     *
+ * ~10x bytes (e.g. pasted PNGs) with no accuracy gain. JPEG artifacts  *
+ * alone can erase a detection, so a clean miss retries sharper: WebP   *
+ * q0.85 next (PNG-level accuracy at ~8x fewer bytes), pixel-exact PNG  *
+ * last. First non-empty boxes win; hits stay cheap, only real misses   *
+ * pay extra uploads. Any failure (timeout after DETECT_TIMEOUT_MS,     *
+ * error, no box ≥ 0.5) returns null and the caller falls back to       *
+ * manual crop.                                                         *
  * ──────────────────────────────────────────────────────────────────── */
 async function makeDetectDownscale(blob) {
   try {
@@ -1075,6 +1080,37 @@ async function makeDetectDownscale(blob) {
   }
 }
 
+/* Sharper retries for the JPEG-miss case, sharpest last: the same
+ * 640px canvas as WebP q0.85, then pixel-exact PNG. Each is only tried
+ * when every previous attempt came back clean-empty (never on timeout
+ * or HTTP errors), so the common hit path costs nothing extra. */
+async function makeDetectRetryCanvas(blob) {
+  const img = await decodeImage(blob);
+  const scale = Math.min(1, DETECT_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+async function makeDetectWebpBlob(blob) {
+  const canvas = await makeDetectRetryCanvas(blob);
+  // toBlob resolves null (never rejects) for unsupported types/modes.
+  return new Promise((resolve) =>
+    canvas.toBlob(resolve, 'image/webp', DETECT_RETRY_WEBP_QUALITY));
+}
+
+async function makeDetectPngBlob(blob) {
+  const canvas = await makeDetectRetryCanvas(blob);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (out) => (out ? resolve(out) : reject(new Error(i18n.errorCannotRead))),
+      'image/png',
+    );
+  });
+}
+
 function decodeImage(blob) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob);
@@ -1095,29 +1131,58 @@ async function getImageDims(blob) {
 }
 
 async function detectServerSide(originalBlob) {
-  const body = await blobToBase64(await makeDetectDownscale(originalBlob));
-  const init = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  };
-  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
-    init.signal = AbortSignal.timeout(DETECT_TIMEOUT_MS);
-  }
-  const response = await fetch(`${API_URL}/detect`, init);
-  if (!response.ok) {
-    // Sleeping Space: Worker wakes it in the background — throw a coded
-    // error so the caller can notice + retry instead of manual-cropping.
-    if (response.status === 503) {
-      let detail = '';
-      try { detail = await response.text(); } catch (_) {}
-      if (isWakingResponse(response.status, detail)) throw markWakingError();
+  const postDetect = async (blob) => {
+    const init = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: await blobToBase64(blob),
+    };
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+      init.signal = AbortSignal.timeout(DETECT_TIMEOUT_MS);
     }
-    return null;
+    const response = await fetch(`${API_URL}/detect`, init);
+    if (!response.ok) {
+      // Sleeping Space: Worker wakes it in the background — throw a coded
+      // error so the caller can notice + retry instead of manual-cropping.
+      if (response.status === 503) {
+        let detail = '';
+        try { detail = await response.text(); } catch (_) {}
+        if (isWakingResponse(response.status, detail)) throw markWakingError();
+      }
+      return null;
+    }
+    const data = await response.json();
+    if (!data || !Array.isArray(data.boxes)) return null;
+    return data;
+  };
+
+  const first = await postDetect(await makeDetectDownscale(originalBlob));
+  // Continue sharper only on a clean empty result (HTTP 200, no boxes).
+  // Transport failures (null) keep the old behavior: no further requests,
+  // straight to the miss path — important under rate limiting.
+  if (!first || !Array.isArray(first.boxes) || first.boxes.length > 0) return first;
+  // JPEG artifacts can erase a detection a sharper encoding still sees —
+  // retry WebP, then pixel-exact PNG, before giving up to manual crop.
+  // A null WebP (browser can't encode it, e.g. old Safari) skips straight
+  // to PNG. Later retries skip waking-Space handling: a 503 above already
+  // threw, and any failure here just falls through to the miss path below.
+  const retries = [makeDetectWebpBlob, makeDetectPngBlob];
+  for (const makeRetryBlob of retries) {
+    try {
+      let retryBlob = null;
+      try {
+        retryBlob = await makeRetryBlob(originalBlob);
+      } catch (_) {
+        retryBlob = null;
+      }
+      if (!retryBlob) continue;
+      const retry = await postDetect(retryBlob);
+      if (retry && Array.isArray(retry.boxes) && retry.boxes.length > 0) return retry;
+    } catch (_) {
+      // Fall through to the first (empty) result → manual crop.
+    }
   }
-  const data = await response.json();
-  if (!data || !Array.isArray(data.boxes)) return null;
-  return data;
+  return first;
 }
 
 function mapBoxToOriginal(box, sentW, sentH, origW, origH) {
