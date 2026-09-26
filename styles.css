@@ -418,14 +418,17 @@ html {
   position: relative;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  width: min(320px, 100%);
+  min-width: 0;
+  max-width: 100%;
   margin-top: 10px;
 }
 
 .preview-thumb {
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   flex-shrink: 0;
   background-color: #eceff3;
@@ -532,8 +535,8 @@ html {
 }
 
 .preview-thumb-add {
-  width: 320px;
-  height: 320px;
+  width: min(320px, 100%);
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
   border: 2px dashed #ccc;
   background-color: #fafafa;
@@ -888,10 +891,6 @@ html {
   .footer-email {
     width: 100%;
     flex: none;
-  }
-  .preview-thumb {
-    width: 320px;
-    height: 320px;
   }
 }
 
@@ -1262,10 +1261,6 @@ html {
   }
 
   /* Responsive 2-column preview cards */
-  .preview-thumb {
-    width: 320px;
-    height: 320px;
-  }
   .preview-thumb-add {
     width: calc(80vw - 8px);
     height: calc((80vw - 8px) * 0.5);
@@ -1603,12 +1598,6 @@ html {
   font-size: clamp(16px, 1.15vw, 20px);
   line-height: 1.35;
   font-weight: 600;
-}
-@media (max-width:360px) {
-  .preview-thumb {
-    width: 80vw;
-    height: auto;
-  }
 }
 @media (max-width: 600px) {
   .about-metrics {
