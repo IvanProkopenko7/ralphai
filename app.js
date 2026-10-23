@@ -81,6 +81,16 @@ const i18n = {
     : 'Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a> and discord servers like <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get - the better.',
   cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
   cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
+  cropHelp: isPolish
+    ? 'Zaznacz metkę przy szyi, przeciągając zaznaczenie lub zmieniając jego pozycję i rozmiar w pikselach.'
+    : 'Frame the neck label by dragging the selection or editing its position and size in pixels.',
+  cropSelection: isPolish ? 'Zaznaczenie w pikselach zdjęcia' : 'Selection in image pixels',
+  cropX: isPolish ? 'Od lewej' : 'Left',
+  cropY: isPolish ? 'Od góry' : 'Top',
+  cropWidth: isPolish ? 'Szerokość' : 'Width',
+  cropHeight: isPolish ? 'Wysokość' : 'Height',
+  removePhoto: isPolish ? 'Usuń zdjęcie' : 'Remove photo',
+  addPhoto: isPolish ? 'Dodaj zdjęcie' : 'Add photo',
   footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
@@ -170,10 +180,12 @@ applyTranslations();
   body.textContent = head + ' ';
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'qr-continue-btn';
+  btn.className = 'extra-checks__continue';
   btn.textContent = i18n.qrContinue;
   btn.addEventListener('click', () => {
     body.textContent = full;
+    body.tabIndex = -1;
+    body.focus();
   });
   body.appendChild(btn);
 })();
@@ -226,27 +238,27 @@ function runAfterTwoPaints(task) {
 
 function setCropConfirmProcessing(isProcessing) {
   btnCropConfirm.disabled = isProcessing;
-  btnCropConfirm.classList.toggle('is-processing', isProcessing);
+  btnCropConfirm.classList.toggle('crop-dialog__confirm--processing', isProcessing);
 }
 
 function buildPreviewCardMarkup(img, index) {
   const thumbClass = img.pending
-    ? 'preview-thumb preview-thumb--pending'
+    ? 'preview-card__thumbnail preview-card__thumbnail--pending'
     : (['real', 'fake', 'unknown', 'too-small'].indexOf(img.verdict) !== -1
-      ? `preview-thumb preview-thumb--${img.verdict}`
-      : 'preview-thumb');
+      ? `preview-card__thumbnail preview-card__thumbnail--${img.verdict}`
+      : 'preview-card__thumbnail');
   const media = img.pending
-    ? `<div class="preview-pending-label">${img.status === 'authenticating' ? i18n.statusAuthenticating : i18n.statusSending}</div>`
+    ? `<div class="preview-card__status">${img.status === 'authenticating' ? i18n.statusAuthenticating : i18n.statusSending}</div>`
     : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
   const manualBtn = (!img.pending && (img.result || img.tooSmall || img.notDetected))
-    ? `<button class="preview-manual-crop" data-index="${index}">${i18n.manualCrop}</button>`
+    ? `<button class="preview-card__crop" data-index="${index}">${i18n.manualCrop}</button>`
     : '';
   return `
     <div class="preview-card" data-card-index="${index}">
       ${img.chip ? img.chip : ''}
       <div class="${thumbClass}">
         ${media}
-        <button class="preview-thumb-remove" data-index="${index}" aria-label="Usuń">&#x2715;</button>
+        <button class="preview-card__remove" data-index="${index}" aria-label="${i18n.removePhoto}">&#x2715;</button>
       </div>
       ${manualBtn}
     </div>
@@ -334,7 +346,7 @@ function pushSilentEntry(cropBlob, originalBlob) {
 }
 
 function buildTooSmallChip() {
-  return `<div class="result-chip result-chip--too-small"><span class="result-chip-verdict">${i18n.chipTooSmall}</span></div>`;
+  return `<div class="result-chip result-chip--too-small"><span class="result-chip__verdict">${i18n.chipTooSmall}</span></div>`;
 }
 
 function pushTooSmallEntry(cropBlob, originalBlob) {
@@ -430,7 +442,7 @@ function handleCropConfirm() {
 }
 
 /* ─── Logo → reset to start ───────────────────────── */
-document.querySelector('.nav-logo').addEventListener('click', (e) => {
+document.querySelector('.navbar__logo').addEventListener('click', (e) => {
   e.preventDefault();
   cleanupAllPreviewUrls();
   croppedImages = [];
@@ -460,7 +472,7 @@ let dragCounter = 0;
 dropZone.addEventListener('dragenter', (e) => {
   e.preventDefault();
   dragCounter++;
-  dropZone.classList.add('drag-over');
+  dropZone.classList.add('main-content--drag-over');
 });
 
 dropZone.addEventListener('dragover', (e) => e.preventDefault());
@@ -468,14 +480,14 @@ dropZone.addEventListener('dragover', (e) => e.preventDefault());
 ['dragleave', 'dragend'].forEach(evt =>
   dropZone.addEventListener(evt, () => {
     dragCounter--;
-    if (dragCounter <= 0) { dragCounter = 0; dropZone.classList.remove('drag-over'); }
+    if (dragCounter <= 0) { dragCounter = 0; dropZone.classList.remove('main-content--drag-over'); }
   })
 );
 
 dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
   dragCounter = 0;
-  dropZone.classList.remove('drag-over');
+  dropZone.classList.remove('main-content--drag-over');
   const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
   if (files.length) handleFiles(files);
 });
@@ -669,7 +681,7 @@ function processNextCrop(keepModalOpen = false) {
       placeholder.pending = false;
       placeholder.notDetected = true;
       placeholder.verdict = 'unknown';
-      placeholder.chip = `<div class="result-chip result-chip--unknown"><span class="result-chip-verdict">${i18n.chipNotDetected}</span></div>`;
+      placeholder.chip = `<div class="result-chip result-chip--unknown"><span class="result-chip__verdict">${i18n.chipNotDetected}</span></div>`;
       releaseActiveCropSource();
       activeCropSourceBlob = null;
       renderGrid();
@@ -837,9 +849,10 @@ function getResponsiveAutoCropArea() {
 }
 
 function openCropper(src, keepModalOpen = false) {
-  if (!keepModalOpen || cropperModal.hidden) {
+  if (!cropperModal.open) {
     previousCropperBodyOverflow = document.body.style.overflow;
     cropperModal.hidden = false;
+    cropperModal.showModal();
     document.body.style.overflow = 'hidden';
   }
 
@@ -872,6 +885,8 @@ function openCropper(src, keepModalOpen = false) {
       scalable:     false,
       rotatable:    false,
       toggleDragModeOnDblclick: false,
+      ready: syncCropControls,
+      crop: syncCropControls,
     };
     // Manual crop only (server found no label) — default framing.
     cropperOptions.autoCropArea = getResponsiveAutoCropArea();
@@ -889,6 +904,7 @@ function openCropper(src, keepModalOpen = false) {
 }
 
 function closeCropper() {
+  cropperModal.close();
   cropperModal.hidden = true;
   document.body.style.overflow = previousCropperBodyOverflow || '';
   previousCropperBodyOverflow = '';
@@ -899,7 +915,7 @@ function closeCropper() {
   releaseActiveCropSource();
   activeCropSourceBlob = null;
   btnCropConfirm.disabled = false;
-  btnCropConfirm.classList.remove('is-processing');
+  btnCropConfirm.classList.remove('crop-dialog__confirm--processing');
   cropperImg.src = '';
   // Reset file input so the same file can be re-selected
   fileInput.value = '';
@@ -919,14 +935,72 @@ btnCropConfirm.addEventListener('click', () => {
   handleCropConfirm();
 });
 
-btnCropCancel.addEventListener('click', () => {
+function cancelCropper() {
   cropQueue = [];
   recropEntry = null;
   closeCropper();
+}
+
+btnCropCancel.addEventListener('click', cancelCropper);
+cropperModal.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  cancelCropper();
 });
+cropperModal.addEventListener('keydown', (event) => {
+  if (event.key !== 'Tab') return;
+  const controls = [...cropperModal.querySelectorAll('input, button')].filter(el => !el.disabled && el.getClientRects().length);
+  const first = controls[0];
+  const last = controls[controls.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+
+const cropFields = {
+  x: document.getElementById('cropX'), y: document.getElementById('cropY'),
+  width: document.getElementById('cropWidth'), height: document.getElementById('cropHeight'),
+};
+
+function syncCropControls() {
+  if (!cropperInstance) return;
+  const data = cropperInstance.getData(true);
+  const image = cropperInstance.getImageData();
+  for (const [key, input] of Object.entries(cropFields)) {
+    const dimension = key === 'x' || key === 'width' ? image.naturalWidth : image.naturalHeight;
+    input.max = Math.round(dimension) - (key === 'x' || key === 'y' ? 1 : 0);
+    if (input !== document.activeElement) input.value = Math.round(data[key]);
+  }
+}
+
+for (const [key, input] of Object.entries(cropFields)) {
+  input.addEventListener('change', () => {
+    if (!cropperInstance) return;
+    if (!Number.isFinite(input.valueAsNumber)) {
+      input.value = Math.round(cropperInstance.getData()[key]);
+      syncCropControls();
+      return;
+    }
+    const data = cropperInstance.getData();
+    const image = cropperInstance.getImageData();
+    data[key] = Math.max(Number(input.min), Math.min(Number(input.max), input.valueAsNumber));
+    data.width = Math.min(data.width, image.naturalWidth - data.x);
+    data.height = Math.min(data.height, image.naturalHeight - data.y);
+    cropperInstance.setData(data);
+    input.value = Math.round(cropperInstance.getData()[key]);
+    syncCropControls();
+  });
+}
 
 /* ─── Preview grid ───────────────────────────────── */
 function renderGrid() {
+  const focused = document.activeElement;
+  const focusClass = focused?.matches('.preview-card__remove, .preview-card__crop')
+    ? (focused.classList.contains('preview-card__remove') ? 'preview-card__remove' : 'preview-card__crop') : null;
+  const focusIndex = focused?.dataset.index;
   if (croppedImages.length === 0) {
     previewGrid.hidden = true;
     previewGrid.innerHTML = '';
@@ -935,6 +1009,7 @@ function renderGrid() {
     if (uncertaintyMsg) uncertaintyMsg.hidden = true;
     if (tooSmallMsg) tooSmallMsg.hidden = true;
     if (notDetectedMsg) notDetectedMsg.hidden = true;
+    if (focusClass) chooseBtn.focus();
     return;
   }
 
@@ -942,11 +1017,12 @@ function renderGrid() {
 
   const canAddMore = croppedImages.length + cropQueue.length < MAX_IMAGES;
   previewGrid.innerHTML = croppedImages.map((img, i) => buildPreviewCardMarkup(img, i)).join('')
-    + (canAddMore ? `<button class="preview-thumb preview-thumb-add" id="addMoreBtn">+</button>` : '');
+    + (canAddMore ? `<button class="preview-card__thumbnail preview-grid__add" id="addMoreBtn" aria-label="${i18n.addPhoto}">+</button>` : '');
+  if (focusClass) previewGrid.querySelector(`.${focusClass}[data-index="${focusIndex}"]`)?.focus();
 }
 
 previewGrid.addEventListener('click', (e) => {
-  const removeButton = e.target.closest('.preview-thumb-remove');
+  const removeButton = e.target.closest('.preview-card__remove');
   if (removeButton) {
     const idx = parseInt(removeButton.dataset.index, 10);
     if (!Number.isNaN(idx)) {
@@ -961,7 +1037,7 @@ previewGrid.addEventListener('click', (e) => {
     fileInput.click();
   }
 
-  const manualButton = e.target.closest('.preview-manual-crop');
+  const manualButton = e.target.closest('.preview-card__crop');
   if (manualButton) {
     const idx = parseInt(manualButton.dataset.index, 10);
     const entry = croppedImages[idx];
@@ -1373,7 +1449,7 @@ function buildResultChip(data) {
     labelText = i18n.chipUncertain;
   }
 
-  return `<div class="result-chip ${chipClass}"><span class="result-chip-verdict">${labelText}</span></div>`;
+  return `<div class="result-chip ${chipClass}"><span class="result-chip__verdict">${labelText}</span></div>`;
 }
 
 /* ─── Helpers ─────────────────────────────────────── */
@@ -1391,3 +1467,15 @@ function hideResult() {
   resultRow.hidden = true;
   resultRow.innerHTML = '';
 }
+
+// Shared navigation labels and keyboard landmarks on every page.
+(() => {
+  const polish = (navigator.language || '').toLowerCase().startsWith('pl');
+  document.documentElement.lang = polish ? 'pl' : 'en';
+  document.querySelector('.skip-link').textContent = polish ? 'Przejdź do treści' : 'Skip to main content';
+  document.querySelector('.navbar__links').setAttribute('aria-label', polish ? 'Nawigacja główna' : 'Main navigation');
+  const preview = document.getElementById('previewGrid');
+  if (preview) preview.setAttribute('aria-label', polish ? 'Przesłane zdjęcia' : 'Uploaded photos');
+  const cropImage = document.getElementById('cropperImg');
+  if (cropImage) cropImage.alt = polish ? 'Zdjęcie do kadrowania' : 'Photo to crop';
+})();

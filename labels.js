@@ -10,7 +10,8 @@
     collectNote: isPolish
       ? 'Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model'
       : 'Photos with no detected label and low-confidence results may be anonymously stored to improve the model',
-    seeAll: isPolish ? 'Zobacz wszystkie' : 'See all'
+    seeAll: isPolish ? 'Zobacz wszystkie' : 'See all',
+    libraryTitle: isPolish ? 'Biblioteka metek' : 'Labels library',
   };
 
   // Fallback when manifest.json can't be fetched (e.g. file://).
@@ -176,32 +177,32 @@
 
     if (eager) {
       return `
-        <article class="label-card" role="listitem">
-          <div class="label-card-media label-card-media--loading">
-            <img src="${src}" alt="${caption}" loading="eager" decoding="async" fetchpriority="high" width="400" height="300" />
+        <li class="label-card">
+          <div class="label-card__media label-card__media--loading">
+            <img src="${src}" alt="${isPolish ? 'Przykład metki Ralph Lauren' : 'Ralph Lauren label example'}: ${caption}" loading="eager" decoding="async" fetchpriority="high" width="400" height="300" />
           </div>
-          <p class="label-card-caption">${caption}</p>
-        </article>
+          <p class="label-card__caption">${caption}</p>
+        </li>
       `;
     }
 
     return `
-      <article class="label-card" role="listitem">
-        <div class="label-card-media label-card-media--loading">
-          <img data-src="${src}" alt="${caption}" loading="lazy" decoding="async" fetchpriority="low" width="400" height="300" />
+      <li class="label-card">
+        <div class="label-card__media label-card__media--loading">
+          <img data-src="${src}" alt="${isPolish ? 'Przykład metki Ralph Lauren' : 'Ralph Lauren label example'}: ${caption}" loading="lazy" decoding="async" fetchpriority="low" width="400" height="300" />
         </div>
-        <p class="label-card-caption">${caption}</p>
-      </article>
+        <p class="label-card__caption">${caption}</p>
+      </li>
     `;
   }
 
   function clearCardLoading(img) {
-    const media = img.closest('.label-card-media');
-    if (media) media.classList.remove('label-card-media--loading');
+    const media = img.closest('.label-card__media');
+    if (media) media.classList.remove('label-card__media--loading');
   }
 
   function wireCardLoaders(scope) {
-    scope.querySelectorAll('.label-card-media img').forEach((img) => {
+    scope.querySelectorAll('.label-card__media img').forEach((img) => {
       if (img.complete && img.naturalWidth > 0) {
         clearCardLoading(img);
         return;
@@ -249,11 +250,11 @@
 
     if (fileNames.length > initialCount) {
       html += `
-        <div class="labels-see-all-wrapper" style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 10px;">
-          <button class="labels-see-all-btn" style="padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid #e5e7eb; border-radius: 999px; background: transparent; color: #111; transition: all 0.2s;">
+        <li class="label-library__more">
+          <button class="label-library__expand" aria-expanded="false">
             ${i18n.seeAll}
           </button>
-        </div>
+        </li>
       `;
     }
 
@@ -261,7 +262,7 @@
     initLazyImages(grid);
     wireCardLoaders(grid);
 
-    const seeAllBtn = grid.querySelector('.labels-see-all-btn');
+    const seeAllBtn = grid.querySelector('.label-library__expand');
     if (seeAllBtn) {
       seeAllBtn.addEventListener('click', function() {
         const remainingFiles = fileNames.slice(initialCount);
@@ -269,12 +270,9 @@
         this.parentElement.outerHTML = remainingHtml;
         initLazyImages(grid);
         wireCardLoaders(grid);
-      });
-      seeAllBtn.addEventListener('mouseover', function() {
-        this.style.backgroundColor = '#f3f4f6';
-      });
-      seeAllBtn.addEventListener('mouseout', function() {
-        this.style.backgroundColor = 'transparent';
+        const firstNewCard = grid.children[initialCount];
+        firstNewCard.tabIndex = -1;
+        firstNewCard.focus();
       });
     }
   }
@@ -288,11 +286,11 @@
       const title = escapeHtml(group.title || folderToTitle(group.folder));
       const gridId = `grid-${slugify(group.folder)}`;
       const subgroup = document.createElement('div');
-      subgroup.className = 'labels-subgroup';
-      subgroup.innerHTML = `<h3 class="labels-subgroup-title">${title}</h3><div id="${gridId}" class="labels-grid" role="list"></div>`;
+      subgroup.className = 'label-library__group';
+      subgroup.innerHTML = `<h3 class="label-library__group-title">${title}</h3><ul id="${gridId}" class="label-library__grid" role="list"></ul>`;
       container.appendChild(subgroup);
       renderGrid(
-        subgroup.querySelector('.labels-grid'),
+        subgroup.querySelector('.label-library__grid'),
         group.baseDir,
         group.files || [],
         eagerFirstGroup && groupIndex === 0
@@ -302,7 +300,7 @@
 
   function renderAll(manifest) {
     // Section headings come from the parent folder names (only "_" -> " ").
-    // CSS .labels-section-title uppercases them for display.
+    // CSS .label-library__heading uppercases them for display.
     if (manifest.sections) {
       const supportedHeading = document.getElementById('supported-labels-heading');
       if (supportedHeading && manifest.sections.supported) {
@@ -346,4 +344,16 @@
       }
     })
     .catch(() => {});
+})();
+
+// Shared navigation labels and keyboard landmarks on every page.
+(() => {
+  const polish = (navigator.language || '').toLowerCase().startsWith('pl');
+  document.documentElement.lang = polish ? 'pl' : 'en';
+  document.querySelector('.skip-link').textContent = polish ? 'Przejdź do treści' : 'Skip to main content';
+  document.querySelector('.navbar__links').setAttribute('aria-label', polish ? 'Nawigacja główna' : 'Main navigation');
+  const preview = document.getElementById('previewGrid');
+  if (preview) preview.setAttribute('aria-label', polish ? 'Przesłane zdjęcia' : 'Uploaded photos');
+  const cropImage = document.getElementById('cropperImg');
+  if (cropImage) cropImage.alt = polish ? 'Zdjęcie do kadrowania' : 'Photo to crop';
 })();

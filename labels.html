@@ -20,55 +20,59 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="navbar">
-    <a href="/" class="nav-logo">RALPHAI</a>
-    <nav class="nav-links">
-      <a href="about.html" class="nav-about" data-i18n="navAbout">ABOUT</a>
-      <a href="labels.html" class="nav-labels nav-labels--active" data-i18n="navLabels">LABELS</a>
-      <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
+    <a href="/" class="navbar__logo">RALPHAI</a>
+    <nav class="navbar__links" aria-label="Main navigation">
+      <a href="about.html" class="navbar__link" data-i18n="navAbout">ABOUT</a>
+      <a href="labels.html" class="navbar__link navbar__link--active" aria-current="page" data-i18n="navLabels">LABELS</a>
+      <a href="mailto:contact@ralphai.tech" class="navbar__link" data-i18n="navContact" id="navContactLink">KONTAKT</a>
     </nav>
   </header>
 
-  <main class="main-content main-content--labels">
-    <section class="labels-page-wrapper" aria-labelledby="supported-labels-heading">
-      <h2 id="supported-labels-heading" class="labels-section-title">SUPPORTED LABELS</h2>
+  <main id="main-content" tabindex="-1" class="main-content main-content--labels">
+    <h1 class="title" data-i18n="libraryTitle">Labels library</h1>
+    <section class="label-library" aria-labelledby="supported-labels-heading">
+      <h2 id="supported-labels-heading" class="label-library__heading">SUPPORTED LABELS</h2>
       <div id="supported-groups">
-        <div class="labels-grid" aria-hidden="true">
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-        </div>
+        <ul class="label-library__grid" aria-hidden="true">
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+        </ul>
       </div>
     </section>
 
-    <section class="labels-page-wrapper" aria-labelledby="upcoming-labels-heading">
-      <h2 id="upcoming-labels-heading" class="labels-section-title labels-section-title--upcoming">UPCOMING LABELS</h2>
+    <section class="label-library" aria-labelledby="upcoming-labels-heading">
+      <h2 id="upcoming-labels-heading" class="label-library__heading label-library__heading--upcoming">UPCOMING LABELS</h2>
       <div id="upcoming-groups">
-        <div class="labels-grid" aria-hidden="true">
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-          <article class="label-card" aria-hidden="true"><div class="label-card-media label-card-media--skeleton label-card-media--loading"></div><p class="label-card-caption">&nbsp;</p></article>
-        </div>
+        <ul class="label-library__grid" aria-hidden="true">
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+          <li class="label-card" aria-hidden="true"><div class="label-card__media label-card__media--skeleton label-card__media--loading"></div><p class="label-card__caption">&nbsp;</p></li>
+        </ul>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p class="footer-author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong>
-    </p>
-    <p class="footer-email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
-    </p>
-    <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="footer-reddit" target="_blank"
-      rel="noopener">reddit</a>
-    <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
+    <div class="site-footer__links">
+      <p class="site-footer__author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong>
+      </p>
+      <p class="site-footer__email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
+      </p>
+      <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="site-footer__social" target="_blank"
+        rel="noopener">reddit</a>
+      <a href="https://github.com/IvanProkopenko7/ralphai" class="site-footer__social" target="_blank" rel="noopener">github</a>
+    </div>
+    <div class="collection-note"><span data-i18n="collectNote">Zdjecia bez wykrytej metki i wyniki o niskiej pewnosci moga byc anonimowo zapisywane, aby ulepszac model</span></div>
   </footer>
-  <div class="footer-collect-bar"><span data-i18n="collectNote">Zdjecia bez wykrytej metki i wyniki o niskiej pewnosci moga byc anonimowo zapisywane, aby ulepszac model</span></div>
 </body>
 
 </html>

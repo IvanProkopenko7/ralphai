@@ -60,3 +60,15 @@
     footerEmail.textContent = EMAIL;
   }
 })();
+
+// Shared navigation labels and keyboard landmarks on every page.
+(() => {
+  const polish = (navigator.language || '').toLowerCase().startsWith('pl');
+  document.documentElement.lang = polish ? 'pl' : 'en';
+  document.querySelector('.skip-link').textContent = polish ? 'Przejdź do treści' : 'Skip to main content';
+  document.querySelector('.navbar__links').setAttribute('aria-label', polish ? 'Nawigacja główna' : 'Main navigation');
+  const preview = document.getElementById('previewGrid');
+  if (preview) preview.setAttribute('aria-label', polish ? 'Przesłane zdjęcia' : 'Uploaded photos');
+  const cropImage = document.getElementById('cropperImg');
+  if (cropImage) cropImage.alt = polish ? 'Zdjęcie do kadrowania' : 'Photo to crop';
+})();

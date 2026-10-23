@@ -94,3 +94,11 @@ __pycache__/
 *.rar
 *.tar
 *.gz
+
+# Local browser automation artifacts
+.playwright-mcp/
+
+# Local accessibility files
+accessibility-audit.md
+ACCESSIBILITY-AUDIT.md
+accessibility.js

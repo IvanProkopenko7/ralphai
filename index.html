@@ -51,88 +51,89 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#canvas">Skip to main content</a>
 
   <header class="navbar">
-    <a href="/" class="nav-logo">RALPHAI</a>
-    <nav class="nav-links">
-      <a href="about.html" class="nav-about" data-i18n="navAbout">ABOUT</a>
-      <a href="labels.html" class="nav-labels" data-i18n="navLabels">LABELS</a>
-      <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">KONTAKT</a>
+    <a href="/" class="navbar__logo">RALPHAI</a>
+    <nav class="navbar__links" aria-label="Main navigation">
+      <a href="about.html" class="navbar__link" data-i18n="navAbout">ABOUT</a>
+      <a href="labels.html" class="navbar__link" data-i18n="navLabels">LABELS</a>
+      <a href="mailto:contact@ralphai.tech" class="navbar__link" data-i18n="navContact" id="navContactLink">KONTAKT</a>
     </nav>
   </header>
 
-  <main id="canvas" class="main-content">
+  <main id="canvas" tabindex="-1" class="main-content">
 
     <!-- Upload section -->
-    <section class="upload-section">
-      <h1 class="title">Legit check RALPH LAUREN</h1>
+    <section class="upload-section" aria-labelledby="uploadHeading">
+      <h1 id="uploadHeading" class="title">Legit check RALPH LAUREN</h1>
       <p class="subtitle" data-i18n="subtitle">Dodaj zdjęcie górnej metki</p>
 
-      <input type="file" id="fileInput" accept="image/*" hidden />
+      <input type="file" id="fileInput" aria-labelledby="choosePhotoLabel" accept="image/*" hidden />
 
-      <div id="previewGrid" class="preview-grid" hidden></div>
+      <div id="previewGrid" class="preview-grid" role="region" aria-label="Uploaded photos" aria-live="polite" hidden></div>
 
       <div id="resultRow" class="result-row" hidden></div>
 
-      <button id="chooseBtn" class="choose-btn">
-        <span data-i18n="chooseBtn">Wybierz zdjęcie</span>
+      <button id="chooseBtn" class="upload-section__choose">
+        <span id="choosePhotoLabel" data-i18n="chooseBtn">Wybierz zdjęcie</span>
       </button>
 
-      <div class="drop-text" id="dropTextGroup">
-        <p class="drop-line-1" data-i18n="dropLine1">lub upuść zdjęcia tutaj</p>
-        <p class="drop-line-2" data-i18n="dropLine2">albo wklej z Ctrl+V</p>
+      <div class="upload-section__hints" id="dropTextGroup">
+        <p class="upload-section__drop-hint" data-i18n="dropLine1">lub upuść zdjęcia tutaj</p>
+        <p class="upload-section__paste-hint" data-i18n="dropLine2">albo wklej z Ctrl+V</p>
       </div>
 
-      <div id="uncertaintyMsg" class="uncertainty-msg" hidden>
+      <div id="uncertaintyMsg" role="status" class="notice" hidden>
         Classification confidence is too low. Please, try re-cropping your photo more closely and checking it again. If the
         result is still uncertain, then please send the photo to the <a href="mailto:contact@ralphai.tech">website's
           email</a> for a human legit check or post it on groups like <a
-          href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a
-          href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>
+          href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a
+          href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>
       </div>
 
-      <p id="notDetectedMsg" class="uncertainty-msg not-detected-message" data-i18n="notDetectedMessage" role="status" hidden>
+      <p id="notDetectedMsg" class="notice notice--not-detected" data-i18n="notDetectedMessage" role="status" hidden>
         Neck label is not detected. Please make sure that you send a photo of the neck label and NOT the pony embroidery, wash tags, or any other part of the garment. If the neck label is visible, click the “Crop manually” button.
       </p>
 
-      <div id="tooSmallMsg" class="uncertainty-msg" hidden>
+      <div id="tooSmallMsg" role="status" class="notice" hidden>
         The label on your photo is too small. Try taking your photo closer to the label and make sure that the label is clearly visible.
       </div>
 
-      <div id="errorMsg" class="error-msg" hidden></div>
+      <div id="errorMsg" role="alert" class="error-message" hidden></div>
     </section>
 
-    <section class="home-credibility-section" aria-labelledby="homeCredibilityHeading">
-      <h2 class="section-heading home-credibility-heading" id="homeCredibilityHeading" data-i18n="homeCredibilityHeading">RalphAI in numbers</h2>
-      <div class="home-metrics-grid" role="list" aria-label="RalphAI credibility metrics">
-        <article class="about-metric-card" role="listitem">
-          <p class="about-metric-value" data-metric-key="visitors">500+</p>
-          <p class="about-metric-label" data-i18n="homeMetricVisitors">Visitors</p>
-        </article>
-        <article class="about-metric-card" role="listitem">
-          <p class="about-metric-value" data-metric-key="overallPrecision">97.4%</p>
-          <p class="about-metric-label" data-i18n="homeMetricPrecision">Overall precision</p>
-        </article>
-        <article class="about-metric-card" role="listitem">
-          <p class="about-metric-value" data-metric-key="datasetPhotos">7626</p>
-          <p class="about-metric-label" data-i18n="homeMetricDatasetPhotos">Photos of tags in the dataset</p>
-        </article>
-      </div>
+    <section class="credibility" aria-labelledby="homeCredibilityHeading">
+      <h2 class="section-heading credibility__heading" id="homeCredibilityHeading" data-i18n="homeCredibilityHeading">RalphAI in numbers</h2>
+      <ul class="credibility__metrics" role="list" aria-label="RalphAI credibility metrics">
+        <li class="metric-card">
+          <p class="metric-card__value" data-metric-key="visitors">500+</p>
+          <p class="metric-card__label" data-i18n="homeMetricVisitors">Visitors</p>
+        </li>
+        <li class="metric-card">
+          <p class="metric-card__value" data-metric-key="overallPrecision">97.4%</p>
+          <p class="metric-card__label" data-i18n="homeMetricPrecision">Overall precision</p>
+        </li>
+        <li class="metric-card">
+          <p class="metric-card__value" data-metric-key="datasetPhotos">7626</p>
+          <p class="metric-card__label" data-i18n="homeMetricDatasetPhotos">Photos of tags in the dataset</p>
+        </li>
+      </ul>
     </section>
 
-    <section class="extra-checks-section" aria-labelledby="extraChecksHeading">
-      <h2 class="section-heading extra-checks-heading" id="extraChecksHeading" data-i18n="extraChecksHeading">What
+    <section class="extra-checks" aria-labelledby="extraChecksHeading">
+      <h2 class="section-heading extra-checks__heading" id="extraChecksHeading" data-i18n="extraChecksHeading">What
         additional checks can I do?</h2>
-      <p class="extra-checks-intro" data-i18n="extraChecksIntro">
+      <p class="extra-checks__intro" data-i18n="extraChecksIntro">
         Unfortunately, there are not a lot of universal ways of authenticating Ralph Lauren clothes. The tags, ponies,
         care labels, stitching quality and materials are very different depending on the year of manufacturing, region
         and category of piece (tags on sweaters are not like the ones on ties), so the telltale signs are very
         specific. But there are 3 things that you can do to increase your chances:
       </p>
 
-      <ol class="extra-checks-list">
-        <li class="extra-checks-item">
-          <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint1Title">Scan the QR code on the neck tag.</h3>
+      <ol class="extra-checks__list">
+        <li class="extra-checks__item">
+          <h3 class="extra-checks__item-title" data-i18n="extraChecksPoint1Title">Scan the QR code on the neck tag.</h3>
           <p data-i18n="extraChecksPoint1Body" id="qrCheckPoint1Body">
             Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it
             with your phone. The QR code should send you to the Ralph Lauren's official authentication page of the
@@ -146,42 +147,42 @@
             answer. But still, QR code gives you about 99% accuracy, so if you can, you should certainly scan it.
           </p>
 
-          <div class="qr-check-image-groups">
-            <section class="qr-check-image-group" aria-label="Real QR examples">
-              <span class="qr-check-group-label qr-check-group-label--real" data-i18n="extraChecksRealLabel">REAL</span>
-              <div class="qr-check-grid" role="list" aria-label="Real QR examples">
-                <figure class="qr-check-card qr-check-card--legit" role="listitem">
+          <div class="qr-examples">
+            <section class="qr-examples__group" aria-label="Real QR examples">
+              <h4 class="qr-examples__label qr-examples__label--real" data-i18n="extraChecksRealLabel">REAL</h4>
+              <ul class="qr-examples__grid" role="list" aria-label="Real QR examples">
+                <li class="qr-examples__card qr-examples__card--legit">
                   <img src="using_images/LEGIT/real-QR-code-page-1.jpg"
                     alt="Legit Ralph Lauren QR scan result example 1" loading="lazy" decoding="async" width="465"
                     height="766" />
-                </figure>
-                <figure class="qr-check-card qr-check-card--legit" role="listitem">
+                </li>
+                <li class="qr-examples__card qr-examples__card--legit">
                   <img src="using_images/LEGIT/real-QR-code-page-2.jpg"
                     alt="Legit Ralph Lauren QR scan result example 2" loading="lazy" decoding="async" width="367"
                     height="547" />
-                </figure>
-              </div>
+                </li>
+              </ul>
             </section>
 
-            <section class="qr-check-image-group" aria-label="Fake QR examples">
-              <span class="qr-check-group-label qr-check-group-label--fake" data-i18n="extraChecksFakeLabel">FAKE</span>
-              <div class="qr-check-grid" role="list" aria-label="Fake QR examples">
-                <figure class="qr-check-card qr-check-card--fake" role="listitem">
+            <section class="qr-examples__group" aria-label="Fake QR examples">
+              <h4 class="qr-examples__label qr-examples__label--fake" data-i18n="extraChecksFakeLabel">FAKE</h4>
+              <ul class="qr-examples__grid" role="list" aria-label="Fake QR examples">
+                <li class="qr-examples__card qr-examples__card--fake">
                   <img src="using_images/FAKE/closer-look-at-qr-code-polo-ralph-lauren-v0-85krh4puh0ed1.webp"
                     alt="Fake Ralph Lauren QR scan result example 1" loading="lazy" decoding="async" width="804"
                     height="879" />
-                </figure>
-                <figure class="qr-check-card qr-check-card--fake" role="listitem">
+                </li>
+                <li class="qr-examples__card qr-examples__card--fake">
                   <img src="using_images/FAKE/fake-QR-code_page.jpg" alt="Fake Ralph Lauren QR scan result example 2"
                     loading="lazy" decoding="async" width="465" height="767" />
-                </figure>
-              </div>
+                </li>
+              </ul>
             </section>
           </div>
         </li>
 
-        <li class="extra-checks-item">
-          <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint2Title">Find similar pieces from trusted
+        <li class="extra-checks__item">
+          <h3 class="extra-checks__item-title" data-i18n="extraChecksPoint2Title">Find similar pieces from trusted
             sellers online.</h3>
           <p data-i18n="extraChecksPoint2Body">
             Try finding same pieces online using the photos of the overall garment, embroidery, tags and so on via
@@ -190,8 +191,8 @@
           </p>
         </li>
 
-        <li class="extra-checks-item">
-          <h3 class="extra-checks-item-title" data-i18n="extraChecksPoint3Title">Post your photos on Ralph Lauren LC
+        <li class="extra-checks__item">
+          <h3 class="extra-checks__item-title" data-i18n="extraChecksPoint3Title">Post your photos on Ralph Lauren LC
             groups.</h3>
           <p data-i18n-html="extraChecksPoint3BodyHtml">
             Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank"
@@ -215,28 +216,39 @@
   </main>
 
   <!-- Cropper modal -->
-  <div class="cropper-overlay" id="cropperModal" hidden>
-    <div class="cropper-modal-inner">
-      <div class="cropper-img-wrap">
+  <dialog class="crop-dialog" id="cropperModal" aria-labelledby="cropTitle" aria-describedby="cropHelp" hidden>
+    <div class="crop-dialog__content">
+      <h2 id="cropTitle" class="crop-dialog__title" data-i18n="manualCrop">Crop manually</h2>
+      <p id="cropHelp" class="crop-dialog__help" data-i18n="cropHelp">Frame the neck label by dragging the selection or editing its position and size in pixels.</p>
+      <div class="crop-dialog__image">
         <img id="cropperImg" src="" alt="Kadruj zdjęcie" />
       </div>
-      <div class="cropper-actions">
-        <button class="btn-crop-cancel" id="btnCropCancel" data-i18n="cropCancel">Anuluj</button>
-        <button class="btn-crop-confirm" id="btnCropConfirm" data-i18n="cropConfirm">Przytnij i użyj</button>
+      <fieldset class="crop-dialog__controls">
+        <legend data-i18n="cropSelection">Selection in image pixels</legend>
+        <label><span data-i18n="cropX">Left</span><input id="cropX" type="number" min="0" step="1" inputmode="numeric" /></label>
+        <label><span data-i18n="cropY">Top</span><input id="cropY" type="number" min="0" step="1" inputmode="numeric" /></label>
+        <label><span data-i18n="cropWidth">Width</span><input id="cropWidth" type="number" min="1" step="1" inputmode="numeric" /></label>
+        <label><span data-i18n="cropHeight">Height</span><input id="cropHeight" type="number" min="1" step="1" inputmode="numeric" /></label>
+      </fieldset>
+      <div class="crop-dialog__actions">
+        <button class="crop-dialog__cancel" id="btnCropCancel" data-i18n="cropCancel">Anuluj</button>
+        <button class="crop-dialog__confirm" id="btnCropConfirm" data-i18n="cropConfirm">Przytnij i użyj</button>
       </div>
     </div>
-  </div>
+  </dialog>
 
   <footer class="site-footer">
-    <p class="footer-author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong>
-    </p>
-    <p class="footer-email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
-    </p>
-    <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="footer-reddit" target="_blank"
-      rel="noopener">reddit</a>
-    <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
+    <div class="site-footer__links">
+      <p class="site-footer__author"><span data-i18n="footerCreatedBy">Stworzone przez</span> <strong>Ivan Prokopenko</strong>
+      </p>
+      <p class="site-footer__email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
+      </p>
+      <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="site-footer__social" target="_blank"
+        rel="noopener">reddit</a>
+      <a href="https://github.com/IvanProkopenko7/ralphai" class="site-footer__social" target="_blank" rel="noopener">github</a>
+    </div>
+    <div class="collection-note"><span data-i18n="collectNote">Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model</span></div>
   </footer>
-  <div class="footer-collect-bar"><span data-i18n="collectNote">Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model</span></div>
 
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="metrics.js"></script>

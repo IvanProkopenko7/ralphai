@@ -18,20 +18,21 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="navbar">
-    <a href="/" class="nav-logo">RALPHAI</a>
-    <nav class="nav-links">
-      <a href="about.html" class="nav-about nav-labels--active" data-i18n="navAbout">ABOUT</a>
-      <a href="labels.html" class="nav-labels" data-i18n="navLabels">LABELS</a>
-      <a href="mailto:contact@ralphai.tech" class="nav-kontakt" data-i18n="navContact" id="navContactLink">CONTACT</a>
+    <a href="/" class="navbar__logo">RALPHAI</a>
+    <nav class="navbar__links" aria-label="Main navigation">
+      <a href="about.html" class="navbar__link navbar__link--active" aria-current="page" data-i18n="navAbout">ABOUT</a>
+      <a href="labels.html" class="navbar__link" data-i18n="navLabels">LABELS</a>
+      <a href="mailto:contact@ralphai.tech" class="navbar__link" data-i18n="navContact" id="navContactLink">CONTACT</a>
     </nav>
   </header>
 
-  <main class="main-content main-content--about">
-    <section class="about-page-wrapper" aria-labelledby="aboutHeading">
-      <h1 id="aboutHeading" class="about-title" data-i18n="aboutTitle">About RalphAI</h1>
+  <main id="main-content" tabindex="-1" class="main-content main-content--about">
+    <section class="about" aria-labelledby="aboutHeading">
+      <h1 id="aboutHeading" class="about__title" data-i18n="aboutTitle">About RalphAI</h1>
 
-      <article class="about-article">
+      <div class="about__body">
         <p data-i18n="aboutP1">
           RalphAI was created for people who buy, sell, and collect Ralph Lauren pieces and need a fast first opinion
           before making a decision.
@@ -49,34 +50,36 @@
           strong assistant, not a replacement for expert judgment,
           so uncertain cases should still be reviewed manually.
         </p>
-      </article>
+      </div>
 
-      <section class="about-metrics" aria-label="RalphAI metrics">
-        <article class="about-metric-card">
-          <p class="about-metric-value" data-metric-key="visitors">500+</p>
-          <p class="about-metric-label" data-i18n="metric0">Visitors</p>
-        </article>
-        <article class="about-metric-card">
-          <p class="about-metric-value" data-metric-key="overallPrecision">97.4%</p>
-          <p class="about-metric-label" data-i18n="metric1">Overall precision</p>
-        </article>
-        <article class="about-metric-card">
-          <p class="about-metric-value" data-metric-key="datasetPhotos">7626</p>
-          <p class="about-metric-label" data-i18n="metric3">Photos of tags in the dataset</p>
-        </article>
-      </section>
+      <ul class="about__metrics" role="list" aria-label="RalphAI metrics">
+        <li class="metric-card">
+          <p class="metric-card__value" data-metric-key="visitors">500+</p>
+          <p class="metric-card__label" data-i18n="metric0">Visitors</p>
+        </li>
+        <li class="metric-card">
+          <p class="metric-card__value" data-metric-key="overallPrecision">97.4%</p>
+          <p class="metric-card__label" data-i18n="metric1">Overall precision</p>
+        </li>
+        <li class="metric-card">
+          <p class="metric-card__value" data-metric-key="datasetPhotos">7626</p>
+          <p class="metric-card__label" data-i18n="metric3">Photos of tags in the dataset</p>
+        </li>
+      </ul>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p class="footer-author"><span data-i18n="footerCreatedBy">Created by</span> <strong>Ivan Prokopenko</strong></p>
-    <p class="footer-email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
-    </p>
-    <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="footer-reddit" target="_blank"
-      rel="noopener">reddit</a>
-    <a href="https://github.com/IvanProkopenko7/ralphai" class="footer-github" target="_blank" rel="noopener">github</a>
+    <div class="site-footer__links">
+      <p class="site-footer__author"><span data-i18n="footerCreatedBy">Created by</span> <strong>Ivan Prokopenko</strong></p>
+      <p class="site-footer__email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
+      </p>
+      <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="site-footer__social" target="_blank"
+        rel="noopener">reddit</a>
+      <a href="https://github.com/IvanProkopenko7/ralphai" class="site-footer__social" target="_blank" rel="noopener">github</a>
+    </div>
+    <div class="collection-note"><span data-i18n="collectNote">Photos with no detected label and low-confidence results may be anonymously stored to improve the model</span></div>
   </footer>
-  <div class="footer-collect-bar"><span data-i18n="collectNote">Photos with no detected label and low-confidence results may be anonymously stored to improve the model</span></div>
 </body>
 
 </html>
