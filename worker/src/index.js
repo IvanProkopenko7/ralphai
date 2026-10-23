@@ -85,20 +85,48 @@ function throwForStatus(res, label) {
 /* ─── Space auto-wake (free-tier sleep recovery) ──────────────────── *
  * Any observed 503 triggers a shared background wake (deduped per      *
  * isolate) while the client gets {error:'space_waking'} and retries    *
- * after a delay. The cron keep-warm deliberately does NOT wake — idle  *
- * Spaces should sleep to save monthly CPU hours; only real user        *
- * traffic wakes. Concurrent uploads share one in-flight wake.          *
+ * after a delay. Restart only when the Hub reports SLEEPING, then poll *
+ * Gradio /info for readiness. Concurrent uploads share one wake.      *
+ * Requires RALPH_Ai_TOKEN to have repo.write on the Space.             *
  * ─────────────────────────────────────────────────────────────────── */
 const WAKE_TIMEOUT_MS = 120000;
 const WAKE_POLL_MS = 5000;
 let wakePromise = null;
+let restartPromise = null;
+
+/* A failed health check does not prove the Space is asleep. Never
+ * restart a running, starting, building, or intentionally paused Space.
+ * Cron and user requests share the runtime check and restart. */
+async function restartSpaceViaApi(apiKey) {
+  if (!restartPromise) {
+    restartPromise = (async () => {
+      try {
+        const headers = { 'Authorization': `Bearer ${apiKey}` };
+        const runtimeRes = await fetch(`https://huggingface.co/api/spaces/${SPACE_ID}/runtime`, {
+          headers, signal: AbortSignal.timeout(10000),
+        });
+        if (!runtimeRes.ok || (await runtimeRes.json()).stage !== 'SLEEPING') return false;
+        const res = await fetch(`https://huggingface.co/api/spaces/${SPACE_ID}/restart`, {
+          method: 'POST', headers, signal: AbortSignal.timeout(10000),
+        });
+        return res.ok;
+      } catch (_) {
+        return false;
+      } finally {
+        restartPromise = null;
+      }
+    })();
+  }
+  return restartPromise;
+}
 
 async function wakeSpace(apiKey) {
   if (!wakePromise) {
     wakePromise = (async () => {
       try {
-        // Poke the hub page + last-known direct host: traffic through the
-        // Spaces proxy is what wakes a sleeping Space (~30–90s w/ models).
+        // Check runtime before restarting; a 503 may mean already starting.
+        await restartSpaceViaApi(apiKey);
+        // Visit the Hub page and direct host while waiting for readiness.
         try {
           await fetch(`https://huggingface.co/spaces/${SPACE_ID}`, {
             headers: { 'Authorization': `Bearer ${apiKey}` },
@@ -476,20 +504,40 @@ function rateLimited(request, kind) {
   return null;
 }
 
-/* ─── Space keep-warm (cron + client ping share this) ─────────────── *
- * Hits the Gradio /info endpoint so the free-tier Space never idles    *
- * into its 48h sleep. Failures are silent by design (next tick retries).*
+/* ─── Space keep-warm (cron keeps the free-tier Space awake) ─────── *
+ * Visits the Hub page and checks Gradio readiness every cron tick.    *
+ * On a failed health check, the Hub runtime must confirm SLEEPING     *
+ * before a restart. Failures are silent; the next tick retries.       *
  * ──────────────────────────────────────────────────────────────────── */
 async function warmSpace(env) {
   const apiKey = env.RALPH_Ai_TOKEN;
   if (!apiKey) return;
   try {
-    const host = await resolveSpaceHost(apiKey);
-    await fetch(`${host}/gradio_api/info`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` },
-    });
+    // Step 1: visit the Space page.
+    try {
+      await fetch(`https://huggingface.co/spaces/${SPACE_ID}`, {
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+      });
+    } catch (_) {
+      // Network blip — continue to the health check below.
+    }
+    // Step 2: health check via Gradio info on the resolved host.
+    let healthy = false;
+    try {
+      const host = await resolveSpaceHost(apiKey);
+      const infoRes = await fetch(`${host}/gradio_api/info`, {
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+      });
+      healthy = infoRes.ok;
+    } catch (_) {
+      healthy = false;
+    }
+    // Step 3: wake only a confirmed sleeping Space.
+    if (!healthy) {
+      await restartSpaceViaApi(apiKey);
+    }
   } catch (_) {
-    // Silent — next cron tick or client ping retries.
+    // Silent — next cron tick retries.
   }
 }
 

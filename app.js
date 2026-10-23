@@ -13,6 +13,7 @@ const previewGrid  = document.getElementById('previewGrid');
 const resultRow    = document.getElementById('resultRow');
 const uncertaintyMsg = document.getElementById('uncertaintyMsg');
 const tooSmallMsg = document.getElementById('tooSmallMsg');
+const notDetectedMsg = document.getElementById('notDetectedMsg');
 const errorMsg     = document.getElementById('errorMsg');
 const cropperModal  = document.getElementById('cropperModal');
 const cropperImg    = document.getElementById('cropperImg');
@@ -84,6 +85,10 @@ const i18n = {
   photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
   chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
   chipUncertain:   isPolish ? 'Nie pewien'                           : 'Uncertain',
+  chipNotDetected: isPolish ? 'Nie wykryto'                          : 'Not detected',
+  notDetectedMessage: isPolish
+    ? 'Nie wykryto metki przy szyi. Upewnij się, że przesyłasz zdjęcie metki przy szyi, a NIE haftu z kucykiem, metek pielęgnacyjnych ani innej części ubrania. Jeśli metka przy szyi jest widoczna, kliknij przycisk „Przytnij ręcznie”.'
+    : 'Neck label is not detected. Please make sure that you send a photo of the neck label and NOT the pony embroidery, wash tags, or any other part of the garment. If the neck label is visible, click the “Crop manually” button.',
   chipTooSmall:    isPolish ? 'Za mała'                              : 'Too small',
   chipAuthentic:   isPolish ? 'Oryginał'                             : 'Authentic',
   chipFake:        'Fake',
@@ -233,7 +238,7 @@ function buildPreviewCardMarkup(img, index) {
   const media = img.pending
     ? `<div class="preview-pending-label">${img.status === 'authenticating' ? i18n.statusAuthenticating : i18n.statusSending}</div>`
     : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
-  const manualBtn = (!img.pending && (img.result || img.tooSmall))
+  const manualBtn = (!img.pending && (img.result || img.tooSmall || img.notDetected))
     ? `<button class="preview-manual-crop" data-index="${index}">${i18n.manualCrop}</button>`
     : '';
   return `
@@ -253,8 +258,9 @@ function updatePreviewAreaMeta() {
   chooseBtn.hidden = true;
   dropText.hidden = true;
 
-  const hasLowConfidence = croppedImages.some(img => img.chip && img.chip.includes('result-chip--unknown'));
+  const hasLowConfidence = croppedImages.some(img => !img.notDetected && img.chip && img.chip.includes('result-chip--unknown'));
   if (uncertaintyMsg) uncertaintyMsg.hidden = !hasLowConfidence;
+  if (notDetectedMsg) notDetectedMsg.hidden = !croppedImages.some(img => img.notDetected);
   const hasTooSmall = croppedImages.some(img => img.tooSmall);
   if (tooSmallMsg) tooSmallMsg.hidden = !hasTooSmall;
 }
@@ -395,6 +401,7 @@ function handleCropConfirm() {
         entry.verdict = '';
         entry.reported = false;
         entry.tooSmall = false;
+        entry.notDetected = false;
         if (manualTooSmall) {
           entry.chip = buildTooSmallChip();
           entry.verdict = 'too-small';
@@ -421,22 +428,6 @@ function handleCropConfirm() {
     }, 'image/jpeg', SQUARE_JPEG_QUALITY);
   });
 }
-
-/* ─── Warmup ping ─────────────────────────────────── */
-// Sends an empty body so the frontend proxy wakes up.
-// For Hugging Face Spaces, just hitting the Worker should be enough to stay warm or
-// we can pass a special flag to wake up the HF space.
-(function scheduleWarmup() {
-  function ping() {
-    fetch(API_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body:    'ping',
-    }).catch(() => {});
-  }
-  ping();
-  setInterval(ping, 4 * 60 * 1000);
-})();
 
 /* ─── Logo → reset to start ───────────────────────── */
 document.querySelector('.nav-logo').addEventListener('click', (e) => {
@@ -562,10 +553,11 @@ function processNextCrop(keepModalOpen = false) {
       pendingMissSaved = false;
 
       // Server-side detection on the downscaled upload (mapped back to the
-      // original); any failure → miss path, except a waking Space → retry.
+      // original). Service failures are errors; only valid results can be misses.
       let hitBox = null;
       let tooSmallBox = false;
       let waking = false;
+      let detectionFailed = false;
       try {
         const dims = await getImageDims(source.blob);
         const det = await detectServerSide(source.blob);
@@ -580,6 +572,7 @@ function processNextCrop(keepModalOpen = false) {
         }
       } catch (e) {
         if (isWakingError(e)) waking = true;
+        detectionFailed = true;
         hitBox = null;
       }
 
@@ -608,6 +601,11 @@ function processNextCrop(keepModalOpen = false) {
         releaseActiveCropSource();
         activeCropSourceBlob = null;
         processNextCrop(false);
+        return;
+      }
+
+      if (detectionFailed) {
+        finishDetectionError(placeholder);
         return;
       }
 
@@ -658,23 +656,39 @@ function processNextCrop(keepModalOpen = false) {
           processNextCrop(false);
           return;
         } catch (_) {
-          // Silent-crop failure degrades to the miss path below.
+          // A crop failure is a processing error, not a detection miss.
+          finishDetectionError(placeholder);
+          return;
         }
       }
 
-      // Miss path: save the ORIGINAL for retraining, manual crop on original.
-      // Drop the spinner before opening the manual cropper so we don't
-      // end up with a duplicate card after the user confirms the crop.
-      removePlaceholder(placeholder);
-      pendingMissSaved = true;
+      // Keep the original for retraining and let the user choose manual cropping.
       reportFail('miss', file, { detector: 'server' });
-      openCropper(source.src, keepModalOpen);
+      fillPlaceholderWithCrop(placeholder, source.blob, source.blob);
+      placeholder.savedToBucket = true;
+      placeholder.pending = false;
+      placeholder.notDetected = true;
+      placeholder.verdict = 'unknown';
+      placeholder.chip = `<div class="result-chip result-chip--unknown"><span class="result-chip-verdict">${i18n.chipNotDetected}</span></div>`;
+      releaseActiveCropSource();
+      activeCropSourceBlob = null;
+      renderGrid();
+      processNextCrop(false);
     })
     .catch(() => {
       removePlaceholder(placeholder);
       showError(i18n.errorCannotRead);
       processNextCrop(keepModalOpen);
     });
+}
+
+function finishDetectionError(placeholder) {
+  releaseActiveCropSource();
+  activeCropSourceBlob = null;
+  removePlaceholder(placeholder);
+  fileInput.value = '';
+  showError(i18n.errorAnalysis);
+  processNextCrop(false);
 }
 
 function removePlaceholder(placeholder) {
@@ -920,6 +934,7 @@ function renderGrid() {
     dropText.hidden = false;
     if (uncertaintyMsg) uncertaintyMsg.hidden = true;
     if (tooSmallMsg) tooSmallMsg.hidden = true;
+    if (notDetectedMsg) notDetectedMsg.hidden = true;
     return;
   }
 
@@ -1055,9 +1070,8 @@ function blobToBase64(blob) {
  * alone can erase a detection, so a clean miss retries sharper: WebP   *
  * q0.85 next (PNG-level accuracy at ~8x fewer bytes), pixel-exact PNG  *
  * last. First non-empty boxes win; hits stay cheap, only real misses   *
- * pay extra uploads. Any failure (timeout after DETECT_TIMEOUT_MS,     *
- * error, no box ≥ 0.5) returns null and the caller falls back to       *
- * manual crop.                                                         *
+ * pay extra uploads. Service failures throw; valid results without a *
+ * box ≥ 0.5 show Not detected and offer manual cropping.              *
  * ──────────────────────────────────────────────────────────────────── */
 async function makeDetectDownscale(blob) {
   try {
@@ -1149,38 +1163,32 @@ async function detectServerSide(originalBlob) {
         try { detail = await response.text(); } catch (_) {}
         if (isWakingResponse(response.status, detail)) throw markWakingError();
       }
-      return null;
+      throw new Error(i18n.errorAnalysis);
     }
     const data = await response.json();
-    if (!data || !Array.isArray(data.boxes)) return null;
+    if (!data || !Array.isArray(data.boxes) || !(data.width > 0) || !(data.height > 0)) {
+      throw new Error(i18n.errorAnalysis);
+    }
     return data;
   };
 
   const first = await postDetect(await makeDetectDownscale(originalBlob));
   // Continue sharper only on a clean empty result (HTTP 200, no boxes).
-  // Transport failures (null) keep the old behavior: no further requests,
-  // straight to the miss path — important under rate limiting.
-  if (!first || !Array.isArray(first.boxes) || first.boxes.length > 0) return first;
+  // Transport failures throw so they cannot be reported as detector misses.
+  if (first.boxes.length > 0) return first;
   // JPEG artifacts can erase a detection a sharper encoding still sees —
-  // retry WebP, then pixel-exact PNG, before giving up to manual crop.
+  // retry WebP, then pixel-exact PNG, before showing Not detected.
   // A null WebP (browser can't encode it, e.g. old Safari) skips straight
-  // to PNG. Later retries skip waking-Space handling: a 503 above already
-  // threw, and any failure here just falls through to the miss path below.
+  // to PNG. Request errors, including a waking Space, propagate to the caller.
   const retries = [makeDetectWebpBlob, makeDetectPngBlob];
   for (const makeRetryBlob of retries) {
+    let retryBlob = null;
     try {
-      let retryBlob = null;
-      try {
-        retryBlob = await makeRetryBlob(originalBlob);
-      } catch (_) {
-        retryBlob = null;
-      }
-      if (!retryBlob) continue;
-      const retry = await postDetect(retryBlob);
-      if (retry && Array.isArray(retry.boxes) && retry.boxes.length > 0) return retry;
-    } catch (_) {
-      // Fall through to the first (empty) result → manual crop.
-    }
+      retryBlob = await makeRetryBlob(originalBlob);
+    } catch (_) {}
+    if (!retryBlob) continue;
+    const retry = await postDetect(retryBlob);
+    if (retry.boxes.length > 0) return retry;
   }
   return first;
 }
