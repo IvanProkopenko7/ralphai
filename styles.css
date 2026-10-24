@@ -417,6 +417,10 @@ html {
   background-color: #fef9c3;
 }
 
+.preview-card__thumbnail--not-detected {
+  background-color: #000;
+}
+
 .preview-card__crop {
   margin-top: 8px;
   padding: 8px 16px;
@@ -472,7 +476,7 @@ html {
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
-  border: none;
+  border: 1px solid grey;
   cursor: pointer;
   font-size: 24px;
   display: flex;
@@ -697,7 +701,7 @@ html {
 
 /* Native dialog provides focus containment, Escape, and background inertness. */
 .crop-dialog {
-  width: min(940px, calc(100% - 24px));
+  width: min(900px, 95%);
   max-width: none;
   max-height: calc(100dvh - 24px);
   margin: auto;
@@ -711,12 +715,7 @@ html {
 
 .crop-dialog::backdrop { background: rgb(0 0 0 / 88%); }
 .crop-dialog__content { display: flex; flex-direction: column; }
-.crop-dialog__title { padding: 16px 20px 8px; font-size: 24px; }
-.crop-dialog__help { padding: 0 20px 12px; line-height: 1.5; }
-.crop-dialog__image { width: 100%; height: min(50dvh, 560px); background: #000; overflow: hidden; }
-.crop-dialog__controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 20px 0; padding: 12px; border: 1px solid #888; }
-.crop-dialog__controls label { display: grid; gap: 6px; min-width: 0; }
-.crop-dialog__controls input { width: 100%; min-height: 36px; padding: 6px; border: 1px solid #888; border-radius: 4px; background: #fff; color: #111; }
+.crop-dialog__image { width: 100%; height: 80vh; background: #000; overflow: hidden; }
 
 .crop-dialog__image img {
   display: block;
@@ -731,6 +730,59 @@ html {
     user-select: none;
   }
 
+  /* Keep the large bottom-right handle as-is, but enlarge the other 7 touch points. */
+  .cropper-point:not(.point-se) {
+    width: 12px;
+    height: 12px;
+    opacity: 1;
+  }
+
+  .cropper-point.point-n {
+    width: 6px;
+    height: 6px;
+    top: -3px;
+    left: 50%;
+    margin-left: -3px;
+  }
+
+  .cropper-point.point-s {
+    width: 6px;
+    height: 6px;
+    bottom: -3px;
+    left: 50%;
+    margin-left: -3px;
+  }
+
+  .cropper-point.point-e {
+    width: 6px;
+    height: 6px;
+    right: -3px;
+    top: 50%;
+    margin-top: -3px;
+  }
+
+  .cropper-point.point-w {
+    width: 6px;
+    height: 6px;
+    left: -3px;
+    top: 50%;
+    margin-top: -3px;
+  }
+
+  .cropper-point.point-nw {
+    top: -6px;
+    left: -6px;
+  }
+
+  .cropper-point.point-ne {
+    top: -6px;
+    right: -6px;
+  }
+
+  .cropper-point.point-sw {
+    bottom: -6px;
+    left: -6px;
+  }
 }
 
 .crop-dialog__actions {
@@ -841,7 +893,7 @@ html {
   }
 
   .crop-dialog__image {
-    height: min(40dvh, 400px);
+    height: 65vh;
   }
 
   .navbar {
@@ -1233,10 +1285,7 @@ main:focus { outline: none; }
 .label-library__more { grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 10px; }
 .label-library__expand { padding: 10px 24px; font-weight: 600; cursor: pointer; border: 2px solid #767676; border-radius: 999px; background: #fff; color: #111; }
 .label-library__expand:hover { background: #f3f4f6; }
-.crop-dialog .cropper-point { width: 24px; height: 24px; background: #005bbb; border: 1px solid #fff; }
-.crop-dialog .cropper-point.point-se { width: 24px; height: 24px; opacity: 0.8; }
 @media (max-width: 600px) {
-  .crop-dialog__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .crop-dialog__actions { flex-wrap: wrap; }
 }
 @media (max-width: 360px) {

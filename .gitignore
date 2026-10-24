@@ -10,11 +10,13 @@ worker/.wrangler/
 .env.test.local
 .env.production.local
 .dev.vars
+.dev.vars.*
 worker/.dev.vars
 worker/.dev.vars.*
 .envrc
 *.env
 secrets/
+credentials/
 *.secret
 *.key
 *.pem
@@ -76,6 +78,11 @@ __pycache__/
 .idea/
 *.code-workspace
 .github/copilot-instructions.md
+.codex/
+.agents/
+.aws/
+.venv/
+venv/
 
 # Temporary / backup files
 *.tmp
@@ -97,6 +104,17 @@ __pycache__/
 
 # Local browser automation artifacts
 .playwright-mcp/
+playwright-report/
+test-results/
+blob-report/
+
+# Private infrastructure and local model artifacts
+/security-worker/
+/security-reports/
+/models/
+
+# Local debugging screenshots
+/image.png
 
 # Local accessibility files
 accessibility-audit.md

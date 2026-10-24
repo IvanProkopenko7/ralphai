@@ -22,48 +22,34 @@
   <header class="navbar">
     <a href="/" class="navbar__logo">RALPHAI</a>
     <nav class="navbar__links" aria-label="Main navigation">
-      <a href="about.html" class="navbar__link navbar__link--active" aria-current="page" data-i18n="navAbout">ABOUT</a>
-      <a href="labels.html" class="navbar__link" data-i18n="navLabels">LABELS</a>
-      <a href="mailto:contact@ralphai.tech" class="navbar__link" data-i18n="navContact" id="navContactLink">CONTACT</a>
+      <a href="about.html" class="navbar__link navbar__link--active" aria-current="page">ABOUT</a>
+      <a href="labels.html" class="navbar__link">LABELS</a>
+      <a href="mailto:contact@ralphai.tech" class="navbar__link" id="navContactLink">CONTACT</a>
     </nav>
   </header>
 
   <main id="main-content" tabindex="-1" class="main-content main-content--about">
     <section class="about" aria-labelledby="aboutHeading">
-      <h1 id="aboutHeading" class="about__title" data-i18n="aboutTitle">About RalphAI</h1>
+      <h1 id="aboutHeading" class="about__title">About RalphAI</h1>
 
       <div class="about__body">
-        <p data-i18n="aboutP1">
-          RalphAI was created for people who buy, sell, and collect Ralph Lauren pieces and need a fast first opinion
-          before making a decision.
-          Instead of guessing from blurry marketplace photos or relying only on memory, users can upload label images
-          and get an instant AI-based assessment.
-        </p>
-        <p data-i18n="aboutP2">
-          The project focuses on practical, real-world use. We train the model on varied label examples, then keep
-          improving it as new formats and edge cases appear.
-          That means better coverage for vintage and modern tags, and more reliable confidence scores when the image
-          quality is good.
-        </p>
-        <p data-i18n="aboutP3">
-          RalphAI is designed to save time, reduce obvious mistakes, and support the legit-check community. It is a
-          strong assistant, not a replacement for expert judgment,
-          so uncertain cases should still be reviewed manually.
-        </p>
+        <p>RalphAI is a free AI model for verifying the authenticity of Ralph Lauren clothing. It's very easy to use - simply upload a photo of the neck label and click the ‘Check label’ button. You’ll get the result in a few seconds.</p>
+        <p>The model recognises over 50+ types of labels: from scarves and hats to suits and jackets, including truly rare vintage labels from the 70s and 80s. It was trained on real listings from Vinted and eBay, so it copes well with photos of less-than-ideal quality – poor lighting, bad angles or blurriness are no problem. If the model is uncertain in its choice, an uncertainty message is displayed.</p>
+        <p>The project is constantly being developed: new tags are continually being added, the model’s accuracy is being improved, and the website is becoming increasingly comprehensive.</p>
       </div>
 
       <ul class="about__metrics" role="list" aria-label="RalphAI metrics">
         <li class="metric-card">
           <p class="metric-card__value" data-metric-key="visitors">500+</p>
-          <p class="metric-card__label" data-i18n="metric0">Visitors</p>
+          <p class="metric-card__label">Visitors</p>
         </li>
         <li class="metric-card">
           <p class="metric-card__value" data-metric-key="overallPrecision">97.4%</p>
-          <p class="metric-card__label" data-i18n="metric1">Overall precision</p>
+          <p class="metric-card__label">Overall precision</p>
         </li>
         <li class="metric-card">
           <p class="metric-card__value" data-metric-key="datasetPhotos">7626</p>
-          <p class="metric-card__label" data-i18n="metric3">Photos of tags in the dataset</p>
+          <p class="metric-card__label">Photos of tags in the dataset</p>
         </li>
       </ul>
     </section>
@@ -71,14 +57,14 @@
 
   <footer class="site-footer">
     <div class="site-footer__links">
-      <p class="site-footer__author"><span data-i18n="footerCreatedBy">Created by</span> <strong>Ivan Prokopenko</strong></p>
+      <p class="site-footer__author"><span>Created by</span> <strong>Ivan Prokopenko</strong></p>
       <p class="site-footer__email">email: <a href="mailto:contact@ralphai.tech" id="footerEmailLink">contact@ralphai.tech</a>
       </p>
       <a href="https://www.reddit.com/user/Neat-Remote-8655/" class="site-footer__social" target="_blank"
         rel="noopener">reddit</a>
       <a href="https://github.com/IvanProkopenko7/ralphai" class="site-footer__social" target="_blank" rel="noopener">github</a>
     </div>
-    <div class="collection-note"><span data-i18n="collectNote">Photos with no detected label and low-confidence results may be anonymously stored to improve the model</span></div>
+    <div class="collection-note"><span>Photos with no detected label and low-confidence results may be anonymously stored to improve the model</span></div>
   </footer>
 </body>
 

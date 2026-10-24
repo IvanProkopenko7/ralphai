@@ -1,19 +1,4 @@
 (() => {
-  const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
-  const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
-
-  const i18n = {
-    navLabels: isPolish ? 'METKI' : 'LABELS',
-    navAbout: isPolish ? 'O NAS' : 'ABOUT',
-    navContact: isPolish ? 'KONTAKT' : 'CONTACT',
-    footerCreatedBy: isPolish ? 'Stworzone przez' : 'Created by',
-    collectNote: isPolish
-      ? 'Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model'
-      : 'Photos with no detected label and low-confidence results may be anonymously stored to improve the model',
-    seeAll: isPolish ? 'Zobacz wszystkie' : 'See all',
-    libraryTitle: isPolish ? 'Biblioteka metek' : 'Labels library',
-  };
-
   // Fallback when manifest.json can't be fetched (e.g. file://).
   // Regenerate with: node generate-labels-manifest.js
   const FALLBACK_MANIFEST = {
@@ -179,7 +164,7 @@
       return `
         <li class="label-card">
           <div class="label-card__media label-card__media--loading">
-            <img src="${src}" alt="${isPolish ? 'Przykład metki Ralph Lauren' : 'Ralph Lauren label example'}: ${caption}" loading="eager" decoding="async" fetchpriority="high" width="400" height="300" />
+            <img src="${src}" alt="Ralph Lauren label example: ${caption}" loading="eager" decoding="async" fetchpriority="high" width="400" height="300" />
           </div>
           <p class="label-card__caption">${caption}</p>
         </li>
@@ -189,7 +174,7 @@
     return `
       <li class="label-card">
         <div class="label-card__media label-card__media--loading">
-          <img data-src="${src}" alt="${isPolish ? 'Przykład metki Ralph Lauren' : 'Ralph Lauren label example'}: ${caption}" loading="lazy" decoding="async" fetchpriority="low" width="400" height="300" />
+          <img data-src="${src}" alt="Ralph Lauren label example: ${caption}" loading="lazy" decoding="async" fetchpriority="low" width="400" height="300" />
         </div>
         <p class="label-card__caption">${caption}</p>
       </li>
@@ -252,7 +237,7 @@
       html += `
         <li class="label-library__more">
           <button class="label-library__expand" aria-expanded="false">
-            ${i18n.seeAll}
+            See all
           </button>
         </li>
       `;
@@ -315,20 +300,6 @@
     renderGroups('upcoming-groups', manifest.upcoming || [], false);
   }
 
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    const key = el.dataset.i18n;
-    if (typeof i18n[key] === 'string') el.textContent = i18n[key];
-  });
-
-  const navContact = document.getElementById('navContactLink');
-  if (navContact) navContact.href = `mailto:${EMAIL}`;
-
-  const footerEmail = document.getElementById('footerEmailLink');
-  if (footerEmail) {
-    footerEmail.href = `mailto:${EMAIL}`;
-    footerEmail.textContent = EMAIL;
-  }
-
   // Paint instantly from the bundled fallback so the page never flashes
   // empty; refresh in the background only if the manifest actually changed.
   renderAll(FALLBACK_MANIFEST);
@@ -344,16 +315,4 @@
       }
     })
     .catch(() => {});
-})();
-
-// Shared navigation labels and keyboard landmarks on every page.
-(() => {
-  const polish = (navigator.language || '').toLowerCase().startsWith('pl');
-  document.documentElement.lang = polish ? 'pl' : 'en';
-  document.querySelector('.skip-link').textContent = polish ? 'Przejdź do treści' : 'Skip to main content';
-  document.querySelector('.navbar__links').setAttribute('aria-label', polish ? 'Nawigacja główna' : 'Main navigation');
-  const preview = document.getElementById('previewGrid');
-  if (preview) preview.setAttribute('aria-label', polish ? 'Przesłane zdjęcia' : 'Uploaded photos');
-  const cropImage = document.getElementById('cropperImg');
-  if (cropImage) cropImage.alt = polish ? 'Zdjęcie do kadrowania' : 'Photo to crop';
 })();

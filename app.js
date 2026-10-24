@@ -20,8 +20,8 @@ const cropperImg    = document.getElementById('cropperImg');
 const btnCropConfirm = document.getElementById('btnCropConfirm');
 const btnCropCancel  = document.getElementById('btnCropCancel');
 
-/* ─── i18n ────────────────────────────────────────── */
-const isPolish = (navigator.language || '').toLowerCase().startsWith('pl');
+/* ─── Image processing settings ────────────────────────────────────────── */
+
 const MAX_IMAGES = 1;
 // Server-side detection budget: 640px JPEG uploads match full-original
 // accuracy (480px missed a real label in testing) at ~10x fewer bytes.
@@ -34,89 +34,24 @@ const DETECT_PNG_MIN_BYTES = 300 * 1024;
 const DETECT_SCORE_MIN = 0.5;
 const TOO_SMALL_MAX_SIDE = 48;
 
-const i18n = {
-  navLabels:       isPolish ? 'METKI'                                : 'LABELS',
-  navAbout:        isPolish ? 'O NAS'                                : 'ABOUT',
-  navContact:      isPolish ? 'KONTAKT'                              : 'CONTACT',
-  subtitle:        isPolish ? 'Dodaj zdjęcie górnej metki'           : 'Add a photo of the neck label',
-  collectNote: isPolish
-    ? 'Zdjęcia bez wykrytej metki i wyniki o niskiej pewności mogą być anonimowo zapisywane, aby ulepszać model'
-    : 'Photos with no detected label and low-confidence results may be anonymously stored to improve the model',
-  notePrefix:      isPolish ? '*Na razie obsługiwane są tylko metki' : "*Currently, only",
-  noteBold:        isPolish ? ' \u201ePolo by Ralph Lauren\u201d'    : " 'Polo by Ralph Lauren' labels are supported",
-  chooseBtn:       isPolish ? 'Wybierz zdjęcie'                      : 'Choose photo',
-  dropLine1:       isPolish ? 'lub upuść zdjęcia tutaj'              : 'or drop photos here',
-  dropLine2:       isPolish ? 'albo wklej z Ctrl+V'                  : 'or paste with Ctrl+V',
-  manualCrop:      isPolish ? 'Przytnij ręcznie'                     : 'Crop manually',
-  homeCredibilityHeading: isPolish ? 'RalphAI w liczbach'            : 'RalphAI in numbers',
-  homeMetricVisitors: isPolish ? 'Użytkownków'                       : 'Visitors',
-  homeMetricPrecision: isPolish ? 'Ogólna precyzja'                  : 'Overall precision',
-  homeMetricDatasetPhotos: isPolish ? 'Zdjęć metek w zbiorze danych' : 'Photos of tags in the dataset',
-  extraChecksHeading: isPolish
-    ? 'Jakie dodatkowe sprawdzenia mogę przeprowadzić?'
-    : 'What additional checks can I do?',
-  extraChecksIntro: isPolish
-    ? 'Niestety nie ma zbyt wielu uniwersalnych sposobów na zweryfikowanie autentyczności ubrań Ralph Lauren. Metki, jeżdźce, metki pielęgnacyjne, jakość szwów i materiały różnią się znacznie w zależności od roku produkcji, kraju pochodzenia i kategorii produktu (metki na swetrach nie wyglądają tak samo jak te na krawatach), więc cechy pozwalające rozpoznać autentyczność są bardzo specyficzne. Są jednak 3 rzeczy, które możesz zrobić, aby zwiększyć swoje szanse:'
-    : 'Unfortunately, there are not a lot of universal ways of authenticating Ralph Lauren clothes. The tags, ponies, care labels, stitching quality and materials are very different depending on the year of manufacturing, region and category of piece (tags on sweaters are not like the ones on ties), so the telltale signs are very specific. But there are 3 things that you can do to increase your chances:',
-  extraChecksPoint1Title: isPolish
-    ? 'Zeskanuj kod QR znajdujący się na górnej metce.'
-    : 'Scan the QR code on the neck tag.',
-  qrContinue: isPolish ? 'Kontynuuj…' : 'Continue…',
-  extraChecksPoint1Body: isPolish
-    ? 'Większość ubrań marki Ralph Lauren wyprodukowanych po listopadzie 2019 roku posiada kod QR na metce górnej metce. Zeskanuj go swoim telefonem. Kod QR powinien przekierować Cię na oficjalną stronę Ralph Lauren służącą do weryfikacji autentyczności danego ubrania. Jeśli link przekieruje Cię na stronę „Authentication Check. We need a closer look at your QR code”, najprawdopodobniej jest to podróbka, choć zdarzają się przypadki, gdy strona ta wyświetla się nawet w przypadku oryginalnych ubrań Ralph Lauren. Dzieje się tak w przypadku produktów, które są sample\'ami i/lub zostały wyprodukowane do użytku wewnętrznego merch\'e i prezenty dla pracowników, lub gdy kod QR został zeskanowany zbyt wiele razy. Jeśli kod QR nie skanuje się lub przekierowuje Cię na jakąkolwiek inną stronę, to z pewnością jest to podróbka. Ponadto, jeśli kod QR skanuje się poprawnie i przekierowuje Cię na właściwą stronę, nie oznacza to, że produkt jest na pewno autentyczny. Kody QR można skopiować, więc powinny one stanowić tylko jeden z elementów procesu weryfikacji autentyczności odzieży, a nie pewną odpowiedź. Niemniej jednak kod QR zapewnia ponad 99% skuteczności, więc jeśli to możliwe, zdecydowanie warto go zeskanować.'
-    : 'Most Ralph Lauren clothes that were made after November 2019 have a QR code on the neck label. Scan it with your phone. The QR code should send you to the Ralph Lauren\'s official authentication page of the piece of clothing that you are authenticating. If the link sends you to the "Authentication Check. We need a closer look at your QR code" page, then it\'s most likely fake, though there are instances of that page showing even on legitimate Ralph Lauren clothes. It happens with products that are either samples and/or manufactured for internal use - employee merch/gifts or when the QR code is scanned too many times. If the QR code doesn\'t scan or sends you to any other page, then it\'s certainly fake. Also, if the QR code scans correctly and sends you to the right page, it doesn\'t mean that the piece is certainly legit. QR codes can be copied, so it should serve as one of the parts of clothes\' authentication process, not a certain answer. But still, QR code gives you about 99% accuracy, so if you can, you should certainly scan it.',
-  extraChecksRealLabel: isPolish ? 'ORYGINAŁ' : 'REAL',
-  extraChecksFakeLabel: isPolish ? 'PODRÓBKA' : 'FAKE',
-  extraChecksPoint2Title: isPolish
-    ? 'Znajdź podobne produkty u sprawdzonych sprzedawców w Internecie.'
-    : 'Find similar pieces from trusted sellers online.',
-  extraChecksPoint2Body: isPolish
-    ? 'Spróbuj znaleźć identyczne ubrania w sieci, korzystając z Google Lens i wykorzystując zdjęcia całego ubrania, haftów, metek itp. Możesz też spróbować wyszukiwać je za pomocą słów kluczowych, na przykład „vintage 80s made in korea ralph lauren jacket”. Następnie porównaj je ze swoim oryginalnym egzemplarzem.'
-    : 'Try finding same pieces online using the photos of the overall garment, embroidery, tags and so on via google lens. You can also try searching them with keywords like "vintage 80s made in korea ralph lauren jacket". After that, compare them to your original piece.',
-  extraChecksPoint3Title: isPolish
-    ? 'Opublikuj swoje zdjęcia na grupach Ralph Lauren.'
-    : 'Post your photos on Ralph Lauren LC groups.',
-  extraChecksPoint3BodyHtml: isPolish
-    ? 'Opublikuj je na grupach Reddit, takich jak <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; grupach na Facebooku, takich jak <a href="https://www.facebook.com/groups/1175276173603525/" target="_blank" rel="noopener">Ralph Lauren Legit Check PL</a>, <a href="https://www.facebook.com/groups/1626396554863125/" target="_blank" rel="noopener">Polo Ralph Lauren Talk PL</a> oraz serwerach Discord, takich jak <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> i podobnych. Pamiętaj, że nawet entuzjaści Polo Ralph Lauren popełniają błędy, więc im więcej opinii uzyskasz – tym lepiej.'
-    : 'Post on Reddit groups like <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank" rel="noopener">r/ralphlaurenlegitcheck</a>, <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank" rel="noopener">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/RLbigpony/" target="_blank" rel="noopener">RLbigpony</a>; Facebook groups like <a href="https://www.facebook.com/groups/1595815894091573" target="_blank" rel="noopener">Polo Ralph Lauren Lifestyle</a> and discord servers like <a href="https://discord.com/invite/fashionreps#:~:text=FashionReps,JavaScript%20to%20run%20this%20app." target="_blank" rel="noopener">Fashion Reps</a> and similar. Be aware that even Polo Ralph Lauren enthusiasts make mistakes, so the more opinions you get - the better.',
-  cropCancel:      isPolish ? 'Anuluj'                               : 'Cancel',
-  cropConfirm:     isPolish ? 'Przytnij i użyj'                      : 'Crop and use',
-  cropHelp: isPolish
-    ? 'Zaznacz metkę przy szyi, przeciągając zaznaczenie lub zmieniając jego pozycję i rozmiar w pikselach.'
-    : 'Frame the neck label by dragging the selection or editing its position and size in pixels.',
-  cropSelection: isPolish ? 'Zaznaczenie w pikselach zdjęcia' : 'Selection in image pixels',
-  cropX: isPolish ? 'Od lewej' : 'Left',
-  cropY: isPolish ? 'Od góry' : 'Top',
-  cropWidth: isPolish ? 'Szerokość' : 'Width',
-  cropHeight: isPolish ? 'Wysokość' : 'Height',
-  removePhoto: isPolish ? 'Usuń zdjęcie' : 'Remove photo',
-  addPhoto: isPolish ? 'Dodaj zdjęcie' : 'Add photo',
-  footerCreatedBy: isPolish ? 'Stworzone przez'                      : 'Created by',
-  photo:           (n) => isPolish ? `Zdjęcie ${n}`                  : `Photo ${n}`,
-  chipUnknown:     isPolish ? 'Nieznany'                             : 'Unknown',
-  chipUncertain:   isPolish ? 'Nie pewien'                           : 'Uncertain',
-  chipNotDetected: isPolish ? 'Nie wykryto'                          : 'Not detected',
-  notDetectedMessage: isPolish
-    ? 'Nie wykryto metki przy szyi. Upewnij się, że przesyłasz zdjęcie metki przy szyi, a NIE haftu z kucykiem, metek pielęgnacyjnych ani innej części ubrania. Jeśli metka przy szyi jest widoczna, kliknij przycisk „Przytnij ręcznie”.'
-    : 'Neck label is not detected. Please make sure that you send a photo of the neck label and NOT the pony embroidery, wash tags, or any other part of the garment. If the neck label is visible, click the “Crop manually” button.',
-  chipTooSmall:    isPolish ? 'Za mała'                              : 'Too small',
-  chipAuthentic:   isPolish ? 'Oryginał'                             : 'Authentic',
+const messages = {
+  manualCrop:      'Crop manually',
+  qrContinue: 'Continue…',
+  removePhoto: 'Remove photo',
+  addPhoto: 'Add photo',
+  photo:           (n) => `Photo ${n}`,
+  chipUnknown:     'Unknown',
+  chipUncertain:   'Uncertain',
+  chipNotDetected: 'Not detected',
+  chipTooSmall:    'Too small',
+  chipAuthentic:   'Authentic',
   chipFake:        'Fake',
-  confidence:      (pct) => isPolish ? `pewność: ${pct}%`            : `confidence: ${pct}%`,
-  errorCannotRead: isPolish ? 'Nie można odczytać pliku.'            : 'Cannot read file.',
-  errorApi:        (st, d) => isPolish
-    ? `Błąd API ${st}: ${d || 'nieznany błąd serwera.'}`
-    : `API error ${st}: ${d || 'unknown server error.'}`,
-  errorAnalysis:   isPolish ? 'Błąd podczas analizy. Spróbuj ponownie.' : 'Analysis error. Please try again.',
-  wakingUp:        isPolish ? 'Model wybudza się po przerwie — potrwa to około minuty. Ponawiam automatycznie…' : 'Model is waking up after idle — this takes about a minute. Retrying automatically…',
-  statusSending:   isPolish ? 'Wysyłanie zdjęcia na serwer…' : 'Sending photo to the server…',
-  statusAuthenticating: isPolish ? 'Uwierzytelnianie…' : 'Authenticating…',
-  uncertaintyHtml: isPolish 
-    ? 'Pewność klasyfikacji jest zbyt niska. Spróbuj przyciąć swoje zdjęcie dokładniej i sprawdź je ponownie. Jeśli wynik nadal jest niepewny, prześlij zdjęcie na <a href="mailto:kontakt@ralphai.tech">adres e-mail strony</a> w celu weryfikacji przez człowieka lub opublikuj je na grupach takich jak <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> lub <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.'
-    : 'Classification confidence is too low. Please, try re-cropping your photo more closely and checking it again. If the result is still uncertain, then please send the photo to the <a href="mailto:contact@ralphai.tech">website\'s email</a> for a human legit check or post it on groups like <a href="https://www.reddit.com/r/PoloRalphLaurenLC/" target="_blank">r/PoloRalphLaurenLC</a> or <a href="https://www.reddit.com/r/ralphlaurenlegitcheck/" target="_blank">r/ralphlaurenlegitcheck</a>.',
-  tooSmallHtml: isPolish
-    ? 'Etykieta na Twoim zdjęciu jest zbyt mała. Spróbuj zrobić zdjęcie bliżej metki i upewnij się, że metka jest wyraźnie widoczna.'
-    : 'The label on your photo is too small. Try taking your photo closer to the label and make sure that the label is clearly visible.',
+  errorCannotRead: 'Cannot read file.',
+  errorApi:        (st, d) => `API error ${st}: ${d || 'unknown server error.'}`,
+  errorAnalysis:   'Analysis error. Please try again.',
+  wakingUp:        'Model is waking up after idle – this takes about a minute. Retrying automatically…',
+  statusSending:   'Sending photo to the server…',
+  statusAuthenticating: 'Authenticating…',
 };
 
 function applySharedMetrics() {
@@ -133,36 +68,9 @@ function applySharedMetrics() {
   });
 }
 
-const EMAIL = isPolish ? 'kontakt@ralphai.tech' : 'contact@ralphai.tech';
 const CONFIDENCE_THRESHOLD = 70;
 
-function applyTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    if (typeof i18n[key] === 'string') el.textContent = i18n[key];
-  });
-  document.querySelectorAll('[data-i18n-html]').forEach(el => {
-    const key = el.dataset.i18nHtml;
-    if (typeof i18n[key] === 'string') el.innerHTML = i18n[key];
-  });
-  if (!isPolish) document.documentElement.lang = 'en';
-  const navContact = document.getElementById('navContactLink');
-  if (navContact) navContact.href = `mailto:${EMAIL}`;
-  const footerEmail = document.getElementById('footerEmailLink');
-  if (footerEmail) { footerEmail.href = `mailto:${EMAIL}`; footerEmail.textContent = EMAIL; }
-
-  const uncertaintyMsgEl = document.getElementById('uncertaintyMsg');
-  if (uncertaintyMsgEl) {
-    uncertaintyMsgEl.innerHTML = i18n.uncertaintyHtml;
-  }
-  const tooSmallMsgEl = document.getElementById('tooSmallMsg');
-  if (tooSmallMsgEl) {
-    tooSmallMsgEl.innerHTML = i18n.tooSmallHtml;
-  }
-
-  applySharedMetrics();
-}
-applyTranslations();
+applySharedMetrics();
 
 /* ─── QR "Continue" collapse on phones (≤480px) ───────────────────── *
  * Shows only the text up to the split marker + a Continue button;    *
@@ -172,7 +80,7 @@ applyTranslations();
   const body = document.getElementById('qrCheckPoint1Body');
   if (!body) return;
   if (!window.matchMedia('(max-width: 480px)').matches) return;
-  const marker = isPolish ? 'oryginalnych ubrań Ralph Lauren.' : 'on legitimate Ralph Lauren clothes.';
+  const marker = 'on legitimate Ralph Lauren clothes.';
   const full = body.textContent;
   const cut = full.indexOf(marker);
   if (cut === -1) return;
@@ -181,7 +89,7 @@ applyTranslations();
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'extra-checks__continue';
-  btn.textContent = i18n.qrContinue;
+  btn.textContent = messages.qrContinue;
   btn.addEventListener('click', () => {
     body.textContent = full;
     body.tabIndex = -1;
@@ -244,21 +152,23 @@ function setCropConfirmProcessing(isProcessing) {
 function buildPreviewCardMarkup(img, index) {
   const thumbClass = img.pending
     ? 'preview-card__thumbnail preview-card__thumbnail--pending'
-    : (['real', 'fake', 'unknown', 'too-small'].indexOf(img.verdict) !== -1
+    : img.notDetected
+      ? 'preview-card__thumbnail preview-card__thumbnail--not-detected'
+      : (['real', 'fake', 'unknown', 'too-small'].indexOf(img.verdict) !== -1
       ? `preview-card__thumbnail preview-card__thumbnail--${img.verdict}`
       : 'preview-card__thumbnail');
   const media = img.pending
-    ? `<div class="preview-card__status">${img.status === 'authenticating' ? i18n.statusAuthenticating : i18n.statusSending}</div>`
-    : `<img src="${img.previewUrl}" alt="${i18n.photo(index + 1)}" />`;
+    ? `<div class="preview-card__status">${img.status === 'authenticating' ? messages.statusAuthenticating : messages.statusSending}</div>`
+    : `<img src="${img.previewUrl}" alt="${messages.photo(index + 1)}" />`;
   const manualBtn = (!img.pending && (img.result || img.tooSmall || img.notDetected))
-    ? `<button class="preview-card__crop" data-index="${index}">${i18n.manualCrop}</button>`
+    ? `<button class="preview-card__crop" data-index="${index}">${messages.manualCrop}</button>`
     : '';
   return `
     <div class="preview-card" data-card-index="${index}">
       ${img.chip ? img.chip : ''}
       <div class="${thumbClass}">
         ${media}
-        <button class="preview-card__remove" data-index="${index}" aria-label="${i18n.removePhoto}">&#x2715;</button>
+        <button class="preview-card__remove" data-index="${index}" aria-label="${messages.removePhoto}">&#x2715;</button>
       </div>
       ${manualBtn}
     </div>
@@ -318,7 +228,7 @@ function finalizeCrop(blob, tooSmall = false) {
       closeCropper();
     }
     classifyWithWakeRetry(entry)
-      .catch(() => showError(i18n.errorAnalysis))
+      .catch(() => showError(messages.errorAnalysis))
       .finally(() => {
         entry.pending = false;
         renderGrid();
@@ -346,7 +256,7 @@ function pushSilentEntry(cropBlob, originalBlob) {
 }
 
 function buildTooSmallChip() {
-  return `<div class="result-chip result-chip--too-small"><span class="result-chip__verdict">${i18n.chipTooSmall}</span></div>`;
+  return `<div class="result-chip result-chip--too-small"><span class="result-chip__verdict">${messages.chipTooSmall}</span></div>`;
 }
 
 function pushTooSmallEntry(cropBlob, originalBlob) {
@@ -396,7 +306,7 @@ function handleCropConfirm() {
     canvas.toBlob((blob) => {
       if (!blob) {
         setCropConfirmProcessing(false);
-        showError(i18n.errorCannotRead);
+        showError(messages.errorCannotRead);
         return;
       }
 
@@ -428,7 +338,7 @@ function handleCropConfirm() {
         closeCropper();
         renderGrid();
         classifyWithWakeRetry(entry)
-          .catch(() => showError(i18n.errorAnalysis))
+          .catch(() => showError(messages.errorAnalysis))
           .finally(() => {
             entry.pending = false;
             renderGrid();
@@ -597,7 +507,7 @@ function processNextCrop(keepModalOpen = false) {
           cropQueue.unshift(file);
           releaseActiveCropSource();
           activeCropSourceBlob = null;
-          showError(i18n.wakingUp);
+          showError(messages.wakingUp);
           setTimeout(() => {
             hideError();
             processNextCrop(keepModalOpen);
@@ -659,7 +569,7 @@ function processNextCrop(keepModalOpen = false) {
           try {
             await classifyWithWakeRetry(placeholder);
           } catch (_) {
-            showError(i18n.errorAnalysis);
+            showError(messages.errorAnalysis);
           } finally {
             placeholder.pending = false;
             placeholder.placeholder = false;
@@ -681,7 +591,7 @@ function processNextCrop(keepModalOpen = false) {
       placeholder.pending = false;
       placeholder.notDetected = true;
       placeholder.verdict = 'unknown';
-      placeholder.chip = `<div class="result-chip result-chip--unknown"><span class="result-chip__verdict">${i18n.chipNotDetected}</span></div>`;
+      placeholder.chip = `<div class="result-chip result-chip--unknown"><span class="result-chip__verdict">${messages.chipNotDetected}</span></div>`;
       releaseActiveCropSource();
       activeCropSourceBlob = null;
       renderGrid();
@@ -689,7 +599,7 @@ function processNextCrop(keepModalOpen = false) {
     })
     .catch(() => {
       removePlaceholder(placeholder);
-      showError(i18n.errorCannotRead);
+      showError(messages.errorCannotRead);
       processNextCrop(keepModalOpen);
     });
 }
@@ -699,7 +609,7 @@ function finishDetectionError(placeholder) {
   activeCropSourceBlob = null;
   removePlaceholder(placeholder);
   fileInput.value = '';
-  showError(i18n.errorAnalysis);
+  showError(messages.errorAnalysis);
   processNextCrop(false);
 }
 
@@ -885,8 +795,6 @@ function openCropper(src, keepModalOpen = false) {
       scalable:     false,
       rotatable:    false,
       toggleDragModeOnDblclick: false,
-      ready: syncCropControls,
-      crop: syncCropControls,
     };
     // Manual crop only (server found no label) — default framing.
     cropperOptions.autoCropArea = getResponsiveAutoCropArea();
@@ -946,54 +854,6 @@ cropperModal.addEventListener('cancel', (event) => {
   event.preventDefault();
   cancelCropper();
 });
-cropperModal.addEventListener('keydown', (event) => {
-  if (event.key !== 'Tab') return;
-  const controls = [...cropperModal.querySelectorAll('input, button')].filter(el => !el.disabled && el.getClientRects().length);
-  const first = controls[0];
-  const last = controls[controls.length - 1];
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-});
-
-const cropFields = {
-  x: document.getElementById('cropX'), y: document.getElementById('cropY'),
-  width: document.getElementById('cropWidth'), height: document.getElementById('cropHeight'),
-};
-
-function syncCropControls() {
-  if (!cropperInstance) return;
-  const data = cropperInstance.getData(true);
-  const image = cropperInstance.getImageData();
-  for (const [key, input] of Object.entries(cropFields)) {
-    const dimension = key === 'x' || key === 'width' ? image.naturalWidth : image.naturalHeight;
-    input.max = Math.round(dimension) - (key === 'x' || key === 'y' ? 1 : 0);
-    if (input !== document.activeElement) input.value = Math.round(data[key]);
-  }
-}
-
-for (const [key, input] of Object.entries(cropFields)) {
-  input.addEventListener('change', () => {
-    if (!cropperInstance) return;
-    if (!Number.isFinite(input.valueAsNumber)) {
-      input.value = Math.round(cropperInstance.getData()[key]);
-      syncCropControls();
-      return;
-    }
-    const data = cropperInstance.getData();
-    const image = cropperInstance.getImageData();
-    data[key] = Math.max(Number(input.min), Math.min(Number(input.max), input.valueAsNumber));
-    data.width = Math.min(data.width, image.naturalWidth - data.x);
-    data.height = Math.min(data.height, image.naturalHeight - data.y);
-    cropperInstance.setData(data);
-    input.value = Math.round(cropperInstance.getData()[key]);
-    syncCropControls();
-  });
-}
 
 /* ─── Preview grid ───────────────────────────────── */
 function renderGrid() {
@@ -1017,7 +877,7 @@ function renderGrid() {
 
   const canAddMore = croppedImages.length + cropQueue.length < MAX_IMAGES;
   previewGrid.innerHTML = croppedImages.map((img, i) => buildPreviewCardMarkup(img, i)).join('')
-    + (canAddMore ? `<button class="preview-card__thumbnail preview-grid__add" id="addMoreBtn" aria-label="${i18n.addPhoto}">+</button>` : '');
+    + (canAddMore ? `<button class="preview-card__thumbnail preview-grid__add" id="addMoreBtn" aria-label="${messages.addPhoto}">+</button>` : '');
   if (focusClass) previewGrid.querySelector(`.${focusClass}[data-index="${focusIndex}"]`)?.focus();
 }
 
@@ -1062,7 +922,7 @@ async function classifyImage(base64) {
   if (!response.ok) {
     let detail = '';
     try { detail = await response.text(); } catch (_) {}
-    const err = new Error(i18n.errorApi(response.status, detail));
+    const err = new Error(messages.errorApi(response.status, detail));
     if (isWakingResponse(response.status, detail)) err.code = 'space_waking';
     throw err;
   }
@@ -1106,7 +966,7 @@ async function classifyWithWakeRetry(entry) {
     } catch (e) {
       if (isWakingError(e) && entry._wakeTries < WAKE_MAX_RETRIES) {
         entry._wakeTries += 1;
-        showError(i18n.wakingUp);
+        showError(messages.wakingUp);
         await new Promise((r) => setTimeout(r, WAKE_RETRY_MS));
         hideError();
         continue;
@@ -1122,18 +982,18 @@ function blobToBase64(blob) {
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== 'string') {
-        reject(new Error(i18n.errorCannotRead));
+        reject(new Error(messages.errorCannotRead));
         return;
       }
 
       const parts = result.split(',');
       if (parts.length < 2) {
-        reject(new Error(i18n.errorCannotRead));
+        reject(new Error(messages.errorCannotRead));
         return;
       }
       resolve(`data:${blob.type};base64,${parts[1]}`);
     };
-    reader.onerror = () => reject(new Error(i18n.errorCannotRead));
+    reader.onerror = () => reject(new Error(messages.errorCannotRead));
     reader.readAsDataURL(blob);
   });
 }
@@ -1195,7 +1055,7 @@ async function makeDetectPngBlob(blob) {
   const canvas = await makeDetectRetryCanvas(blob);
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      (out) => (out ? resolve(out) : reject(new Error(i18n.errorCannotRead))),
+      (out) => (out ? resolve(out) : reject(new Error(messages.errorCannotRead))),
       'image/png',
     );
   });
@@ -1208,7 +1068,7 @@ function decodeImage(blob) {
     img.onload = () => resolve(img);
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error(i18n.errorCannotRead));
+      reject(new Error(messages.errorCannotRead));
     };
     img.src = url;
   });
@@ -1239,11 +1099,11 @@ async function detectServerSide(originalBlob) {
         try { detail = await response.text(); } catch (_) {}
         if (isWakingResponse(response.status, detail)) throw markWakingError();
       }
-      throw new Error(i18n.errorAnalysis);
+      throw new Error(messages.errorAnalysis);
     }
     const data = await response.json();
     if (!data || !Array.isArray(data.boxes) || !(data.width > 0) || !(data.height > 0)) {
-      throw new Error(i18n.errorAnalysis);
+      throw new Error(messages.errorAnalysis);
     }
     return data;
   };
@@ -1326,7 +1186,7 @@ function canvasToSquare320(src) {
 async function canvasToSquare320Blob(src) {
   const out = await new Promise((resolve) =>
     canvasToSquare320(src).toBlob(resolve, 'image/jpeg', SQUARE_JPEG_QUALITY));
-  if (!out) throw new Error(i18n.errorCannotRead);
+  if (!out) throw new Error(messages.errorCannotRead);
   return out;
 }
 
@@ -1406,10 +1266,10 @@ function blobToOriginalDataUrl(blob) {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result !== 'string') reject(new Error(i18n.errorCannotRead));
+      if (typeof reader.result !== 'string') reject(new Error(messages.errorCannotRead));
       else resolve(reader.result);
     };
-    reader.onerror = () => reject(new Error(i18n.errorCannotRead));
+    reader.onerror = () => reject(new Error(messages.errorCannotRead));
     reader.readAsDataURL(blob);
   });
 }
@@ -1434,19 +1294,19 @@ function buildResultChip(data) {
   const isLowConfidence = pct < CONFIDENCE_THRESHOLD;
 
   let chipClass  = 'result-chip--unknown';
-  let labelText  = i18n.chipUnknown;
+  let labelText  = messages.chipUnknown;
 
   if (predictedClass === 'real') {
     chipClass = 'result-chip--authentic';
-    labelText = i18n.chipAuthentic;
+    labelText = messages.chipAuthentic;
   } else if (predictedClass === 'fake') {
     chipClass = 'result-chip--fake';
-    labelText = i18n.chipFake;
+    labelText = messages.chipFake;
   }
 
   if (isLowConfidence) {
     chipClass = 'result-chip--unknown';
-    labelText = i18n.chipUncertain;
+    labelText = messages.chipUncertain;
   }
 
   return `<div class="result-chip ${chipClass}"><span class="result-chip__verdict">${labelText}</span></div>`;
@@ -1467,15 +1327,3 @@ function hideResult() {
   resultRow.hidden = true;
   resultRow.innerHTML = '';
 }
-
-// Shared navigation labels and keyboard landmarks on every page.
-(() => {
-  const polish = (navigator.language || '').toLowerCase().startsWith('pl');
-  document.documentElement.lang = polish ? 'pl' : 'en';
-  document.querySelector('.skip-link').textContent = polish ? 'Przejdź do treści' : 'Skip to main content';
-  document.querySelector('.navbar__links').setAttribute('aria-label', polish ? 'Nawigacja główna' : 'Main navigation');
-  const preview = document.getElementById('previewGrid');
-  if (preview) preview.setAttribute('aria-label', polish ? 'Przesłane zdjęcia' : 'Uploaded photos');
-  const cropImage = document.getElementById('cropperImg');
-  if (cropImage) cropImage.alt = polish ? 'Zdjęcie do kadrowania' : 'Photo to crop';
-})();
